@@ -1,0 +1,7 @@
+
+/.idea
+*.pyc
+custom_api/cesar/config.json
+custom_api/wialon/config.json
+start.bat
+config.json

@@ -1,0 +1,157 @@
+{% extends 'main.html' %}
+
+{% block title %}
+Карточка лота
+{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col">
+            <h2>{{ Car.nm }}5</h2>
+            <p class="text-muted">{{ Car.last_time}}</p>
+        </div>
+    </div>
+    <div class="row mt-4">
+        <div id="map" style="width: 100%; height: 400px;"></div>
+    </div>
+    <br><br>
+    <div class="row mt-4">
+        <div class="col">
+            <h4>Wialon</h4>
+            <table class="table table-sm table-bordered">
+                <thead class="thead-light">
+                    <tr>
+                        <th>UUID блока</th>
+                        <th>Последний онлайн</th>
+                        <th>Дата последнего сообщения GPS</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>{{Car.uuid}}</td>
+                        <td>{{Car.last_time}}</td>
+                        <td>Пример Дата последнего сообщения GPS</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="col">
+            <h4>Цезарь</h4>
+            <table class="table table-sm table-bordered">
+                <thead class="thead-light">
+                    <tr>
+                        <th>UID блока</th>
+                        <th>Последний онлайн</th>
+                        <th>Дата последнего сообщения GPS</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Пример UID</td>
+                        <td>Пример Последний онлайн</td>
+                        <td>Пример Дата последнего сообщения GPS</td>
+                    </tr>
+                    <!-- Добавьте больше строк по мере необходимости -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <br><br>
+    <div class="row mt-4">
+        <div class="btn-group d-flex" role="group">
+            <a href="#info" class="btn btn-outline-primary" id="info-tab">Инфо</a>
+            <a href="#jira" class="btn btn-outline-primary" id="jira-tab">Jira</a>
+            <a href="#sensors" class="btn btn-outline-primary" id="sensors-tab">Датчики</a>
+            <a href="#transitions" class="btn btn-outline-primary" id="transitions-tab">Переходы</a>
+            <a href="#comments" class="btn btn-outline-primary" id="comments-tab">Комментарии</a>
+        </div>
+    </div>
+    <div class="row mt-3">
+        <div class="tab-content" id="tab-content">
+            <div class="tab-pane" id="info-content">
+                <h3>Инфо</h3>
+                <p>Склад: Складская информация</p>
+                <p>Аренда: Информация об аренде</p>
+            </div>
+            <div class="tab-pane" id="jira-content">
+                <h3>Jira</h3>
+                <p>Здесь будет информация о Jira.</p>
+            </div>
+            <div class="tab-pane" id="sensors-content">
+                <h3>Датчики</h3>
+                <p>Здесь будет информация о датчиках.</p>
+            </div>
+            <div class="tab-pane" id="transitions-content">
+                <h3>Переходы</h3>
+                <p>Здесь будет информация о переходах.</p>
+            </div>
+            <div class="tab-pane" id="comments-content">
+                <h3>Комментарии</h3>
+                <p>Здесь будет информация о комментариях.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Подключение Yandex Map без API ключа -->
+<script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU" type="text/javascript"></script>
+<script type="text/javascript">
+    ymaps.ready(init);
+    function init(){
+        var myMap = new ymaps.Map("map", {
+            center: [0, 0],
+            zoom: 2
+        });
+        var myPlacemark = new ymaps.Placemark([0, 0], {
+            hintContent: 'Метка на 0,0',
+            balloonContent: 'Гаражный номер'
+        });
+         var myPlacemark2 = new ymaps.Placemark([50, 49], {
+            hintContent: 'Метка на 50,49',
+            balloonContent: 'Гаражный номе2р'
+        });
+        myMap.geoObjects.add(myPlacemark);
+        myMap.geoObjects.add(myPlacemark2);
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const tabs = document.querySelectorAll('.btn-group .btn');
+        const tabContent = document.querySelectorAll('.tab-pane');
+
+        function showTab(tab) {
+            tabs.forEach(tab => {
+                tab.classList.remove('btn-primary');
+                tab.classList.add('btn-outline-primary');
+            });
+
+            tab.classList.remove('btn-outline-primary');
+            tab.classList.add('btn-primary');
+
+            const tabName = tab.getAttribute('href').substring(1);
+            tabContent.forEach(content => {
+                if (content.getAttribute('id') === `${tabName}-content`) {
+                    content.classList.add('active');
+                } else {
+                    content.classList.remove('active');
+                }
+            });
+        }
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function (e) {
+                e.preventDefault();
+                showTab(tab);
+                window.location.hash = tab.getAttribute('href');
+            });
+        });
+
+        // Initial tab based on hash
+        const currentHash = window.location.hash || '#info';
+        const initialTab = document.querySelector(`.btn[href="${currentHash}"]`);
+        if (initialTab) {
+            showTab(initialTab);
+        }
+    });
+</script>
+{% endblock %}

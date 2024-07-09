@@ -1,0 +1,57 @@
+{% extends 'main.html' %}
+
+{% block title %}
+Отчеты
+{% endblock %}
+
+{% block body %}
+<div class="container my-5">
+    <h2>Wialon</h2>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th scope="col">Название отчета</th>
+                <th scope="col">Скачать</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Весь транспорт</td>
+                <td>
+                    <a href="{{ url_for('download', report='wialon') }}" class="btn btn-primary">Скачать</a>
+                </td>
+            </tr>
+            <tr>
+                <td>Давно offline (от 3 дней)</td>
+                <td>
+                    <a href="{{ url_for('download', report='wialon_offline') }}" class="btn btn-primary">Скачать</a>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <br><br>
+    <h2>Cesar Position</h2>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th scope="col">Название отчета</th>
+                <th scope="col">Скачать</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Весь транспорт</td>
+                <td>
+                    <a href="{{ url_for('download', report='cesar') }}" class="btn btn-primary">Скачать</a>
+                </td>
+            </tr>
+            <tr>
+                <td>Давно offline (от 3 дней)</td>
+                <td>
+                    <a href="{{ url_for('download', report='cesar_offline') }}" class="btn btn-primary">Скачать</a>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+{% endblock %}
