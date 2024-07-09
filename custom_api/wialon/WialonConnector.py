@@ -10,7 +10,7 @@ with open('config.json', 'r') as f:
     config = json.load(f)
 
 geolocator = Nominatim(user_agent="KiraPixel")
-token = ''
+token = config['wialon_token']
 
 class Car:
     def __init__(self):
@@ -58,7 +58,7 @@ def wialon_connector():
     # Создание экземпляра Wialon
     wialon_api = Wialon()
     # Авторизация с использованием токена
-    result = wialon_api.token_login(config['wialon_token'])
+    result = wialon_api.token_login(token='7e134b2935ca593e81c9f3a6f21065eaC1C6AB50D35C56768D6610345E6D04F875BCBB62')
     # Установка ID сессии
     wialon_api.sid = result['eid']
     return wialon_api

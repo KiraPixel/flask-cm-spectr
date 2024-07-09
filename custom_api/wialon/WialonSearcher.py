@@ -3,7 +3,7 @@ from wialon import flags
 from custom_api.wialon import WialonConnector
 
 
-def search_all_items(offline=False, site=False):
+def search_all_items(offline=False, last_time_start_unix=None, last_time_end_unix=None):
     wialon_api = WialonConnector.wialon_connector()
 
     # Параметры для поиска объектов
@@ -39,7 +39,26 @@ def search_all_items(offline=False, site=False):
 
         if offline and lmsg is not None and lmsg['t'] > three_days_ago_unix:
             lmsg = WialonConnector.convert_to_moscow_time(lmsg['t'])  # конвертируем в московское время
-            final_str = f'{nm};{uuid};{lmsg};'
+            final_str = f'{nm}'
+        elif last_time_start_unix is not None or last_time_end_unix is not None:
+            if lmsg is None:
+                continue
+            lmsg_conv = WialonConnector.convert_to_moscow_time(lmsg['t'])
+            if last_time_start_unix is not None and last_time_end_unix is not None:
+                if last_time_start_unix <= lmsg['t'] <= last_time_end_unix:
+                    final_str = f'{nm}'
+                else:
+                    continue
+            elif last_time_start_unix is not None:
+                if lmsg['t'] >= last_time_start_unix:
+                    final_str = f'{nm}'
+                else:
+                    continue
+            elif last_time_end_unix is not None:
+                if lmsg['t'] <= last_time_end_unix:
+                    final_str = f'{nm}'
+                else:
+                    continue
         else:
             pos = item.get('pos', None)
             last_pos = ''

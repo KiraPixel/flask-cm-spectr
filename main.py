@@ -1,6 +1,7 @@
 import os
 import io
 from datetime import timedelta, datetime
+import time
 import json
 from functools import wraps
 import re
@@ -19,7 +20,7 @@ with open('config.json', 'r') as f:
     config = json.load(f)
 
 app.secret_key = config['SECRET_KEY']
-app.debug = False
+app.debug = True
 os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "false"
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)
 # Настройка подключения к базе данных
@@ -85,11 +86,44 @@ def admin_required(f):
 @login_required
 def home():
     columns = ['№ Лота', 'Регион', 'Склад', 'Модель']  # Заголовки столбцов
-    test_data = []
+    columns_data = []
+    filter_time = False
     session = db.session
-    for item in session.query(Transport).all():
-        test_data.append([item.uNumber, item.region, item.storage, item.model])
-    return render_template('filter.html', columns=columns, table_rows=test_data, redi='/cars/')
+
+    nm = request.args.get('nm')
+
+    last_time_start = request.args.get('last_time_start')
+    last_time_end = request.args.get('last_time_end')
+    data = []
+
+    if nm is not None and nm != '':
+        for item in session.query(Transport).filter(Transport.uNumber.like(f'%{nm}%')).all():
+            columns_data.append([item.uNumber, item.region, item.storage, item.model])
+    elif last_time_start or last_time_end:
+        last_time_start_unix = None
+        last_time_end_unix = None
+        if last_time_start:
+            try:
+                last_time_start_unix = time.mktime(datetime.strptime(last_time_start, '%Y-%m-%d').timetuple())
+            except ValueError:
+                pass
+        if last_time_end:
+            try:
+                last_time_end_unix = time.mktime(datetime.strptime(last_time_end, '%Y-%m-%d').timetuple())
+            except ValueError:
+                pass
+        data = WialonSearcher.search_all_items(last_time_start_unix=last_time_start_unix,last_time_end_unix=last_time_end_unix)
+        for item in session.query(Transport).all():
+            if any(x.startswith(item.uNumber) for x in data):
+                columns_data.append([item.uNumber, item.region, item.storage, item.model])
+    else:
+        for item in session.query(Transport).all():
+            columns_data.append([item.uNumber, item.region, item.storage, item.model])
+
+
+
+
+    return render_template('filter.html', columns=columns, table_rows=columns_data, redi='/cars/', request=request)
 
 
 @app.route('/login', methods=['GET', 'POST'])
