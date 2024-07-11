@@ -1,5 +1,5 @@
 import csv
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import time
 import requests
 import json
@@ -74,6 +74,11 @@ class CesarApi:
                 pin = item['pin']
                 model = item['device_type']
                 lmsg = item['receive_time']
+                if lmsg is not None:
+                    dt = datetime.strptime(lmsg, "%Y-%m-%dT%H:%M:%SZ")
+                    moscow_tz = timezone(timedelta(hours=3))
+                    moscow_time = dt.astimezone(moscow_tz)
+                    lmsg = moscow_time.strftime("%d-%m-%Y %H:%M")
 
                 if offline:
                     if lmsg is None:
