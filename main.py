@@ -52,12 +52,31 @@ class Transport(db.Model):
     __tablename__ = 'transport'
 
     id = db.Column(db.Integer, primary_key=True)
-    storage_id = db.Column(db.Integer)
+    storage_id = db.Column(db.Integer, db.ForeignKey('storage.ID'), nullable=False)
     uNumber = db.Column(db.String(10))
     model = db.Column(db.String(100))
 
+    storage = db.relationship('Storage', back_populates='transports', primaryjoin="Transport.storage_id == Storage.ID")
+
     def __repr__(self):
         return '<Transport %r>' % self.uNumber
+
+
+class Storage(db.Model):
+    __tablename__ = 'storage'
+
+    ID = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100))
+    type = db.Column(db.String(100))
+    region = db.Column(db.String(100))
+    address = db.Column(db.String(100))
+    organization = db.Column(db.String(100))
+
+    transports = db.relationship('Transport', back_populates='storage', primaryjoin="Storage.ID == Transport.storage_id")
+
+
+    def __repr__(self):
+        return '<Storage %r>' % self.uNumber
 
 
 def login_required(f):
@@ -88,7 +107,7 @@ def admin_required(f):
 @app.route('/')
 @login_required
 def home():
-    columns = ['№ Лота', 'Регион', 'Склад', 'Модель']  # Заголовки столбцов
+    columns = ['№ Лота', 'Модель', 'Склад', 'Регион']  # Заголовки столбцов
     columns_data = []
     filter_time = False
     session = db.session
@@ -100,28 +119,30 @@ def home():
     data = []
 
     if nm is not None and nm != '':
-        for item in session.query(Transport).filter(Transport.uNumber.like(f'%{nm}%')).all():
-            columns_data.append([item.uNumber, item.storage_id, item.model])
+        for transport, storage in db.session.query(Transport, Storage).join(Storage, Transport.storage_id == Storage.ID).filter(Transport.uNumber.like(f'%{nm}%')).all():
+
+            columns_data.append([transport.uNumber, transport.model, storage.name, storage.region, ])
     elif last_time_start or last_time_end:
         last_time_start_unix = None
         last_time_end_unix = None
         if last_time_start:
             try:
-                last_time_start_unix = time.mktime(datetime.strptime(last_time_start, '%Y-%m-%d').timetuple())
+                last_time_start_unix = time.mktime(datetime.strptime(last_time_start, '%Y-%m-%dT%H:%M').timetuple())
             except ValueError:
                 pass
         if last_time_end:
             try:
-                last_time_end_unix = time.mktime(datetime.strptime(last_time_end, '%Y-%m-%d').timetuple())
+                last_time_end_unix = time.mktime(datetime.strptime(last_time_end, '%Y-%m-%dT%H:%M').timetuple())
             except ValueError:
                 pass
         data = WialonSearcher.search_all_items(last_time_start_unix=last_time_start_unix,last_time_end_unix=last_time_end_unix)
-        for item in session.query(Transport).all():
-            if any(x.startswith(item.uNumber) for x in data):
-                columns_data.append([item.uNumber, item.storage_id, item.model])
+        for transport, storage in db.session.query(Transport, Storage).join(Storage, Transport.storage_id == Storage.ID).all():
+            if any(x.startswith(transport.uNumber) for x in data):
+                columns_data.append([transport.uNumber, transport.model, storage.name, storage.region, ])
     else:
-        for item in session.query(Transport).all():
-            columns_data.append([item.uNumber, item.storage_id, item.model])
+        for transport, storage in db.session.query(Transport, Storage).join(Storage, Transport.storage_id == Storage.ID).all():
+
+            columns_data.append([transport.uNumber, transport.model, storage.name, storage.region, ])
 
 
 

@@ -13,14 +13,13 @@
         <label for="filter-nm" class="form-label">№ Лота</label>
         <input type="text" id="filter-nm" name="nm" class="form-control" value="{% if request.args.get('nm') %}{{ request.args.get('nm') }}{% else %}{% endif %}">
       </div>
-      <div class="col-md-4">
-        <label for="filter-last-time-start" class="form-label">Онлайн (от)</label>
-        <input type="date" id="filter-last-time-start" name="last_time_start" class="form-control" value="{% if request.args.get('last_time_start') %}{{ request.args.get('last_time_start') }}{% else %}{% endif %}">
-      </div>
-      <div class="col-md-4">
-        <label for="filter-last-time-end" class="form-label">Онлайн (до)</label>
-        <input type="date" id="filter-last-time-end" name="last_time_end" class="form-control" value="{% if request.args.get('last_time_end') %}{{ request.args.get('last_time_end') }}{% else %}{% endif %}">
-      </div>
+    <div class="col-md-4">
+      <label for="filter-last-time-start" class="form-label">Онлайн (от)</label>
+      <input type="datetime-local" id="filter-last-time-start" name="last_time_start" class="form-control" value="{% if request.args.get('last_time_start') %}{{ request.args.get('last_time_start') }}{% else %}{% endif %}">
+    </div>
+    <div class="col-md-4">
+      <label for="filter-last-time-end" class="form-label">Онлайн (до)</label>
+      <input type="datetime-local" id="filter-last-time-end" name="last_time_end" class="form-control" value="{% if request.args.get('last_time_end') %}{{ request.args.get('last_time_end') }}{% else %}{% endif %}">
     </div>
     <div class="row mt-3">
       <div class="col-md-12 d-flex justify-content-end">
