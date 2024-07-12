@@ -224,7 +224,7 @@ def download():
             io.BytesIO(output.getvalue().encode('utf-8')),
             mimetype='text/plain',
             as_attachment=True,
-            download_name='wialon_offline_report.txt'
+            download_name='wialon_hard_report.txt'
         )
     if report_name == "wialon_offline":
         output = io.StringIO()
