@@ -215,6 +215,17 @@ def download():
             as_attachment=True,
             download_name='wialon_report.txt'
         )
+    if report_name == "wialon_with_address":
+        output = io.StringIO()
+        for row in WialonSearcher.search_all_items(address=True):
+            output.write(row + '\n')
+        output.seek(0)
+        return send_file(
+            io.BytesIO(output.getvalue().encode('utf-8')),
+            mimetype='text/plain',
+            as_attachment=True,
+            download_name='wialon_offline_report.txt'
+        )
     if report_name == "wialon_offline":
         output = io.StringIO()
         for row in WialonSearcher.search_all_items(True):

@@ -22,6 +22,12 @@
                 </td>
             </tr>
             <tr>
+                <td>Весь транспорт (тяжелый, с адресом)</td>
+                <td>
+                    <a href="{{ url_for('download', report='wialon_with_address') }}" class="btn btn-primary">Скачать</a>
+                </td>
+            </tr>
+            <tr>
                 <td>Давно offline (от 3 дней)</td>
                 <td>
                     <a href="{{ url_for('download', report='wialon_offline') }}" class="btn btn-primary">Скачать</a>

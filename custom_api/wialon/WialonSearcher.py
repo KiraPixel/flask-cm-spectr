@@ -1,9 +1,11 @@
 import time
 from wialon import flags
 from custom_api.wialon import WialonConnector
+from geopy.geocoders import Nominatim
+geolocator = Nominatim(user_agent="KiraPixel")
 
 
-def search_all_items(offline=False, last_time_start_unix=None, last_time_end_unix=None):
+def search_all_items(offline=False, address=False, last_time_start_unix=None, last_time_end_unix=None):
     wialon_api = WialonConnector.wialon_connector()
 
     # Параметры для поиска объектов
@@ -36,10 +38,27 @@ def search_all_items(offline=False, last_time_start_unix=None, last_time_end_uni
         nm = item['nm']
         uuid = item['id']
         lmsg = item['lmsg']
+        final_str = ''
 
         if offline and lmsg is not None and lmsg['t'] > three_days_ago_unix:
             lmsg = WialonConnector.convert_to_moscow_time(lmsg['t'])  # конвертируем в московское время
             final_str = f'{nm}'
+        elif address:
+            if lmsg is not None:
+                pos = item.get('pos', None)
+                pos_x = ''
+                pos_y = ''
+                location = None
+                last_time = WialonConnector.convert_to_moscow_time(lmsg['t'])
+                if pos is not None:
+                    pos_x = pos['x']
+                    pos_y = pos['y']
+                if pos_x == '' or pos_y == '':
+                    location = ''
+                else:
+                    location = geolocator.reverse((pos_y, pos_x), exactly_one=True)
+                print(location)
+                final_str = f'{nm};{last_time};{location}'
         elif last_time_start_unix is not None or last_time_end_unix is not None:
             if lmsg is None:
                 continue
@@ -137,7 +156,7 @@ def test_search():
 # x.refresh_address()
 # print(x.address)
 
-# all_car = search_all_items()
+# all_car = search_all_items(address=True)
 
 # test_search()
 
