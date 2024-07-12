@@ -23,7 +23,7 @@ def search_all_items(offline=False, last_time_start_unix=None, last_time_end_uni
     # Выполнение запроса на поиск объектов
     result = wialon_api.core_search_items(params)
     result_items = result['items']
-    res_list = []
+    res_list = ['wialon_id;uNumber;wialon_id2(tech);last_time;last_pos_time;x_y poistion']
 
     if offline:
         current_time_unix = time.time()  # текущее время в формате Unix (секунды с начала эпохи)
