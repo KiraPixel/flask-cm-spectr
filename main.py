@@ -192,10 +192,11 @@ def get_car(car_id):
     results = Transport.query.filter(Transport.uNumber.like(search_pattern)).first()
     #print(results.uNumber)
     Car = WialonSearcher.search_item(car_id)
-    Car.convert_all()
+    if Car is not None:
+        Car.convert_all()
 
     jira_info = Jira.search(search_pattern)
-    return render_template('car.html', Car=Car, jira=jira_info)
+    return render_template('car.html', car_name=car_id, Car=Car, jira=jira_info)
 
 
 @app.route('/download')
