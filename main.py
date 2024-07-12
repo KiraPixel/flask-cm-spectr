@@ -52,8 +52,7 @@ class Transport(db.Model):
     __tablename__ = 'transport'
 
     id = db.Column(db.Integer, primary_key=True)
-    region = db.Column(db.String(100))
-    storage = db.Column(db.String(100))
+    storage_id = db.Column(db.Integer)
     uNumber = db.Column(db.String(10))
     model = db.Column(db.String(100))
 
@@ -102,7 +101,7 @@ def home():
 
     if nm is not None and nm != '':
         for item in session.query(Transport).filter(Transport.uNumber.like(f'%{nm}%')).all():
-            columns_data.append([item.uNumber, item.region, item.storage, item.model])
+            columns_data.append([item.uNumber, item.storage_id, item.model])
     elif last_time_start or last_time_end:
         last_time_start_unix = None
         last_time_end_unix = None
@@ -119,10 +118,10 @@ def home():
         data = WialonSearcher.search_all_items(last_time_start_unix=last_time_start_unix,last_time_end_unix=last_time_end_unix)
         for item in session.query(Transport).all():
             if any(x.startswith(item.uNumber) for x in data):
-                columns_data.append([item.uNumber, item.region, item.storage, item.model])
+                columns_data.append([item.uNumber, item.storage_id, item.model])
     else:
         for item in session.query(Transport).all():
-            columns_data.append([item.uNumber, item.region, item.storage, item.model])
+            columns_data.append([item.uNumber, item.storage_id, item.model])
 
 
 
@@ -175,7 +174,7 @@ def get_car(car_id):
     Car.convert_all()
 
     jira_info = Jira.search(search_pattern)
-    return render_template('test2.html', Car=Car, jira=jira_info)
+    return render_template('car.html', Car=Car, jira=jira_info)
 
 
 @app.route('/download')
