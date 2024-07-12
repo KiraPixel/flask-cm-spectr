@@ -75,8 +75,26 @@
                 <p>Аренда: Информация об аренде</p>
             </div>
             <div class="tab-pane" id="jira-content">
-                <h3>Jira</h3>
-                <p>Здесь будет информация о Jira.</p>
+                <div class="col">
+                    <table class="table table-sm table-bordered">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Задача</th>
+                                <th>Название задачи</th>
+                                <th>Статус</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in jira %}
+                            <tr>
+                                <td><a href="http://185.137.235.105:8080/browse/{{ item }}">{{ item }}</a></td>
+                                <td>{{ item.fields.summary }}</td>
+                                <td>{{ item.fields.status }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
             <div class="tab-pane" id="sensors-content">
                 <h3>Датчики</h3>

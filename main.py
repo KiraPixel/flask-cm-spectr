@@ -11,6 +11,7 @@ from flask_sqlalchemy import SQLAlchemy
 
 from custom_api.wialon import WialonSearcher
 from custom_api.cesar import CesarConnector
+from custom_api.jira import jirasearcher
 from geopy.geocoders import Nominatim
 
 
@@ -18,6 +19,9 @@ app = Flask(__name__)
 
 with open('config.json', 'r') as f:
     config = json.load(f)
+
+with open('config_jira.json', 'r') as f:
+    jira_config = json.load(f)
 
 app.secret_key = config['SECRET_KEY']
 app.debug = True
@@ -28,7 +32,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = config['SQLALCHEMY_DATABASE_URL']
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 geolocator = Nominatim(user_agent="KiraPixel")
-
+Jira = jirasearcher.JiraConnector(jira_config['url'], jira_config['username'], jira_config['password'])
 
 class User(db.Model):
     __tablename__ = 'users'
@@ -169,7 +173,9 @@ def get_car(car_id):
     #print(results.uNumber)
     Car = WialonSearcher.search_item(car_id)
     Car.convert_all()
-    return render_template('test2.html', Car=Car)
+
+    jira_info = Jira.search(search_pattern)
+    return render_template('test2.html', Car=Car, jira=jira_info)
 
 
 @app.route('/download')
