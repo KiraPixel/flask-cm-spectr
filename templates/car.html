@@ -8,8 +8,8 @@
 <div class="container mt-4">
     <div class="row">
         <div class="col">
-            <h2>{{ car_name }}5</h2>
-            <p class="text-muted">{{ Car.last_time}}</p>
+            <h2>{{ car_name }}</h2>
+            <p class="text-muted">{{ wialon.last_time}}</p>
         </div>
     </div>
     <div class="row mt-4">
@@ -24,14 +24,12 @@
                     <tr>
                         <th>UUID блока</th>
                         <th>Последний онлайн</th>
-                        <th>Дата последнего сообщения GPS</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td>{{Car.uuid}}</td>
-                        <td>{{Car.last_time}}</td>
-                        <td>Пример Дата последнего сообщения GPS</td>
+                        <td>{{wialon.uuid}}</td>
+                        <td>{{wialon.last_time}}</td>
                     </tr>
                 </tbody>
             </table>
@@ -121,7 +119,7 @@
             center: [0, 0],
             zoom: 2
         });
-        var myPlacemark = new ymaps.Placemark([0, 0], {
+        var wialonMark = new ymaps.Placemark([{{wialon.last_x_pos}}, 0], {
             hintContent: 'Метка на 0,0',
             balloonContent: 'Гаражный номер'
         });
@@ -129,7 +127,7 @@
             hintContent: 'Метка на 50,49',
             balloonContent: 'Гаражный номе2р'
         });
-        myMap.geoObjects.add(myPlacemark);
+        myMap.geoObjects.add(wialonMark);
         myMap.geoObjects.add(myPlacemark2);
     }
 

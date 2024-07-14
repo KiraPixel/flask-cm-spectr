@@ -109,41 +109,50 @@ def admin_required(f):
 def home():
     columns = ['№ Лота', 'Модель', 'Склад', 'Регион']  # Заголовки столбцов
     columns_data = []
-    filter_time = False
-    session = db.session
+    data_db = None
+    ts_bd = db.session.query(Transport, Storage).join(Storage, Transport.storage_id == Storage.ID)
 
-    nm = request.args.get('nm')
+    filter_nm = request.args.get('nm')
+    filter_last_time_start = request.args.get('last_time_start')
+    filter_last_time_end = request.args.get('last_time_end')
+    filet_model = request.args.get('model')
+    filter_storage = request.args.get('storage')
+    filter_region = request.args.get('region')
 
-    last_time_start = request.args.get('last_time_start')
-    last_time_end = request.args.get('last_time_end')
-    data = []
+    if filter_nm:
+        data_db = ts_bd.filter(Transport.uNumber.like(f'%{filter_nm}%')).all()
+    elif filet_model:
+        data_db = db.session.query(Transport, Storage).join(Storage, Transport.storage_id == Storage.ID).filter(
+            Transport.model.like(f'%{filet_model}%')).all()
+    elif filter_storage:
+        data_db = db.session.query(Transport, Storage).join(Storage, Transport.storage_id == Storage.ID).filter(
+            Storage.name.like(f'%{filter_storage}%')).all()
+    elif filter_region:
+        data_db = db.session.query(Transport, Storage).join(Storage, Transport.storage_id == Storage.ID).filter(
+            Storage.region.like(f'%{filter_region}%')).all()
+    else:
+        data_db = db.session.query(Transport, Storage).join(Storage, Transport.storage_id == Storage.ID).all()
 
-    if nm is not None and nm != '':
-        for transport, storage in db.session.query(Transport, Storage).join(Storage, Transport.storage_id == Storage.ID).filter(Transport.uNumber.like(f'%{nm}%')).all():
-
-            columns_data.append([transport.uNumber, transport.model, storage.name, storage.region, ])
-    elif last_time_start or last_time_end:
+    if filter_last_time_start or filter_last_time_end:
         last_time_start_unix = None
         last_time_end_unix = None
-        if last_time_start:
+        if filter_last_time_start:
             try:
-                last_time_start_unix = time.mktime(datetime.strptime(last_time_start, '%Y-%m-%dT%H:%M').timetuple())
+                last_time_start_unix = time.mktime(datetime.strptime(filter_last_time_start, '%Y-%m-%dT%H:%M').timetuple())
             except ValueError:
                 pass
-        if last_time_end:
+        if filter_last_time_end:
             try:
-                last_time_end_unix = time.mktime(datetime.strptime(last_time_end, '%Y-%m-%dT%H:%M').timetuple())
+                last_time_end_unix = time.mktime(datetime.strptime(filter_last_time_end, '%Y-%m-%dT%H:%M').timetuple())
             except ValueError:
                 pass
         data = WialonSearcher.search_all_items(last_time_start_unix=last_time_start_unix,last_time_end_unix=last_time_end_unix)
-        for transport, storage in db.session.query(Transport, Storage).join(Storage, Transport.storage_id == Storage.ID).all():
+        for transport, storage in data_db:
             if any(x.startswith(transport.uNumber) for x in data):
                 columns_data.append([transport.uNumber, transport.model, storage.name, storage.region, ])
     else:
-        for transport, storage in db.session.query(Transport, Storage).join(Storage, Transport.storage_id == Storage.ID).all():
-
+        for transport, storage in data_db:
             columns_data.append([transport.uNumber, transport.model, storage.name, storage.region, ])
-
 
 
 
@@ -191,12 +200,14 @@ def get_car(car_id):
     search_pattern = f'%{car_id}%'
     results = Transport.query.filter(Transport.uNumber.like(search_pattern)).first()
     #print(results.uNumber)
-    Car = WialonSearcher.search_item(car_id)
-    if Car is not None:
-        Car.convert_all()
+    wialon = WialonSearcher.search_item(car_id)
+    cesar = ''
+    if wialon is not None:
+        wialon.convert_all()
+
 
     jira_info = Jira.search(search_pattern)
-    return render_template('car.html', car_name=car_id, Car=Car, jira=jira_info)
+    return render_template('car.html', car_name=car_id, cesar=cesar, wialon=wialon, jira=jira_info)
 
 
 @app.route('/download')

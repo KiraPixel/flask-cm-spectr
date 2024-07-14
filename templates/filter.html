@@ -8,27 +8,94 @@
 <div class="container">
   <h2>Фильтры</h2>
   <form id="filter-form" class="mb-4" method="get" action="">
-    <div class="row g-3">
-      <div class="col-md-4">
-        <label for="filter-nm" class="form-label">№ Лота</label>
-        <input type="text" id="filter-nm" name="nm" class="form-control" value="{% if request.args.get('nm') %}{{ request.args.get('nm') }}{% else %}{% endif %}">
+    <div class="row">
+      <div class="col-md-4 mb-3">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">Основные параметры</h5>
+            <div class="mb-3">
+              <label for="filter-nm" class="form-label">№ Лота</label>
+              <input type="text" id="filter-nm" name="nm" class="form-control filter-input" value="{% if request.args.get('nm') %}{{ request.args.get('nm') }}{% else %}{% endif %}">
+            </div>
+            <div class="mb-3">
+              <label for="filter-model" class="form-label">Модель</label>
+              <input type="text" id="filter-model" name="model" class="form-control filter-input" value="{% if request.args.get('model') %}{{ request.args.get('model') }}{% else %}{% endif %}">
+            </div>
+          </div>
+        </div>
       </div>
-    <div class="col-md-4">
-      <label for="filter-last-time-start" class="form-label">Онлайн (от)</label>
-      <input type="datetime-local" id="filter-last-time-start" name="last_time_start" class="form-control" value="{% if request.args.get('last_time_start') %}{{ request.args.get('last_time_start') }}{% else %}{% endif %}">
-    </div>
-    <div class="col-md-4">
-      <label for="filter-last-time-end" class="form-label">Онлайн (до)</label>
-      <input type="datetime-local" id="filter-last-time-end" name="last_time_end" class="form-control" value="{% if request.args.get('last_time_end') %}{{ request.args.get('last_time_end') }}{% else %}{% endif %}">
+      <div class="col-md-4 mb-3">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">Локация</h5>
+            <div class="mb-3">
+              <label for="filter-storage" class="form-label">Склад</label>
+              <input type="text" id="filter-storage" name="storage" class="form-control filter-input" value="{% if request.args.get('storage') %}{{ request.args.get('storage') }}{% else %}{% endif %}">
+            </div>
+            <div class="mb-3">
+              <label for="filter-region" class="form-label">Регион</label>
+              <input type="text" id="filter-region" name="region" class="form-control filter-input" value="{% if request.args.get('region') %}{{ request.args.get('region') }}{% else %}{% endif %}">
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4 mb-3">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">Время онлайн</h5>
+            <div class="mb-3">
+              <label for="filter-last-time-start" class="form-label">Онлайн (от)</label>
+              <input type="datetime-local" id="filter-last-time-start" name="last_time_start" class="form-control" value="{% if request.args.get('last_time_start') %}{{ request.args.get('last_time_start') }}{% else %}{% endif %}">
+            </div>
+            <div class="mb-3">
+              <label for="filter-last-time-end" class="form-label">Онлайн (до)</label>
+              <input type="datetime-local" id="filter-last-time-end" name="last_time_end" class="form-control" value="{% if request.args.get('last_time_end') %}{{ request.args.get('last_time_end') }}{% else %}{% endif %}">
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
     <div class="row mt-3">
-      <div class="col-md-12 d-flex justify-content-end">
-        <button type="submit" class="btn btn-primary">Применить</button>
+      <div class="col-md-12 d-flex justify-content-center">
+        <button type="submit" class="btn btn-primary btn-lg">Применить</button>
       </div>
     </div>
   </form>
 </div>
 
   {% include 'table_template.html' %}
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const filterInputs = document.querySelectorAll('.filter-input');
+    const timeInputs = document.querySelectorAll('input[type="datetime-local"]');
+
+    function checkInputs() {
+      let filled = false;
+      filterInputs.forEach(input => {
+        if (input.value.trim() !== '') {
+          filled = true;
+        }
+      });
+      if (filled) {
+        filterInputs.forEach(input => {
+          if (input.value.trim() === '') {
+            input.disabled = true;
+          }
+        });
+      } else {
+        filterInputs.forEach(input => {
+          input.disabled = false;
+        });
+      }
+    }
+
+    filterInputs.forEach(input => {
+      input.addEventListener('input', checkInputs);
+    });
+
+    checkInputs();
+  });
+</script>
 
 {% endblock %}
