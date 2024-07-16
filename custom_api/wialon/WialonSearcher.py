@@ -5,7 +5,7 @@ from geopy.geocoders import Nominatim
 geolocator = Nominatim(user_agent="KiraPixel")
 
 
-def search_all_items(offline=False, address=False, last_time_start_unix=None, last_time_end_unix=None):
+def search_all_items(offline=False, address=False, last_time_start_unix=None, last_time_end_unix=None, originals=False):
     wialon_api = WialonConnector.wialon_connector()
 
     # Параметры для поиска объектов
@@ -26,6 +26,9 @@ def search_all_items(offline=False, address=False, last_time_start_unix=None, la
     result = wialon_api.core_search_items(params)
     result_items = result['items']
     res_list = ['wialon_id;uNumber;wialon_id2(tech);last_time;last_pos_time;x_y poistion']
+
+    if originals:
+        return result_items
 
     if offline:
         current_time_unix = time.time()  # текущее время в формате Unix (секунды с начала эпохи)

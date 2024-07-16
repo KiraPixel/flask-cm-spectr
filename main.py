@@ -79,6 +79,28 @@ class Storage(db.Model):
         return '<Storage %r>' % self.uNumber
 
 
+class CashCesar(db.Model):
+    __tablename__ = 'cash_cesar'
+    unit_id = db.Column(db.Integer, primary_key=True, index=True)
+    object_name = db.Column(db.Text, nullable=False)
+    pin = db.Column(db.Integer, default=0)
+    vin = db.Column(db.Text, nullable=False)
+    last_time = db.Column(db.Integer, default=0)
+    pos_x = db.Column(db.Float, default=0.0)
+    pos_y = db.Column(db.Float, default=0.0)
+    created_at = db.Column(db.Integer, default=0)
+    device_type = db.Column(db.Text, nullable=False)
+
+
+class CashWialon(db.Model):
+    __tablename__ = 'cash_wialon'
+    id = db.Column(db.Integer, primary_key=True, index=True)
+    nm = db.Column(db.Text, nullable=False)
+    pos_x = db.Column(db.Float, default=0.0)
+    pos_y = db.Column(db.Float, default=0.0)
+    last_time = db.Column(db.Integer, default=0)
+
+
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):

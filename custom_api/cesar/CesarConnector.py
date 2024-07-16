@@ -102,7 +102,7 @@ class CesarApi:
                 res_list.append(final_str)
             return res_list
 
-        return request['devices']
+        return result_items
 
 # Cesar = CesarApi()
 # all_unit = Cesar.get_all_unit()
