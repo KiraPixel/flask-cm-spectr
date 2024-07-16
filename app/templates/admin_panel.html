@@ -14,7 +14,7 @@
             Создать пользователя
         </div>
         <div class="card-body">
-            <form action="{{ url_for('admin_panel') }}" method="POST">
+            <form action="{{ url_for('main.admin_panel') }}" method="POST">
                 <div class="mb-3">
                     <label for="username" class="form-label">Имя пользователя</label>
                     <input type="text" class="form-control" id="username" name="username" required>
@@ -65,9 +65,9 @@
                         <td>{{ user.last_activity.strftime('%Y-%m-%d') if user.last_activity else 'Н/Д' }}</td>
                         <td>{{ user.email }}</td>
                         <td>
-                            <a href="{{ url_for('edit_user', user_id=user.id) }}" class="btn btn-warning btn-sm">Редактировать</a>
-                            <a href="{{ url_for('delete_user', user_id=user.id) }}" class="btn btn-danger btn-sm">Удалить</a>
-                            <a href="{{ url_for('set_access', user_id=user.id) }}" class="btn btn-info btn-sm">Назначить доступы</a>
+                            <a href="{{ url_for('main.edit_user', user_id=user.id) }}" class="btn btn-warning btn-sm">Редактировать</a>
+                            <a href="{{ url_for('main.delete_user', user_id=user.id) }}" class="btn btn-danger btn-sm">Удалить</a>
+                            <a href="{{ url_for('main.set_access', user_id=user.id) }}" class="btn btn-info btn-sm">Назначить доступы</a>
                         </td>
                     </tr>
                     {% endfor %}
