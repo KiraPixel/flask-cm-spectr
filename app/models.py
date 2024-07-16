@@ -66,3 +66,4 @@ class CashWialon(db.Model):
     pos_x = db.Column(db.Float, default=0.0)
     pos_y = db.Column(db.Float, default=0.0)
     last_time = db.Column(db.Integer, default=0)
+    last_pos_time = db.Column(db.Integer, default=0)

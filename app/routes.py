@@ -1,15 +1,18 @@
+from datetime import datetime
+import time
+import re
+import io
+
 from flask import Blueprint, render_template, request, send_file, redirect, url_for, session, flash
 
 from . import Jira
 from .models import db, User, Transport, Storage, CashWialon, CashCesar
 from .utils import login_required, admin_required
+from .modules import ReportGenerator
 from custom_api.wialon import WialonSearcher
 from custom_api.cesar import CesarConnector
 from custom_api.jira import jirasearcher
-from datetime import datetime
-import time
-import re
-import io
+
 
 
 
@@ -126,67 +129,7 @@ def get_car(car_id):
 @login_required
 def download():
     report_name = request.args.get('report')
-    if report_name == "wialon":
-        # Создаем текстовый файл "на лету"
-        output = io.StringIO()
-        for row in WialonSearcher.search_all_items():
-            output.write(row + '\n')
-        output.seek(0)
-        return send_file(
-            io.BytesIO(output.getvalue().encode('utf-8')),
-            mimetype='text/plain',
-            as_attachment=True,
-            download_name='wialon_report.txt'
-        )
-    if report_name == "wialon_with_address":
-        output = io.StringIO()
-        for row in WialonSearcher.search_all_items(address=True):
-            output.write(row + '\n')
-        output.seek(0)
-        return send_file(
-            io.BytesIO(output.getvalue().encode('utf-8')),
-            mimetype='text/plain',
-            as_attachment=True,
-            download_name='wialon_hard_report.txt'
-        )
-    if report_name == "wialon_offline":
-        output = io.StringIO()
-        for row in WialonSearcher.search_all_items(True):
-            output.write(row + '\n')
-        output.seek(0)
-        return send_file(
-            io.BytesIO(output.getvalue().encode('utf-8')),
-            mimetype='text/plain',
-            as_attachment=True,
-            download_name='wialon_offline_report.txt'
-        )
-    if report_name == "cesar":
-        # Создаем текстовый файл "на лету"
-        output = io.StringIO()
-        Cesar = CesarConnector.CesarApi()
-        for row in Cesar.get_cars_info(toString=True):
-            output.write(row + '\n')
-        output.seek(0)
-        return send_file(
-            io.BytesIO(output.getvalue().encode('utf-8')),
-            mimetype='text/plain',
-            as_attachment=True,
-            download_name='cesar_report.txt'
-        )
-    if report_name == "cesar_offline":
-        # Создаем текстовый файл "на лету"
-        output = io.StringIO()
-        Cesar = CesarConnector.CesarApi()
-        for row in Cesar.get_cars_info(toString=True, offline=True):
-            output.write(row + '\n')
-        output.seek(0)
-        return send_file(
-            io.BytesIO(output.getvalue().encode('utf-8')),
-            mimetype='text/plain',
-            as_attachment=True,
-            download_name='cesar_report.txt'
-        )
-
+    return ReportGenerator.filegen(report_name)
 
 @bp.route('/admin/', methods=['GET', 'POST'])
 @login_required
