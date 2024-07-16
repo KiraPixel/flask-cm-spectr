@@ -7,6 +7,8 @@ import json
 import os
 
 from custom_api.jira import jirasearcher
+from .modules import MyTime
+
 Jira = jirasearcher.JiraConnector(jira_config['url'], jira_config['username'], jira_config['password'])
 db = SQLAlchemy()
 
@@ -31,5 +33,7 @@ def create_app():
 
     from .routes import bp
     app.register_blueprint(bp)
+    app.jinja_env.filters['unix_to_datetime'] = MyTime.unix_to_moscow_time
+
 
     return app

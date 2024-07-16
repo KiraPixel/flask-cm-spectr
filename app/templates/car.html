@@ -9,7 +9,7 @@
     <div class="row">
         <div class="col">
             <h2>{{ car_name }}</h2>
-            <p class="text-muted">{{ wialon.last_time}}</p>
+            <p class="text-muted">{{ wialon.last_time }}</p>
         </div>
     </div>
     <div class="row mt-4">
@@ -27,10 +27,12 @@
                     </tr>
                 </thead>
                 <tbody>
+                    {% for item in wialon %}
                     <tr>
-                        <td>{{wialon.uuid}}</td>
-                        <td>{{wialon.last_time}}</td>
+                        <td>{{ item.nm }}</td>
+                        <td>{{ item.last_time | unix_to_datetime }}</td>
                     </tr>
+                    {% endfor %}
                 </tbody>
             </table>
         </div>
@@ -41,16 +43,15 @@
                     <tr>
                         <th>UID блока</th>
                         <th>Последний онлайн</th>
-                        <th>Дата последнего сообщения GPS</th>
                     </tr>
                 </thead>
                 <tbody>
+                    {% for item in cesar %}
                     <tr>
-                        <td>Пример UID</td>
-                        <td>Пример Последний онлайн</td>
-                        <td>Пример Дата последнего сообщения GPS</td>
+                        <td>{{ item.object_name }}</td>
+                        <td>{{ item.last_time | unix_to_datetime }}</td>
                     </tr>
-                    <!-- Добавьте больше строк по мере необходимости -->
+                    {% endfor %}
                 </tbody>
             </table>
         </div>
@@ -116,19 +117,30 @@
     ymaps.ready(init);
     function init(){
         var myMap = new ymaps.Map("map", {
-            center: [0, 0],
-            zoom: 2
+            center: [60, 80],
+            zoom: 3
         });
-        var wialonMark = new ymaps.Placemark([{{wialon.last_x_pos}}, 0], {
-            hintContent: 'Метка на 0,0',
-            balloonContent: 'Гаражный номер'
+
+        // Добавление меток Cesar
+        {% for item in cesar %}
+        var cesarMark = new ymaps.Placemark([{{ item.pos_x }}, {{ item.pos_y }}], {
+            hintContent: 'Метка Cesar',
+            balloonContent: 'UID блока: {{ item.object_name }}'
+        },
+        {
+            preset: 'islands#redIcon'
         });
-         var myPlacemark2 = new ymaps.Placemark([50, 49], {
-            hintContent: 'Метка на 50,49',
-            balloonContent: 'Гаражный номе2р'
+        myMap.geoObjects.add(cesarMark);
+        {% endfor %}
+
+        // Добавление меток Wialon
+        {% for item in wialon %}
+        var wialonMark = new ymaps.Placemark([{{ item.pos_y }}, {{ item.pos_x }}], {
+            hintContent: 'Метка Wialon',
+            balloonContent: 'UUID блока: {{ item.nm }}'
         });
         myMap.geoObjects.add(wialonMark);
-        myMap.geoObjects.add(myPlacemark2);
+        {% endfor %}
     }
 
     document.addEventListener('DOMContentLoaded', function () {

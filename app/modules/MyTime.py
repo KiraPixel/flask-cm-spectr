@@ -2,10 +2,21 @@ import time
 import datetime
 
 
+def now_unix_time():
+    return time.time()
+
+
 def get_time_minus_three_days():
     current_time = time.time()
     three_days_ago = current_time - 3 * 24 * 60 * 60
     return int(three_days_ago)
+
+
+def to_unix_time(time_str):
+    try:
+        return time.mktime(datetime.datetime.strptime(time_str, '%Y-%m-%dT%H:%M').timetuple())
+    except ValueError:
+        return None
 
 
 def tz_to_moscow_time(z_time):

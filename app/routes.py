@@ -1,79 +1,78 @@
 from datetime import datetime
 import time
 import re
-import io
 
 from flask import Blueprint, render_template, request, send_file, redirect, url_for, session, flash
 
 from . import Jira
 from .models import db, User, Transport, Storage, CashWialon, CashCesar
 from .utils import login_required, admin_required
-from .modules import ReportGenerator
+from .modules import ReportGenerator, MyTime
 from custom_api.wialon import WialonSearcher
-from custom_api.cesar import CesarConnector
-from custom_api.jira import jirasearcher
 
-
-
-
+# Создаем Blueprint для маршрутов приложения
 bp = Blueprint('main', __name__)
 
 
+# Главная страница
 @bp.route('/', endpoint='home')
 @login_required
 def home():
     columns = ['№ Лота', 'Модель', 'Склад', 'Регион']  # Заголовки столбцов
     columns_data = []
-    data_db = None
-    ts_bd = db.session.query(Transport, Storage).join(Storage, Transport.storage_id == Storage.ID)
 
-    filter_nm = request.args.get('nm')
-    filter_last_time_start = request.args.get('last_time_start')
-    filter_last_time_end = request.args.get('last_time_end')
-    filet_model = request.args.get('model')
-    filter_storage = request.args.get('storage')
-    filter_region = request.args.get('region')
+    # Получаем параметры фильтра из запроса
+    filters = {
+        'nm': request.args.get('nm'),
+        'last_time_start': request.args.get('last_time_start'),
+        'last_time_end': request.args.get('last_time_end'),
+        'model': request.args.get('model'),
+        'storage': request.args.get('storage'),
+        'region': request.args.get('region')
+    }
 
-    if filter_nm:
-        data_db = ts_bd.filter(Transport.uNumber.like(f'%{filter_nm}%')).all()
-    elif filet_model:
-        data_db = db.session.query(Transport, Storage).join(Storage, Transport.storage_id == Storage.ID).filter(
-            Transport.model.like(f'%{filet_model}%')).all()
-    elif filter_storage:
-        data_db = db.session.query(Transport, Storage).join(Storage, Transport.storage_id == Storage.ID).filter(
-            Storage.name.like(f'%{filter_storage}%')).all()
-    elif filter_region:
-        data_db = db.session.query(Transport, Storage).join(Storage, Transport.storage_id == Storage.ID).filter(
-            Storage.region.like(f'%{filter_region}%')).all()
-    else:
-        data_db = db.session.query(Transport, Storage).join(Storage, Transport.storage_id == Storage.ID).all()
+    # Создаем базовый запрос
+    query = db.session.query(Transport, Storage).join(Storage, Transport.storage_id == Storage.ID)
 
-    if filter_last_time_start or filter_last_time_end:
-        last_time_start_unix = None
-        last_time_end_unix = None
-        if filter_last_time_start:
-            try:
-                last_time_start_unix = time.mktime(datetime.strptime(filter_last_time_start, '%Y-%m-%dT%H:%M').timetuple())
-            except ValueError:
-                pass
-        if filter_last_time_end:
-            try:
-                last_time_end_unix = time.mktime(datetime.strptime(filter_last_time_end, '%Y-%m-%dT%H:%M').timetuple())
-            except ValueError:
-                pass
-        data = WialonSearcher.search_all_items(last_time_start_unix=last_time_start_unix,last_time_end_unix=last_time_end_unix)
+    # Применяем фильтры к запросу
+    if filters['nm']:
+        query = query.filter(Transport.uNumber.like(f'%{filters["nm"]}%'))
+    if filters['model']:
+        query = query.filter(Transport.model.like(f'%{filters["model"]}%'))
+    if filters['storage']:
+        query = query.filter(Storage.name.like(f'%{filters["storage"]}%'))
+    if filters['region']:
+        query = query.filter(Storage.region.like(f'%{filters["region"]}%'))
+
+    # Выполняем запрос и получаем данные
+    data_db = query.all()
+
+    # Обрабатываем фильтрацию по дате
+    if filters['last_time_start'] or filters['last_time_end']:
+        last_time_start_unix = MyTime.to_unix_time(filters['last_time_start']) if filters['last_time_start'] else 0
+        last_time_end_unix = MyTime.to_unix_time(filters['last_time_end']) if filters['last_time_end'] else time.time()
+
+        # Получаем данные из CashWialon в указанный временной интервал
+        cash_wialon_data = db.session.query(CashWialon).filter(
+            CashWialon.last_time.between(last_time_start_unix, last_time_end_unix)
+        ).all()
+
+        # Фильтруем данные на основе временного интервала
+        filtered_data = []
         for transport, storage in data_db:
-            if any(x.startswith(transport.uNumber) for x in data):
-                columns_data.append([transport.uNumber, transport.model, storage.name, storage.region, ])
-    else:
-        for transport, storage in data_db:
-            columns_data.append([transport.uNumber, transport.model, storage.name, storage.region, ])
+            if any(data.nm.startswith(transport.uNumber) for data in cash_wialon_data):
+                filtered_data.append((transport, storage))
+        data_db = filtered_data
 
+    # Формируем данные для отображения
+    for transport, storage in data_db:
+        columns_data.append([transport.uNumber, transport.model, storage.name, storage.region])
 
-
+    # Отображаем шаблон с результатами фильтрации
     return render_template('filter.html', columns=columns, table_rows=columns_data, redi='/cars/', request=request)
 
 
+# Страница входа
 @bp.route('/login', methods=['GET', 'POST'], endpoint='login')
 def login():
     error = None
@@ -90,22 +89,25 @@ def login():
     return render_template('login.html', error=error)
 
 
+# Выход из системы
 @bp.route('/logout')
-@login_required
+@login_required  # Декоратор, требующий авторизации для доступа к странице
 def logout():
     session.pop('username', None)
     flash('Вы вышли из системы', 'info')
     return redirect(url_for('main.login'))
 
 
+# Страница отчетов
 @bp.route('/rep')
-@login_required
+@login_required  # Декоратор, требующий авторизации для доступа к странице
 def reports():
     return render_template('reports.html')
 
 
+# Страница информации о конкретной машине
 @bp.route('/cars/<string:car_id>')
-@login_required
+@login_required  # Декоратор, требующий авторизации для доступа к странице
 def get_car(car_id):
     text = car_id.replace(' ', '')
     if re.match(r'^[A-Z]+\d{5}$', text):
@@ -113,27 +115,26 @@ def get_car(car_id):
         if text[1] != ' ':
             car_id = text[:1] + ' ' + text[1:]
     search_pattern = f'%{car_id}%'
-    results = Transport.query.filter(Transport.uNumber.like(search_pattern)).first()
-    #print(results.uNumber)
-    wialon = WialonSearcher.search_item(car_id)
-    cesar = ''
-    if wialon is not None:
-        wialon.convert_all()
 
-
+    #получаем полный набор данных
+    wialon = db.session.query(CashWialon).filter(CashWialon.nm.like(search_pattern)).all()
+    cesar = db.session.query(CashCesar).filter(CashCesar.object_name.like(search_pattern)).all()
     jira_info = Jira.search(search_pattern)
     return render_template('car.html', car_name=car_id, cesar=cesar, wialon=wialon, jira=jira_info)
 
 
+# Скачивание отчета
 @bp.route('/download', endpoint="download")
-@login_required
+@login_required  # Декоратор, требующий авторизации для доступа к странице
 def download():
     report_name = request.args.get('report')
     return ReportGenerator.filegen(report_name)
 
+
+# Панель администратора
 @bp.route('/admin/', methods=['GET', 'POST'])
-@login_required
-@admin_required
+@login_required  # Декоратор, требующий авторизации для доступа к странице
+@admin_required  # Декоратор, требующий прав администратора для доступа к странице
 def admin_panel():
     if request.method == 'POST':
         username = request.form['username']
@@ -141,18 +142,21 @@ def admin_panel():
         password = request.form['password']
         role = request.form['role']
 
+        # Создаем нового пользователя
         new_user = User(username=username, email=email, password=password, role=role, last_activity="1999-12-02 00:00:00")
         db.session.add(new_user)
         db.session.commit()
         return redirect(url_for('main.admin_panel'))
 
+    # Получаем список всех пользователей
     users = User.query.all()
     return render_template('admin_panel.html', users=users)
 
 
+# Редактирование пользователя
 @bp.route('/edit_user/<int:user_id>', methods=['GET', 'POST'])
-@login_required
-@admin_required
+@login_required  # Декоратор, требующий авторизации для доступа к странице
+@admin_required  # Декоратор, требующий прав администратора для доступа к странице
 def edit_user(user_id):
     user = User.query.get_or_404(user_id)
     if request.method == 'POST':
@@ -165,9 +169,10 @@ def edit_user(user_id):
     return render_template('edit_user.html', user=user)
 
 
+# Удаление пользователя
 @bp.route('/delete_user/<int:user_id>')
-@login_required
-@admin_required
+@login_required  # Декоратор, требующий авторизации для доступа к странице
+@admin_required  # Декоратор, требующий прав администратора для доступа к странице
 def delete_user(user_id):
     user = User.query.get_or_404(user_id)
     db.session.delete(user)
@@ -175,9 +180,10 @@ def delete_user(user_id):
     return redirect(url_for('main.admin_panel'))
 
 
+# Назначение доступов пользователю
 @bp.route('/set_access/<int:user_id>')
-@login_required
-@admin_required
+@login_required  # Декоратор, требующий авторизации для доступа к странице
+@admin_required  # Декоратор, требующий прав администратора для доступа к странице
 def set_access(user_id):
     user = User.query.get_or_404(user_id)
     # Логика назначения доступов
