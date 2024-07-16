@@ -133,6 +133,14 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 </script>
 {% endblock %}
+<style>
+  .table td.no-wrap {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px; /* Задайте нужную вам ширину или максимальную ширину */
+  }
+</style>
 
 {% block body %}
 <div class="container">
@@ -151,9 +159,9 @@ document.addEventListener("DOMContentLoaded", function() {
           <tr>
             {% for item in row %}
               {% if loop.first and redi %}
-              <td><a href="{{ redi }}/{{ item }}">{{ item }}</a></td>
+              <td class="no-wrap" title="{{ item }}"><a href="{{ redi }}/{{ item }}">{{ item }}</a></td>
               {% else %}
-              <td>{{ item }}</td>
+              <td class="no-wrap" title="{{ item }}">{{ item }}</td>
               {% endif %}
             {% endfor %}
           </tr>

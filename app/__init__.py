@@ -34,6 +34,7 @@ def create_app():
     from .routes import bp
     app.register_blueprint(bp)
     app.jinja_env.filters['unix_to_datetime'] = MyTime.unix_to_moscow_time
+    app.jinja_env.filters['online_check'] = MyTime.online_check
 
 
     return app

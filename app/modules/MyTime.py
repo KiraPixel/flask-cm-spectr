@@ -6,6 +6,18 @@ def now_unix_time():
     return time.time()
 
 
+def online_check(unix_time):
+    try:
+        current_time = datetime.datetime.now().timestamp()
+        time_difference = current_time - unix_time
+        if time_difference <= 300:  # 5 minutes in seconds
+            return "online"
+        else:
+            return "offline"
+    except:
+        return "unknown"
+
+
 def get_time_minus_three_days():
     current_time = time.time()
     three_days_ago = current_time - 3 * 24 * 60 * 60

@@ -41,6 +41,7 @@
                         {{ session.username }}
                     </a>
                     <div class="dropdown-menu dropdown-menu-right" aria-labelledby="userDropdown">
+                        <a class="dropdown-item" href="/map">Все объекты на карте</a>
                         <a class="dropdown-item" href="/admin">Админ панель</a>
                         <a class="dropdown-item" href="#">Настройки</a>
                         <div class="dropdown-divider"></div>
@@ -52,7 +53,7 @@
         </div>
     </nav>
 
-    <div class="container mt-5">
+    <div class="container-fluid mt-4">
         {% block body %}{% endblock %}
     </div>
 

@@ -188,3 +188,13 @@ def set_access(user_id):
     user = User.query.get_or_404(user_id)
     # Логика назначения доступов
     return f"Назначить доступы для пользователя {user_id}"
+
+
+@bp.route('/map/')
+def map():
+    wialon = db.session.query(CashWialon).all()
+    cesar = db.session.query(CashCesar).all()
+
+    return render_template('map.html', cesar=cesar, wialon=wialon)
+
+
