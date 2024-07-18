@@ -95,8 +95,10 @@ def __CashDB():
 
 
 def UpdateBD():
+    print(f'UPDATEDB START: {datetime.datetime.now()}')
     __ClearDB()
     __CashDB()
+    print(f'UPDATEDB END: {datetime.datetime.now()}')
 
 
 UpdateBD()

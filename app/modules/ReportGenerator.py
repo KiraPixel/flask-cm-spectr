@@ -10,6 +10,7 @@ from . import MyTime
 
 
 def filegen(args):
+    UpdateBD()
     output = io.StringIO()
     if 'wialon' in args:
         if args == 'wialon':
