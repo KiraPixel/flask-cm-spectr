@@ -101,4 +101,4 @@ def UpdateBD():
     print(f'UPDATEDB END: {datetime.datetime.now()}')
 
 
-UpdateBD()
+#UpdateBD()

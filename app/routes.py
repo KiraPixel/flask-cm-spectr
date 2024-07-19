@@ -7,7 +7,7 @@ from flask import Blueprint, render_template, request, send_file, redirect, url_
 from . import Jira
 from .models import db, User, Transport, Storage, CashWialon, CashCesar
 from .utils import login_required, admin_required
-from .modules import ReportGenerator, MyTime, DBcash
+from .modules import ReportGenerator, MyTime
 from custom_api.wialon import WialonSearcher
 
 # Создаем Blueprint для маршрутов приложения
@@ -18,7 +18,6 @@ bp = Blueprint('main', __name__)
 @bp.route('/', endpoint='home')
 @login_required
 def home():
-    DBcash.UpdateBD()
     columns = ['№ Лота', 'Модель', 'Склад', 'Регион']  # Заголовки столбцов
     columns_data = []
 

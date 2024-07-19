@@ -4,13 +4,11 @@ from flask import send_file
 
 from custom_api.wialon import WialonSearcher
 from custom_api.cesar import CesarConnector
-from .DBcash import UpdateBD
 from app.models import db, CashCesar, CashWialon
 from . import MyTime
 
 
 def filegen(args):
-    UpdateBD()
     output = io.StringIO()
     if 'wialon' in args:
         if args == 'wialon':
