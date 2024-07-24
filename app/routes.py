@@ -44,7 +44,7 @@ def home():
     if filters['region']:
         query = query.filter(Storage.region.like(f'%{filters["region"]}%'))
 
-    # Выполняем запрос и получаем данные
+    # Выполняем запрос и получаем данные !
     data_db = query.all()
 
     # Обрабатываем фильтрацию по дате
