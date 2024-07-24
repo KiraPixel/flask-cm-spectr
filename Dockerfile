@@ -15,9 +15,6 @@ WORKDIR /app
 # Копируем файлы проекта внутрь контейнера
 COPY . .
 
-# Проверяем содержимое директории (для отладки)
-RUN ls -la /app
-
 # Устанавливаем зависимости
 RUN pip install --no-cache-dir -r requirements.txt
 
