@@ -9,12 +9,6 @@ RUN apt-get update && apt-get install -y \
     bash \
     && rm -rf /var/lib/apt/lists/*
 
-# Устанавливаем рабочую директорию
-WORKDIR /app
-
-# Копируем файлы проекта внутрь контейнера
-COPY . .
-
 # Устанавливаем зависимости
 RUN pip install --no-cache-dir -r requirements.txt
 
