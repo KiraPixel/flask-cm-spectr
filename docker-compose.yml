@@ -8,6 +8,16 @@ services:
     volumes:
       - .:/app
     network_mode: host
+    environment:
+      HOST: ${HOST}
+      SECRET_KEY: ${SECRET_KEY}
+      SQLALCHEMY_DATABASE_URL: ${SQLALCHEMY_DATABASE_URL}
+      CESAR_USERNAME: ${CESAR_USERNAME}
+      CESAR_PASSWORD: ${CESAR_PASSWORD}
+      WIALON_TOKEN: ${WIALON_TOKEN}
+      JIRA_USERNAME: ${JIRA_USERNAME}
+      JIRA_PASSWORD: ${JIRA_PASSWORD}
+      JIRA_URL: ${JIRA_URL}
     ports:
       - "5000:5000"
     stdin_open: true   # Открывает стандартный вход
