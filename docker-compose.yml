@@ -12,4 +12,3 @@ services:
     stdin_open: true   # Открывает стандартный вход
     tty: true          # Позволяет использовать терминал
     restart: always
-    command: ["bash"]
