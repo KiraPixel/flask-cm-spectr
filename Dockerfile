@@ -16,8 +16,5 @@ COPY . .
 # Устанавливаем зависимости
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Выводим список файлов для отладки
-RUN ls -la /app
-RUN ls -la /app
 # Определяем команду для запуска
-CMD ["python", "run.py"]
+CMD ["python", "/app/run.py"]
