@@ -7,6 +7,7 @@ services:
       dockerfile: Dockerfile
     volumes:
       - .:/app
+    network_mode: host
     ports:
       - "5000:5000"
     stdin_open: true   # Открывает стандартный вход
