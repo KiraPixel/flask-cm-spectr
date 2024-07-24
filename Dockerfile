@@ -9,12 +9,17 @@ RUN apt-get update && apt-get install -y \
     bash \
     && rm -rf /var/lib/apt/lists/*
 
-# Копируем файлы проекта внутрь контейнера
+# Устанавливаем рабочую директорию
 WORKDIR /app
+
+# Копируем файлы проекта внутрь контейнера
 COPY . .
+
+# Проверяем содержимое директории (для отладки)
+RUN ls -la /app
 
 # Устанавливаем зависимости
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Определяем команду для запуска
-CMD ["python", "/app/run.py"]
+CMD ["python", "run.py"]
