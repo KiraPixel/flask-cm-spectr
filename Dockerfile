@@ -2,7 +2,7 @@
 FROM python:3.9-slim
 
 # Устанавливаем рабочую директорию внутри контейнера
-WORKDIR /app
+WORKDIR /ref
 
 # Копируем файл зависимостей в рабочую директорию
 COPY requirements.txt .
