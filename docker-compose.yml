@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: Dockerfile
     volumes:
-      - .:/app
+      - .:/ref
     network_mode: host
     environment:
       HOST: ${HOST}
