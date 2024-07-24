@@ -1,17 +1,16 @@
 # Используем базовый образ Python
 FROM python:3.9-slim
 
-# Устанавливаем рабочую директорию внутри контейнера
-WORKDIR /ref
-
-# Копируем файл зависимостей в рабочую директорию
-COPY requirements.txt .
+# Установка системных зависимостей
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    default-libmysqlclient-dev \
+    pkg-config \
+    bash \
+    && rm -rf /var/lib/apt/lists/*
 
 # Устанавливаем зависимости
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Копируем все остальные файлы в рабочую директорию
-COPY . .
-
-# Указываем команду, которая будет выполнена при запуске контейнера
-CMD ["python", "ref/run.py"]
+# Определяем команду для запуска
+CMD ["python", "run.py"]
