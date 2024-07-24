@@ -154,7 +154,7 @@ def admin_panel():
 
 
 # Редактирование пользователя
-@bp.route('/edit_user/<int:user_id>', methods=['GET', 'POST'])
+@bp.route('/edit_user/<int:user_id>', methods=['POST'])
 @login_required  # Декоратор, требующий авторизации для доступа к странице
 @admin_required  # Декоратор, требующий прав администратора для доступа к странице
 def edit_user(user_id):
@@ -166,7 +166,7 @@ def edit_user(user_id):
         db.session.commit()
         return redirect(url_for('main.admin_panel'))
 
-    return render_template('edit_user.html', user=user)
+    return redirect(url_for('main.admin_panel'))
 
 
 # Удаление пользователя

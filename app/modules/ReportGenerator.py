@@ -12,7 +12,7 @@ def filegen(args):
     output = io.StringIO()
     if 'wialon' in args:
         if args == 'wialon':
-            output.write('wialon_id;uNumber;;last_time;last_pos_time;x_y poistion' + '\n')
+            output.write('wialon_id;uNumber;last_time;last_pos_time;x_y poistion' + '\n')
             query = CashWialon.query.all()
             for row in query:
                 final_str = f'{row.id};{row.nm};{MyTime.unix_to_moscow_time(row.last_time)};{MyTime.unix_to_moscow_time(row.last_pos_time)};{row.pos_x},{row.pos_y}'

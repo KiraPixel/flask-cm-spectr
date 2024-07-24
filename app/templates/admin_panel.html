@@ -8,35 +8,11 @@
 <div class="container">
     <h1 class="my-4">Админ панель</h1>
     
-    <!-- Секция для создания нового пользователя -->
-    <div class="card mb-4">
-        <div class="card-header">
-            Создать пользователя
-        </div>
-        <div class="card-body">
-            <form action="{{ url_for('main.admin_panel') }}" method="POST">
-                <div class="mb-3">
-                    <label for="username" class="form-label">Имя пользователя</label>
-                    <input type="text" class="form-control" id="username" name="username" required>
-                </div>
-                <div class="mb-3">
-                    <label for="email" class="form-label">Email</label>
-                    <input type="email" class="form-control" id="email" name="email" required>
-                </div>
-                <div class="mb-3">
-                    <label for="password" class="form-label">Пароль</label>
-                    <input type="password" class="form-control" id="password" name="password" required>
-                </div>
-                <div class="mb-3">
-                    <label for="role" class="form-label">Роль</label>
-                    <select class="form-control" id="role" name="role" required>
-                        <option value="1">Администратор</option>
-                        <option value="2">Пользователь</option>
-                    </select>
-                </div>
-                <button type="submit" class="btn btn-primary">Создать</button>
-            </form>
-        </div>
+    <!-- Кнопка для создания нового пользователя -->
+    <div class="mb-4">
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
+            Добавить пользователя
+        </button>
     </div>
 
     <!-- Секция для вывода списка пользователей -->
@@ -65,7 +41,7 @@
                         <td>{{ user.last_activity.strftime('%Y-%m-%d') if user.last_activity else 'Н/Д' }}</td>
                         <td>{{ user.email }}</td>
                         <td>
-                            <a href="{{ url_for('main.edit_user', user_id=user.id) }}" class="btn btn-warning btn-sm">Редактировать</a>
+                            <a href="#" class="btn btn-warning btn-sm edit-user-btn" data-bs-toggle="modal" data-bs-target="#editUserModal" data-id="{{ user.id }}" data-username="{{ user.username }}" data-email="{{ user.email }}" data-role="{{ user.role }}">Редактировать</a>
                             <a href="{{ url_for('main.delete_user', user_id=user.id) }}" class="btn btn-danger btn-sm">Удалить</a>
                             <a href="{{ url_for('main.set_access', user_id=user.id) }}" class="btn btn-info btn-sm">Назначить доступы</a>
                         </td>
@@ -76,4 +52,106 @@
         </div>
     </div>
 </div>
+
+<!-- Модальное окно для создания нового пользователя -->
+<div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addUserModalLabel">Создать пользователя</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addUserForm" action="{{ url_for('main.admin_panel') }}" method="POST">
+                    <div class="mb-3">
+                        <label for="addUsername" class="form-label">Имя пользователя</label>
+                        <input type="text" class="form-control" id="addUsername" name="username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="addEmail" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="addEmail" name="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="addPassword" class="form-label">Пароль</label>
+                        <input type="password" class="form-control" id="addPassword" name="password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="addRole" class="form-label">Роль</label>
+                        <select class="form-control" id="addRole" name="role" required>
+                            <option value="1">Администратор</option>
+                            <option value="2">Пользователь</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                <button type="submit" form="addUserForm" class="btn btn-primary">Создать</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно для редактирования пользователя -->
+<div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editUserModalLabel">Редактировать пользователя</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editUserForm" action="" method="POST">
+                    <div class="mb-3">
+                        <label for="editUsername" class="form-label">Имя пользователя</label>
+                        <input type="text" class="form-control" id="editUsername" name="username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editEmail" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="editEmail" name="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editRole" class="form-label">Роль</label>
+                        <select class="form-control" id="editRole" name="role" required>
+                            <option value="1">Администратор</option>
+                            <option value="2">Пользователь</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                <button type="submit" form="editUserForm" class="btn btn-primary">Сохранить изменения</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', (event) => {
+    const editUserModal = new bootstrap.Modal(document.getElementById('editUserModal'));
+    const editUserForm = document.getElementById('editUserForm');
+    const editUsername = document.getElementById('editUsername');
+    const editEmail = document.getElementById('editEmail');
+    const editRole = document.getElementById('editRole');
+
+    document.querySelectorAll('.edit-user-btn').forEach(button => {
+        button.addEventListener('click', (event) => {
+            event.preventDefault();  // предотвращаем переход по ссылке
+
+            const userId = button.getAttribute('data-id');
+            const username = button.getAttribute('data-username');
+            const email = button.getAttribute('data-email');
+            const role = button.getAttribute('data-role');
+
+            editUsername.value = username;
+            editEmail.value = email;
+            editRole.value = role;
+
+            editUserForm.action = `/edit_user/${userId}`;
+            editUserModal.show();
+        });
+    });
+});
+</script>
 {% endblock %}
