@@ -8,15 +8,18 @@ RUN apt-get update && apt-get install -y \
     pkg-config \
     bash \
     && rm -rf /var/lib/apt/lists/*
+    
+# Устанавливаем рабочую директорию внутри контейнера
+WORKDIR /ref
 
-# Устанавливаем рабочую директорию
-WORKDIR /app
-
-# Копируем файлы проекта внутрь контейнера
-COPY . .
+# Копируем файл зависимостей в рабочую директорию
+COPY requirements.txt .
 
 # Устанавливаем зависимости
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install -r requirements.txt
+
+# Копируем все остальные файлы в рабочую директорию
+COPY . .
 
 # Определяем команду для запуска
 CMD ["python", "run.py"]
