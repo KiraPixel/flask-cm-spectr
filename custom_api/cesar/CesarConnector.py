@@ -2,11 +2,7 @@ import csv
 from datetime import datetime, timedelta, timezone
 import time
 import requests
-import json
-
-
-with open('config.json', 'r') as f:
-    config = json.load(f)
+from app import config
 
 
 token = ''
@@ -30,8 +26,8 @@ class CesarApi:
             'accept': '*/*',
         }
         data = {
-            'username': config['cesar_username'],
-            'password': config['cesar_password'],
+            'username': config.CESAR_USERNAME,
+            'password': config.CESAR_PASSWORD,
             'grant_type': 'password'
         }
         request = requests.post(self.api_url+'token', headers=headers, data=data)

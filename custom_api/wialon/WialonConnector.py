@@ -1,16 +1,10 @@
-import time
 import datetime
-import json
 from wialon import Wialon, WialonError, flags
 from geopy.geocoders import Nominatim
-import io
-
-
-with open('config.json', 'r') as f:
-    config = json.load(f)
+from app import config
 
 geolocator = Nominatim(user_agent="KiraPixel")
-token = config['wialon_token']
+token = config.WIALON_TOKEN
 
 class Car:
     def __init__(self):
