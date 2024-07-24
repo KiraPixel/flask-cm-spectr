@@ -14,4 +14,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Указываем команду, которая будет выполнена при запуске контейнера
-CMD ["python", "run.py"]
+CMD ["python", "ref/run.py"]
