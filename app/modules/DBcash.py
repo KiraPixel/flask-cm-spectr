@@ -1,5 +1,5 @@
 from custom_api.cesar import CesarConnector
-from custom_api.wialon import WialonSearcher
+from custom_api.wialon import WialonConnector
 from sqlalchemy import create_engine, Column, Integer, Float, Text
 from sqlalchemy.orm import declarative_base, sessionmaker
 import datetime
@@ -39,7 +39,7 @@ def __CashDB():
     try:
         Cesar = CesarConnector.CesarApi()
         cesar_result = Cesar.get_cars_info()
-        wialon_result = WialonSearcher.search_all_items(originals=True)
+        wialon_result = WialonConnector.search_all_items()
 
         for item in cesar_result:
             unit_id = item['unit_id']
