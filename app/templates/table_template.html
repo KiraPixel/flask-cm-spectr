@@ -29,7 +29,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const firstPageLink = document.createElement('a');
     firstPageLink.classList.add('page-link');
     firstPageLink.href = '#';
-    firstPageLink.innerText = 'Первая';
+    firstPageLink.innerText = 'First';
     firstPageLink.addEventListener('click', function(e) {
       e.preventDefault();
       if (currentPage > 1) {
@@ -48,7 +48,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const prevPageLink = document.createElement('a');
     prevPageLink.classList.add('page-link');
     prevPageLink.href = '#';
-    prevPageLink.innerText = 'Предыдущая';
+    prevPageLink.innerText = 'Previous';
     prevPageLink.addEventListener('click', function(e) {
       e.preventDefault();
       if (currentPage > 1) {
@@ -99,7 +99,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const nextPageLink = document.createElement('a');
     nextPageLink.classList.add('page-link');
     nextPageLink.href = '#';
-    nextPageLink.innerText = 'Следующая';
+    nextPageLink.innerText = 'Next';
     nextPageLink.addEventListener('click', function(e) {
       e.preventDefault();
       if (currentPage < pageCount) {
@@ -118,7 +118,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const lastPageLink = document.createElement('a');
     lastPageLink.classList.add('page-link');
     lastPageLink.href = '#';
-    lastPageLink.innerText = 'Последняя';
+    lastPageLink.innerText = 'Last';
     lastPageLink.addEventListener('click', function(e) {
       e.preventDefault();
       if (currentPage < pageCount) {
