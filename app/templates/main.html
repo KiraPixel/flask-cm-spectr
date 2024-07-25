@@ -73,13 +73,16 @@
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav me-auto">
                 <li class="nav-item">
-                    <a class="nav-link {% if request.endpoint == 'main.index' %}active{% endif %}" href="/">Главная</a>
+                    <a class="nav-link {% if request.endpoint == 'main.home' %}active{% endif %}" href="/">Главная</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {% if request.endpoint == 'main.rep' %}active{% endif %}" href="/">Опасности</a>
+                    <a class="nav-link {% if request.endpoint == 'main.dashboard' %}active{% endif %}" href="/dashboard">Дашборд</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {% if request.endpoint == 'main.rep' %}active{% endif %}" href="/rep">Отчеты</a>
+                    <a class="nav-link {% if request.endpoint == 'main.health_check' %}active{% endif %}" href="/health_check">Опасности</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'main.reports' %}active{% endif %}" href="/rep">Отчеты</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="http://185.137.235.105:8080/">Jira</a>

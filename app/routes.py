@@ -71,6 +71,27 @@ def home():
     return render_template('filter.html', columns=columns, table_rows=columns_data, redi='/cars/', request=request)
 
 
+# Страница cостояния
+@bp.route('/health_check')
+@login_required  # Декоратор, требующий авторизации для доступа к странице
+def health_check():
+    return render_template('in_development.html')
+
+
+# Дашборды
+@bp.route('/dashboard')
+@login_required  # Декоратор, требующий авторизации для доступа к странице
+def dashboard():
+    return render_template('in_development.html')
+
+
+# Страница отчетов
+@bp.route('/rep')
+@login_required  # Декоратор, требующий авторизации для доступа к странице
+def reports():
+    return render_template('reports.html')
+
+
 # Страница входа
 @bp.route('/login', methods=['GET', 'POST'], endpoint='login')
 def login():
@@ -95,13 +116,6 @@ def logout():
     session.pop('username', None)
     flash('Вы вышли из системы', 'info')
     return redirect(url_for('main.login'))
-
-
-# Страница отчетов
-@bp.route('/rep')
-@login_required  # Декоратор, требующий авторизации для доступа к странице
-def reports():
-    return render_template('reports.html')
 
 
 # Страница информации о конкретной машине
