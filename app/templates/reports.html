@@ -6,58 +6,52 @@
 
 {% block body %}
 <div class="container my-5">
-    <h2>Wialon</h2>
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th scope="col">Название отчета</th>
-                <th scope="col">Скачать</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>Весь транспорт</td>
-                <td>
-                    <a href="{{ url_for('main.download', report='wialon') }}" class="btn btn-primary">Скачать</a>
-                </td>
-            </tr>
-            <tr>
-                <td>Весь транспорт (тяжелый, с адресом)</td>
-                <td>
-                    <a href="{{ url_for('main.download', report='wialon_with_address') }}" class="btn btn-primary">Скачать</a>
-                </td>
-            </tr>
-            <tr>
-                <td>Давно offline (от 3 дней)</td>
-                <td>
-                    <a href="{{ url_for('main.download', report='wialon_offline') }}" class="btn btn-primary">Скачать</a>
-                </td>
-            </tr>
-        </tbody>
-    </table>
-    <br><br>
-    <h2>Cesar Position</h2>
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th scope="col">Название отчета</th>
-                <th scope="col">Скачать</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>Весь транспорт</td>
-                <td>
-                    <a href="{{ url_for('main.download', report='cesar') }}" class="btn btn-primary">Скачать</a>
-                </td>
-            </tr>
-            <tr>
-                <td>Давно offline (от 3 дней)</td>
-                <td>
-                    <a href="{{ url_for('main.download', report='cesar_offline') }}" class="btn btn-primary">Скачать</a>
-                </td>
-            </tr>
-        </tbody>
-    </table>
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Wialon</h4>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        <a href="{{ url_for('main.download', report='wialon') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            Весь транспорт
+                            <span class="badge bg-success rounded-pill">Скачать</span>
+                        </a>
+                        <a href="{{ url_for('main.download', report='wialon_offline') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            Давно offline (от 3 дней)
+                            <span class="badge bg-success rounded-pill">Скачать</span>
+                        </a>
+                        <a href="{{ url_for('main.download', report='wialon_with_address') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            Весь транспорт с адресом (очень тяжелый отчет)
+                            <span class="badge bg-danger rounded-pill d-flex align-items-center">
+                                <i class="bi bi-lock"></i>   Скачать
+                            </span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Cesar Position</h4>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        <a href="{{ url_for('main.download', report='cesar') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            Весь транспорт
+                            <span class="badge bg-success rounded-pill">Скачать</span>
+                        </a>
+                        <a href="{{ url_for('main.download', report='cesar_offline') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            Давно offline (от 3 дней)
+                            <span class="badge bg-success rounded-pill">Скачать</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}

@@ -127,6 +127,14 @@ def get_car(car_id):
 @login_required  # Декоратор, требующий авторизации для доступа к странице
 def download():
     report_name = request.args.get('report')
+
+    # Проверка, требуется ли админ-доступ для данного отчета
+    if report_name == 'wialon_with_address':
+        user = User.query.filter_by(username=session['username']).first_or_404()
+        if user.role != 1:  # Проверяем, является ли пользователь администратором
+            flash('Нет прав', 'warning')
+            return redirect(url_for('main.home'))
+
     return ReportGenerator.filegen(report_name)
 
 
