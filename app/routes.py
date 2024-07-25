@@ -61,7 +61,6 @@ def home():
         for transport, storage in data_db:
             if any(data.nm.startswith(transport.uNumber) for data in cash_wialon_data):
                 filtered_data.append((transport, storage))
-        print(len(filtered_data))
         data_db = filtered_data
 
     # Формируем данные для отображения
