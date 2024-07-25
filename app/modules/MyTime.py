@@ -1,6 +1,8 @@
 import time
 import datetime
+import pytz
 
+moscow_tz = pytz.timezone('Europe/Moscow')
 
 def now_unix_time():
     return time.time()
@@ -26,7 +28,9 @@ def get_time_minus_three_days():
 
 def to_unix_time(time_str):
     try:
-        return time.mktime(datetime.datetime.strptime(time_str, '%Y-%m-%dT%H:%M').timetuple())
+        naive_time = datetime.datetime.strptime(time_str, '%Y-%m-%dT%H:%M')
+        localized_time = moscow_tz.localize(naive_time)
+        return int(localized_time.timestamp())
     except ValueError:
         return None
 
