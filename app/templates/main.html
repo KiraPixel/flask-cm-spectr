@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru" data-bs-theme="dark">
+<html lang="ru" data-bs-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -43,7 +43,7 @@
                 return cookieValue;
             }
 
-            const savedTheme = getCookie('theme') || 'dark'; // по умолчанию темная тема
+            const savedTheme = getCookie('theme') || 'light'; // по умолчанию темная тема
             document.documentElement.setAttribute('data-bs-theme', savedTheme);
         })();
     </script>
@@ -108,13 +108,6 @@
                             <button type="button" class="dropdown-item d-flex align-items-center" data-bs-theme-value="dark">
                                 <i class="bi bi-moon-stars-fill me-2 opacity-50"></i>
                                 Dark
-                                <i class="bi bi-check2 ms-auto d-none"></i>
-                            </button>
-                        </li>
-                        <li>
-                            <button type="button" class="dropdown-item d-flex align-items-center" data-bs-theme-value="auto">
-                                <i class="bi bi-circle-half me-2 opacity-50"></i>
-                                Auto
                                 <i class="bi bi-check2 ms-auto d-none"></i>
                             </button>
                         </li>
