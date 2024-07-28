@@ -7,7 +7,6 @@ import time
 import app.config as config
 from app.models import CashWialon, CashCesar
 
-
 SQLALCHEMY_DATABASE_URL = config.SQLALCHEMY_DATABASE_URL
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -34,13 +33,20 @@ def __ClearDB():
         session.close()
 
 
-def __CashDB():
+def __FetchData():
+    # Fetch data from APIs
+    cesar_connector = CesarConnector.CesarApi()
+    wialon_connector = WialonConnector # Если класс внутри модуля
+
+    cesar_result = cesar_connector.get_cars_info()
+    wialon_result = wialon_connector.search_all_items()
+
+    return cesar_result, wialon_result
+
+
+def __CashDB(cesar_result, wialon_result):
     session = SessionLocal()
     try:
-        Cesar = CesarConnector.CesarApi()
-        cesar_result = Cesar.get_cars_info()
-        wialon_result = WialonConnector.search_all_items()
-
         for item in cesar_result:
             unit_id = item['unit_id']
             object_name = item['object_name']
@@ -95,10 +101,8 @@ def __CashDB():
 
 
 def UpdateBD():
-    print(f'UPDATEDB START: {datetime.datetime.now()}')
+    cesar_result, wialon_result = __FetchData()
     __ClearDB()
-    __CashDB()
-    print(f'UPDATEDB END: {datetime.datetime.now()}')
+    __CashDB(cesar_result, wialon_result)
 
-
-#UpdateBD()
+# UpdateBD()  # Uncomment to run the update
