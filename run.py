@@ -28,4 +28,5 @@ if __name__ == '__main__':
         update_thread = threading.Thread(target=update_db_periodically, name='UpdateDBThread')
         update_thread.daemon = True
         update_thread.start()
-    app.run(host=os.getenv('HOST', '127.0.0.1'))
+    app.debug = True
+    app.run(host=os.getenv('HOST', '0.0.0.0'))
