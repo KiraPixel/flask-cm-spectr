@@ -22,7 +22,7 @@ def search_all_items():
             'sortType': 'sys_name'
         },
         'force': 1,
-        'flags': 1 | 1024,
+        'flags': 1 | 256 | 1024,
         'from': 0,
         'to': 0,
     }

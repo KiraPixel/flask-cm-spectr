@@ -15,7 +15,7 @@ def update_db_periodically():
         duration = end_time - start_time  # Вычисляем длительность обновления
         print(f"DB UPDATE | {datetime.now()} Update duration: {duration:.2f} seconds")
         # Если обновление занимает меньше времени, чем интервал, ждем оставшееся время
-        sleep_time = max(60 - duration, 0)
+        sleep_time = max(80 - duration, 0)
         time.sleep(sleep_time)
 
 

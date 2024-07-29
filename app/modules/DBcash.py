@@ -72,8 +72,9 @@ def __CashDB(cesar_result, wialon_result):
             session.add(cesar_entry)
 
         for item in wialon_result:
-            nm = item['nm']
             id = item['id']
+            uid = item['uid']
+            nm = item['nm']
             pos = item['pos']
             lmsg = item['lmsg']
 
@@ -82,8 +83,19 @@ def __CashDB(cesar_result, wialon_result):
             last_time = lmsg['t'] if pos else 0
             last_pos_time = pos['t'] if pos else 0
 
+            # Проверка и преобразование uid
+            try:
+                uid = int(uid)
+                if uid > 9223372036854775807:  # Пример для BIGINT в MySQL
+                    print(f"Value for uid is too large: {nm} - {uid}. Replacing with 0.")
+                    uid = 0
+            except (ValueError, TypeError):
+                print(f"Invalid value for uid: {nm} - {uid}. Replacing with 0.")
+                uid = 0
+
             wialon_entry = CashWialon(
                 id=id,
+                uid=uid,
                 nm=nm,
                 pos_x=pos_x,
                 pos_y=pos_y,

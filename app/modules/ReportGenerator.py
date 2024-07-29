@@ -12,23 +12,23 @@ def filegen(args):
     output = io.StringIO()
     if 'wialon' in args:
         if args == 'wialon':
-            output.write('wialon_id;uNumber;last_time;last_pos_time;x_y poistion' + '\n')
+            output.write('wialon_id;uNumber;uid;last_time;last_pos_time;x_y poistion' + '\n')
             query = CashWialon.query.all()
             for row in query:
-                final_str = f'{row.id};{row.nm};{MyTime.unix_to_moscow_time(row.last_time)};{MyTime.unix_to_moscow_time(row.last_pos_time)};{row.pos_x},{row.pos_y}'
+                final_str = f'{row.id};{row.nm};{row.uid};{MyTime.unix_to_moscow_time(row.last_time)};{MyTime.unix_to_moscow_time(row.last_pos_time)};{row.pos_x},{row.pos_y}'
                 output.write(final_str + '\n')
         elif args == 'wialon_with_address':
-            output.write('wialon_id;uNumber;last_time;last_pos_time;address' + '\n')
+            output.write('wialon_id;uNumber;uid;last_time;last_pos_time;address' + '\n')
             query = CashWialon.query.all()
             for row in query:
                 location = LocationModule.get_address(row.pos_y, row.pos_x)
-                final_str = f'{row.id};{row.nm};{MyTime.unix_to_moscow_time(row.last_time)};{MyTime.unix_to_moscow_time(row.last_pos_time)};{location}'
+                final_str = f'{row.id};{row.nm};{row.uid};{MyTime.unix_to_moscow_time(row.last_time)};{MyTime.unix_to_moscow_time(row.last_pos_time)};{location}'
                 output.write(final_str + '\n')
         elif args == 'wialon_offline':
-            output.write('wialon_id;uNumber;;last_time;last_pos_time;x_y poistion' + '\n')
+            output.write('wialon_id;uNumber;uid;last_time;last_pos_time;x_y poistion' + '\n')
             query = CashWialon.query.filter(CashWialon.last_time < MyTime.get_time_minus_three_days()).all()
             for row in query:
-                final_str = f'{row.id};{row.nm};{MyTime.unix_to_moscow_time(row.last_time)};{MyTime.unix_to_moscow_time(row.last_pos_time)};{row.pos_x},{row.pos_y}'
+                final_str = f'{row.id};{row.nm};{row.uid};{MyTime.unix_to_moscow_time(row.last_time)};{MyTime.unix_to_moscow_time(row.last_pos_time)};{row.pos_x},{row.pos_y}'
                 output.write(final_str + '\n')
         else:
             return None
@@ -81,13 +81,13 @@ def filegen(args):
             # Проверяем оборудование в CashCesar
             for cesar in CashCesar.query.all():
                 if not any(transport_number in cesar.object_name for transport_number in transport_numbers):
-                    final_str = f'Wialon;{cesar.object_name}'  # Здесь None, так как нет прямого соответствия
+                    final_str = f'Cesar;{cesar.object_name}'  # Здесь None, так как нет прямого соответствия
                     output.write(final_str + '\n')
 
             # Проверяем оборудование в CashWialon
             for wialon in CashWialon.query.all():
                 if not any(transport_number in wialon.nm for transport_number in transport_numbers):
-                    final_str = f'Cesar;{wialon.nm}'  # Здесь None, так как нет прямого соответствия
+                    final_str = f'Wialon;{wialon.nm}'  # Здесь None, так как нет прямого соответствия
                     output.write(final_str + '\n')
         else:
             return None

@@ -5,7 +5,7 @@ import re
 from flask import Blueprint, render_template, request, send_file, redirect, url_for, session, flash
 
 from . import Jira
-from .models import db, User, Transport, Storage, CashWialon, CashCesar
+from .models import db, User, Transport, TransportModel, Storage, CashWialon, CashCesar
 from .utils import login_required, admin_required
 from .modules import ReportGenerator, MyTime
 
@@ -30,20 +30,20 @@ def home():
         'region': request.args.get('region')
     }
 
-    # Создаем базовый запрос
-    query = db.session.query(Transport, Storage).join(Storage, Transport.storage_id == Storage.ID)
+    # Создаем базовый запрос с объединением трех таблиц
+    query = db.session.query(Transport, Storage, TransportModel).join(Storage, Transport.storage_id == Storage.ID).join(TransportModel, Transport.model_id == TransportModel.id)
 
     # Применяем фильтры к запросу
     if filters['nm']:
         query = query.filter(Transport.uNumber.like(f'%{filters["nm"]}%'))
     if filters['model']:
-        query = query.filter(Transport.model.like(f'%{filters["model"]}%'))
+        query = query.filter(TransportModel.name.like(f'%{filters["model"]}%'))
     if filters['storage']:
         query = query.filter(Storage.name.like(f'%{filters["storage"]}%'))
     if filters['region']:
         query = query.filter(Storage.region.like(f'%{filters["region"]}%'))
 
-    # Выполняем запрос и получаем данные !
+    # Выполняем запрос и получаем данные
     data_db = query.all()
 
     # Обрабатываем фильтрацию по дате
@@ -58,17 +58,19 @@ def home():
 
         # Фильтруем данные на основе временного интервала
         filtered_data = []
-        for transport, storage in data_db:
+        for transport, storage, transport_model in data_db:
             if any(data.nm.startswith(transport.uNumber) for data in cash_wialon_data):
-                filtered_data.append((transport, storage))
+                filtered_data.append((transport, storage, transport_model))
         data_db = filtered_data
 
     # Формируем данные для отображения
-    for transport, storage in data_db:
-        columns_data.append([transport.uNumber, transport.model, storage.name, storage.region])
+    for transport, storage, transport_model in data_db:
+        columns_data.append([transport.uNumber, transport_model.name, storage.name, storage.region])
 
     # Отображаем шаблон с результатами фильтрации
     return render_template('filter.html', columns=columns, table_rows=columns_data, redi='/cars/', request=request)
+
+
 
 
 # Страница cостояния
@@ -132,9 +134,24 @@ def get_car(car_id):
     #получаем полный набор данных
     wialon = db.session.query(CashWialon).filter(CashWialon.nm.like(search_pattern)).all()
     cesar = db.session.query(CashCesar).filter(CashCesar.object_name.like(search_pattern)).all()
-    jira_info = Jira.search(search_pattern)
-    return render_template('car.html', car_name=car_id, cesar=cesar, wialon=wialon, jira=jira_info)
+    car = db.session.query(Transport).filter(Transport.uNumber == car_id).first()
 
+    if not car:
+        return "Car not found", 404
+
+    storage = db.session.query(Storage).filter(Storage.ID == car.storage_id).first()
+    transport_model = db.session.query(TransportModel).filter(TransportModel.id == car.model_id).first()
+
+    jira_info = Jira.search(search_pattern)
+    return render_template(
+        'car.html',
+        car_name=car_id,
+        cesar=cesar,
+        wialon=wialon,
+        storage=storage,
+        transport_model=transport_model,
+        jira=jira_info
+    )
 
 # Скачивание отчета
 @bp.route('/download', endpoint="download")
