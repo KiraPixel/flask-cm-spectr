@@ -1,6 +1,4 @@
-import datetime
-from wialon import Wialon, WialonError, flags
-from geopy.geocoders import Nominatim
+from wialon import Wialon
 from app import config
 
 token = config.WIALON_TOKEN
