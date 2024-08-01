@@ -1,0 +1,191 @@
+{% extends "main.html" %}
+
+{% block title %}Ресурсы Модели ТС{% endblock %}
+
+{% block body %}
+<div class="container">
+    <h1 class="my-4">Поиск и Добавление Моделей ТС</h1>
+
+    <!-- Поиск моделей ТС -->
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <div class="input-group">
+                <input type="text" class="form-control" id="searchInput" placeholder="Введите название модели ТС" aria-label="Введите название модели ТС">
+                <button class="btn btn-primary" type="button" id="searchButton">Поиск</button>
+            </div>
+            <div id="searchResults" class="mt-3"></div>
+        </div>
+    </div>
+
+    <!-- Добавление новой модели ТС -->
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <h2>Добавить новую модель ТС</h2>
+            <div id="addModelMessage"></div>
+            <form id="addModelForm">
+                <div class="mb-3">
+                    <label for="newType" class="form-label">Тип</label>
+                    <input type="text" class="form-control" id="newType" required>
+                </div>
+                <div class="mb-3">
+                    <label for="newName" class="form-label">Название</label>
+                    <input type="text" class="form-control" id="newName" required>
+                </div>
+                <div class="mb-3">
+                    <label for="newLiftType" class="form-label">Тип подъемника</label>
+                    <input type="text" class="form-control" id="newLiftType">
+                </div>
+                <div class="mb-3">
+                    <label for="newEngine" class="form-label">Двигатель</label>
+                    <input type="text" class="form-control" id="newEngine">
+                </div>
+                <button type="button" class="btn btn-success me-2" onclick="addModel()">Добавить</button>
+                <button type="reset" class="btn btn-secondary">Отменить</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Скрипт для поиска, отображения результатов и добавления новой модели ТС -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Поиск моделей по нажатию кнопки
+        document.getElementById('searchButton').addEventListener('click', searchModel);
+
+        // Поиск моделей по нажатию Enter
+        document.getElementById('searchInput').addEventListener('keypress', function (e) {
+            if (e.which === 13) {
+                searchModel();
+            }
+        });
+    });
+
+    function searchModel() {
+        const query = document.getElementById('searchInput').value;
+
+        fetch('/api/search_model', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ name: query })
+        })
+        .then(response => response.json())
+        .then(data => {
+            const resultsDiv = document.getElementById('searchResults');
+            resultsDiv.innerHTML = '';
+            data.forEach(model => {
+                resultsDiv.innerHTML += `
+                    <div class="card mb-2">
+                        <div class="card-body">
+                            <h5 class="card-title">${model.name}</h5>
+                            <p class="card-text">Тип: ${model.type}</p>
+                            <p class="card-text">Тип подъемника: ${model.lift_type}</p>
+                            <p class="card-text">Двигатель: ${model.engine}</p>
+                            <div class="d-flex justify-content-end">
+                                <button class="btn btn-primary" onclick="editModel(${model.id})">Редактировать</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        });
+    }
+
+    function addModel() {
+        const type = document.getElementById('newType').value;
+        const name = document.getElementById('newName').value;
+        const liftType = document.getElementById('newLiftType').value;
+        const engine = document.getElementById('newEngine').value;
+
+        fetch('/api/add_model', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ type, name, lift_type: liftType, engine })
+        })
+        .then(response => response.json())
+        .then(data => {
+            const messageDiv = document.getElementById('addModelMessage');
+            if (data.success) {
+                messageDiv.className = 'alert alert-success';
+                messageDiv.textContent = 'Модель ТС успешно добавлена.';
+                document.getElementById('addModelForm').reset();
+            } else {
+                messageDiv.className = 'alert alert-danger';
+                messageDiv.textContent = 'Ошибка: ' + data.message;
+            }
+        });
+    }
+
+    function editModel(id) {
+        fetch('/api/get_model?id=' + id)
+            .then(response => response.json())
+            .then(model => {
+                const resultsDiv = document.getElementById('searchResults');
+                resultsDiv.innerHTML = `
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Редактировать Модель ТС</h5>
+                            <form id="editModelForm">
+                                <input type="hidden" name="id" value="${model.id}">
+                                <div class="mb-3">
+                                    <label for="editType" class="form-label">Тип</label>
+                                    <input type="text" class="form-control" id="editType" name="type" value="${model.type}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="editName" class="form-label">Название</label>
+                                    <input type="text" class="form-control" id="editName" name="name" value="${model.name}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="editLiftType" class="form-label">Тип подъемника</label>
+                                    <input type="text" class="form-control" id="editLiftType" name="lift_type" value="${model.lift_type}">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="editEngine" class="form-label">Двигатель</label>
+                                    <input type="text" class="form-control" id="editEngine" name="engine" value="${model.engine}">
+                                </div>
+                                <div class="d-flex justify-content-end">
+                                    <button type="button" class="btn btn-secondary me-2" onclick="cancelEdit()">Отменить</button>
+                                    <button type="submit" class="btn btn-primary">Сохранить</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                `;
+
+                document.getElementById('editModelForm').addEventListener('submit', function(event) {
+                    event.preventDefault();
+                    updateModel();
+                });
+            });
+    }
+
+    function updateModel() {
+        const form = document.getElementById('editModelForm');
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+
+        fetch('/api/update_model', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                searchModel(); // Обновляем список после редактирования
+            } else {
+                alert('Ошибка: ' + data.message);
+            }
+        });
+    }
+
+    function cancelEdit() {
+        searchModel(); // Обновляем список после отмены редактирования
+    }
+</script>
+{% endblock %}

@@ -20,6 +20,12 @@
             border: none;
             box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
         }
+        .flash-message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
     </style>
 </head>
 <body>
@@ -31,6 +37,21 @@
                         <h3 class="text-center">Вход в ЦМ</h3>
                     </div>
                     <div class="card-body">
+                        <!-- Добавляем блок для сообщений flash -->
+                        <div class="flash-message">
+                            {% with messages = get_flashed_messages(with_categories=true) %}
+                                {% if messages %}
+                                    {% for category, message in messages %}
+                                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                            {{ message }}
+                                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                                <span aria-hidden="true">&times;</span>
+                                            </button>
+                                        </div>
+                                    {% endfor %}
+                                {% endif %}
+                            {% endwith %}
+                        </div>
                         <form method="POST" action="{{ url_for('main.login') }}">
                             <div class="form-group">
                                 <label for="username">Логин</label>
@@ -51,5 +72,9 @@
             </div>
         </div>
     </div>
+    <!-- Подключаем Bootstrap JS и jQuery -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>

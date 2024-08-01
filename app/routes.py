@@ -2,22 +2,21 @@ from datetime import datetime
 import time
 import re
 
-from flask import Blueprint, render_template, request, send_file, redirect, url_for, session, flash
+from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 
 from . import Jira
 from .models import db, User, Transport, TransportModel, Storage, CashWialon, CashCesar
 from .utils import login_required, admin_required
 from .modules import ReportGenerator, MyTime
 
-# Создаем Blueprint для маршрутов приложения
+# Создаем Blueprint для основных маршрутов приложения
 bp = Blueprint('main', __name__)
-
 
 # Главная страница
 @bp.route('/', endpoint='home')
 @login_required
 def home():
-    columns = ['№ Лота', 'Модель', 'Склад', 'Регион']  # Заголовки столбцов
+    columns = ['№ Лота', 'Модель', 'Склад', 'Регион']
     columns_data = []
 
     # Получаем параметры фильтра из запроса
@@ -70,29 +69,23 @@ def home():
     # Отображаем шаблон с результатами фильтрации
     return render_template('filter.html', columns=columns, table_rows=columns_data, redi='/cars/', request=request)
 
-
-
-
 # Страница cостояния
 @bp.route('/health_check')
-@login_required  # Декоратор, требующий авторизации для доступа к странице
+@login_required
 def health_check():
     return render_template('in_development.html')
 
-
 # Дашборды
 @bp.route('/dashboard')
-@login_required  # Декоратор, требующий авторизации для доступа к странице
+@login_required
 def dashboard():
     return render_template('in_development.html')
 
-
 # Страница отчетов
 @bp.route('/rep')
-@login_required  # Декоратор, требующий авторизации для доступа к странице
+@login_required
 def reports():
     return render_template('reports.html')
-
 
 # Страница входа
 @bp.route('/login', methods=['GET', 'POST'], endpoint='login')
@@ -110,28 +103,24 @@ def login():
             error = 'Неправильный логин или пароль. Попробуйте снова.'
     return render_template('login.html', error=error)
 
-
 # Выход из системы
 @bp.route('/logout')
-@login_required  # Декоратор, требующий авторизации для доступа к странице
+@login_required
 def logout():
     session.pop('username', None)
     flash('Вы вышли из системы', 'info')
     return redirect(url_for('main.login'))
 
-
 # Страница информации о конкретной машине
 @bp.route('/cars/<string:car_id>')
-@login_required  # Декоратор, требующий авторизации для доступа к странице
+@login_required
 def get_car(car_id):
     text = car_id.replace(' ', '')
     if re.match(r'^[A-Z]+\d{5}$', text):
-        # Добавляем пробел перед цифрами, если его нет
         if text[1] != ' ':
             car_id = text[:1] + ' ' + text[1:]
     search_pattern = f'%{car_id}%'
 
-    #получаем полный набор данных
     wialon = db.session.query(CashWialon).filter(CashWialon.nm.like(search_pattern)).all()
     cesar = db.session.query(CashCesar).filter(CashCesar.object_name.like(search_pattern)).all()
     car = db.session.query(Transport).filter(Transport.uNumber == car_id).first()
@@ -155,24 +144,22 @@ def get_car(car_id):
 
 # Скачивание отчета
 @bp.route('/download', endpoint="download")
-@login_required  # Декоратор, требующий авторизации для доступа к странице
+@login_required
 def download():
     report_name = request.args.get('report')
 
-    # Проверка, требуется ли админ-доступ для данного отчета
     if report_name == 'wialon_with_address':
         user = User.query.filter_by(username=session['username']).first_or_404()
-        if user.role != 1:  # Проверяем, является ли пользователь администратором
+        if user.role != 1:
             flash('Нет прав', 'warning')
             return redirect(url_for('main.home'))
 
     return ReportGenerator.filegen(report_name)
 
-
 # Панель администратора
 @bp.route('/admin/', methods=['GET', 'POST'])
-@login_required  # Декоратор, требующий авторизации для доступа к странице
-@admin_required  # Декоратор, требующий прав администратора для доступа к странице
+@login_required
+@admin_required
 def admin_panel():
     if request.method == 'POST':
         username = request.form['username']
@@ -180,23 +167,20 @@ def admin_panel():
         password = request.form['password']
         role = request.form['role']
 
-        # Создаем нового пользователя
         new_user = User(username=username, email=email, password=password, role=role, last_activity="1999-12-02 00:00:00")
         db.session.add(new_user)
         db.session.commit()
         return redirect(url_for('main.admin_panel'))
 
-    # Получаем список всех пользователей
     users = User.query.all()
     return render_template('admin_panel.html', users=users)
 
-
 # Редактирование пользователя
 @bp.route('/edit_user/<int:user_id>', methods=['POST'])
-@login_required  # Декоратор, требующий авторизации для доступа к странице
-@admin_required  # Декоратор, требующий прав администратора для доступа к странице
+@login_required
+@admin_required
 def edit_user(user_id):
-    user = User.query.get_or_404(user_id)
+    user = User.query.get_or__404(user_id)
     if request.method == 'POST':
         user.username = request.form['username']
         user.email = request.form['email']
@@ -206,33 +190,44 @@ def edit_user(user_id):
 
     return redirect(url_for('main.admin_panel'))
 
-
 # Удаление пользователя
 @bp.route('/delete_user/<int:user_id>')
-@login_required  # Декоратор, требующий авторизации для доступа к странице
-@admin_required  # Декоратор, требующий прав администратора для доступа к странице
+@login_required
+@admin_required
 def delete_user(user_id):
     user = User.query.get_or_404(user_id)
     db.session.delete(user)
     db.session.commit()
     return redirect(url_for('main.admin_panel'))
 
-
 # Назначение доступов пользователю
 @bp.route('/set_access/<int:user_id>')
-@login_required  # Декоратор, требующий авторизации для доступа к странице
-@admin_required  # Декоратор, требующий прав администратора для доступа к странице
+@login_required
+@admin_required
 def set_access(user_id):
     user = User.query.get_or_404(user_id)
-    # Логика назначения доступов
     return f"Назначить доступы для пользователя {user_id}"
 
-
 @bp.route('/map/')
+@login_required
 def map():
     wialon = db.session.query(CashWialon).all()
     cesar = db.session.query(CashCesar).all()
-
     return render_template('map.html', cesar=cesar, wialon=wialon)
 
+@bp.route('/resources/transport')
+@login_required
+def transport_page():
+    storages = Storage.query.all()
+    models = TransportModel.query.all()
+    return render_template('resources/transport.html', storages=storages, models=models)
 
+@bp.route('/resources/storage')
+@login_required
+def storage_page():
+    storages = Storage.query.all()
+    return render_template('resources/storage.html', storages=storages)
+
+@bp.route('/resources/models', methods=['GET'])
+def models_page():
+    return render_template('resources/models.html')

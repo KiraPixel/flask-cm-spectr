@@ -1,0 +1,184 @@
+{% extends "main.html" %}
+
+{% block title %}Ресурсы Транспорт{% endblock %}
+
+{% block body %}
+<div class="container">
+    <h1 class="my-4">Поиск и Добавление Транспорта</h1>
+
+    <div class="row mb-3">
+        <div class="col-md-8">
+            <input type="text" id="searchInput" class="form-control" placeholder="Введите номер машины (uNumber)">
+        </div>
+        <div class="col-md-4">
+            <button id="searchButton" class="btn btn-primary w-100">Найти</button>
+        </div>
+    </div>
+
+    <div id="searchResults" class="mt-4"></div>
+
+    <div class="mt-5">
+        <h2>Добавить новое транспортное средство</h2>
+        <form id="addTransportForm">
+            <div class="form-group mb-3">
+                <label for="newUNumber">Номер машины</label>
+                <input type="text" class="form-control" id="newUNumber" name="uNumber">
+            </div>
+            <div class="form-group mb-3">
+                <label for="newStorageId">Склад</label>
+                <select class="form-control" id="newStorageId" name="storage_id">
+                    {% for storage in storages %}
+                        <option value="{{ storage.ID }}">{{ storage.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group mb-3">
+                <label for="newModelId">Модель</label>
+                <select class="form-control" id="newModelId" name="model_id">
+                    {% for model in models %}
+                        <option value="{{ model.id }}">{{ model.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn-success">Добавить</button>
+        </form>
+        <div id="addTransportMessage" class="mt-3"></div>
+    </div>
+</div>
+
+<!-- Скрипт для поиска, отображения результатов и добавления нового ТС -->
+<script>
+    document.getElementById('searchButton').addEventListener('click', function() {
+        searchTransport();
+    });
+
+    document.getElementById('searchInput').addEventListener('keypress', function(event) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            searchTransport();
+        }
+    });
+
+    document.getElementById('addTransportForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        addTransport();
+    });
+
+    function searchTransport() {
+        const query = document.getElementById('searchInput').value.toLowerCase();
+        fetch('/api/search_transport?uNumber=' + query)
+            .then(response => response.json())
+            .then(data => {
+                const resultsDiv = document.getElementById('searchResults');
+                resultsDiv.innerHTML = '';
+                data.forEach(transport => {
+                    const transportDiv = document.createElement('div');
+                    transportDiv.classList.add('card', 'mb-3');
+                    transportDiv.innerHTML = `
+                        <div class="card-body">
+                            <h5 class="card-title">${transport.uNumber}</h5>
+                            <p class="card-text">Склад: ${transport.storage.name}</p>
+                            <p class="card-text">Модель: ${transport.transport_model.name}</p>
+                            <div class="d-flex justify-content-end">
+                                <button class="btn btn-primary" onclick="editTransport(${transport.id})">Редактировать</button>
+                            </div>
+                        </div>
+                    `;
+                    resultsDiv.appendChild(transportDiv);
+                });
+            });
+    }
+
+    function editTransport(id) {
+        fetch('/api/get_transport?id=' + id)
+            .then(response => response.json())
+            .then(data => {
+                const resultsDiv = document.getElementById('searchResults');
+                resultsDiv.innerHTML = `
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Редактировать Транспорт</h5>
+                            <form id="editTransportForm">
+                                <input type="hidden" name="id" value="${data.id}">
+                                <div class="form-group mb-3">
+                                    <label for="uNumber">Номер машины</label>
+                                    <input type="text" class="form-control" name="uNumber" value="${data.uNumber}" readonly>
+                                </div>
+                                <div class="form-group mb-3">
+                                    <label for="storage_id">Склад</label>
+                                    <select class="form-control" name="storage_id">
+                                        ${data.storages.map(storage => `<option value="${storage.ID}" ${storage.ID == data.storage_id ? 'selected' : ''}>${storage.name}</option>`).join('')}
+                                    </select>
+                                </div>
+                                <div class="form-group mb-3">
+                                    <label for="model_id">Модель</label>
+                                    <select class="form-control" name="model_id">
+                                        ${data.models.map(model => `<option value="${model.id}" ${model.id == data.model_id ? 'selected' : ''}>${model.name}</option>`).join('')}
+                                    </select>
+                                </div>
+                                <div class="d-flex justify-content-end">
+                                    <button type="button" class="btn btn-secondary me-2" onclick="cancelEdit()">Отменить</button>
+                                    <button type="submit" class="btn btn-success">Сохранить</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                `;
+
+                // Добавляем обработчик для формы редактирования
+                document.getElementById('editTransportForm').addEventListener('submit', function(event) {
+                    event.preventDefault();
+                    updateTransport(id);
+                });
+            });
+    }
+
+    function updateTransport(id) {
+        const form = document.getElementById('editTransportForm');
+        const formData = new FormData(form);
+
+        fetch('/api/update_transport', {
+            method: 'POST',
+            body: new URLSearchParams(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                searchTransport(); // Обновляем список после успешного обновления
+            } else {
+                alert('Ошибка: ' + data.message);
+            }
+        });
+    }
+
+    function addTransport() {
+        const uNumber = document.getElementById('newUNumber').value;
+        const storageId = document.getElementById('newStorageId').value;
+        const modelId = document.getElementById('newModelId').value;
+
+        fetch('/api/add_transport', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ uNumber, storage_id: storageId, model_id: modelId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            const messageDiv = document.getElementById('addTransportMessage');
+            if (data.success) {
+                messageDiv.className = 'alert alert-success';
+                messageDiv.textContent = 'Транспорт успешно добавлен.';
+                document.getElementById('addTransportForm').reset();
+            } else {
+                messageDiv.className = 'alert alert-danger';
+                messageDiv.textContent = 'Ошибка: ' + data.message;
+            }
+        });
+    }
+
+    function cancelEdit() {
+        searchTransport(); // Обновляем список после отмены редактирования
+    }
+</script>
+{% endblock %}

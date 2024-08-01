@@ -4,14 +4,12 @@ from flask_sqlalchemy import SQLAlchemy
 from geopy.geocoders import Nominatim
 import json
 import os
-import os
 
 from custom_api.jira import jirasearcher
 from .modules import MyTime
 
 Jira = jirasearcher.JiraConnector(os.getenv('JIRA_URL', 'http://localhost:8080'), os.getenv('JIRA_USERNAME', 'default_bot_username'), os.getenv('JIRA_PASSWORD', 'default_bot_password'))
 db = SQLAlchemy()
-
 
 def create_app():
     app = Flask(__name__)
@@ -25,10 +23,13 @@ def create_app():
     db.init_app(app)
     geolocator = Nominatim(user_agent="KiraPixel")
 
-    from .routes import bp
-    app.register_blueprint(bp)
+    from .routes import bp as main_bp
+    from .routes_api import api_bp
+
+    app.register_blueprint(main_bp)
+    app.register_blueprint(api_bp, url_prefix='/api')
+
     app.jinja_env.filters['unix_to_datetime'] = MyTime.unix_to_moscow_time
     app.jinja_env.filters['online_check'] = MyTime.online_check
-
 
     return app
