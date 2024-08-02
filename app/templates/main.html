@@ -3,241 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Flask App{% endblock %}</title>
+    <title>{% block title %}Центр Мониторинга{% endblock %}</title>
     <!-- Подключаем Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="icon" href="https://i.imgur.com/QTYrkTB.png">
     <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .container-fluid {
+            flex: 1;
+        }
         .navbar .nav-item .theme-toggle-button, .navbar .nav-item .user-dropdown-button {
             display: flex;
             align-items: center;
             padding: 0.5rem 1rem;
             height: 100%;
         }
-        .theme-icon-active, .user-dropdown-icon {
-            margin-right: 0.5rem;
+        /* Мобильная версия */
+        .navbar-nav .nav-item {
+            margin-bottom: 0.5rem; /* Отступ между пунктами меню */
         }
-        .dropdown-menu {
-            min-width: 160px; /* Чтобы меню не было слишком узким */
-        }
-        .dropdown-menu.show {
-            display: block !important;
-        }
-          /* Мобильная версия */
-
-
-            .navbar-nav .nav-item {
-                margin-bottom: 0.5rem; /* Отступ между пунктами меню */
-            }
-        }
-
     </style>
-    <script>
-        // Инлайн скрипт для немедленного применения темы из куки
-        (function() {
-            function getCookie(name) {
-                let cookieValue = null;
-                if (document.cookie && document.cookie !== '') {
-                    const cookies = document.cookie.split(';');
-                    for (let i = 0; i < cookies.length; i++) {
-                        const cookie = cookies[i].trim();
-                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                            break;
-                        }
-                    }
-                }
-                return cookieValue;
-            }
-
-            const savedTheme = getCookie('theme') || 'light'; // по умолчанию темная тема
-            document.documentElement.setAttribute('data-bs-theme', savedTheme);
-        })();
-    </script>
 </head>
 <body>
-    <!-- Добавляем SVG иконки -->
-    <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
-        <symbol id="sun-fill" fill="currentColor" viewBox="0 0 16 16">
-            <path d="..."></path>
-        </symbol>
-        <symbol id="moon-stars-fill" fill="currentColor" viewBox="0 0 16 16">
-            <path d="..."></path>
-        </symbol>
-        <symbol id="circle-half" fill="currentColor" viewBox="0 0 16 16">
-            <path d="..."></path>
-        </symbol>
-        <symbol id="check2" fill="currentColor" viewBox="0 0 16 16">
-            <path d="..."></path>
-        </symbol>
-    </svg>
-
-    <nav class="navbar navbar-expand-lg">
-        <a class="navbar-brand" href="/">Центр мониторинга ЛК-СПЕКТР</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav me-auto">
-                <li class="nav-item">
-                    <a class="nav-link {% if request.endpoint == 'main.home' %}active{% endif %}" href="/">Главная</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {% if request.endpoint == 'main.dashboard' %}active{% endif %}" href="/dashboard">Дашборд</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {% if request.endpoint == 'main.health_check' %}active{% endif %}" href="/health_check">Опасности</a>
-                </li>
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="resourcesDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        Ресурсы
-                    </a>
-                    <ul class="dropdown-menu" aria-labelledby="resourcesDropdown">
-                        <li><a class="dropdown-item" href="/resources/transport">Транспорт</a></li>
-                        <li><a class="dropdown-item" href="/resources/storage">Склады</a></li>
-                        <li><a class="dropdown-item" href="/resources/models">Модели ТС</a></li>
-                    </ul>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {% if request.endpoint == 'main.reports' %}active{% endif %}" href="/rep">Отчеты</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="http://185.137.235.105:8080/">Jira</a>
-                </li>
-            </ul>
-            {% if session.username %}
-            <ul class="navbar-nav">
-                <!-- Разметка для переключения темы -->
-                <li class="nav-item dropdown">
-                    <button class="btn btn-bd-primary py-2 dropdown-toggle d-flex align-items-center theme-toggle-button" id="themeDropdown" type="button" aria-expanded="false" data-bs-toggle="dropdown" aria-label="Toggle theme">
-                        <i class="bi bi-sun-fill my-1 theme-icon-active"></i>
-                        <span class="visually-hidden" id="bd-theme-text">Toggle theme</span>
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="themeDropdown">
-                        <li>
-                            <button type="button" class="dropdown-item d-flex align-items-center" data-bs-theme-value="light">
-                                <i class="bi bi-sun-fill me-2 opacity-50"></i>
-                                Light
-                                <i class="bi bi-check2 ms-auto d-none"></i>
-                            </button>
-                        </li>
-                        <li>
-                            <button type="button" class="dropdown-item d-flex align-items-center" data-bs-theme-value="dark">
-                                <i class="bi bi-moon-stars-fill me-2 opacity-50"></i>
-                                Dark
-                                <i class="bi bi-check2 ms-auto d-none"></i>
-                            </button>
-                        </li>
-                    </ul>
-                </li>
-                <!-- Разметка для выпадающего списка пользователя -->
-                <li class="nav-item dropdown">
-                    <button class="btn btn-bd-primary py-2 dropdown-toggle d-flex align-items-center user-dropdown-button" id="userDropdown" type="button" aria-expanded="false" data-bs-toggle="dropdown" aria-label="User menu">
-                        <span>{{ session.username }}</span>
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userDropdown">
-                        <li><a class="dropdown-item" href="/map">Все объекты на карте</a></li>
-                        <li><a class="dropdown-item" href="/admin">Админ панель</a></li>
-                        <li><a class="dropdown-item" href="#">Настройки</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="{{ url_for('main.logout') }}">Выйти</a></li>
-                    </ul>
-                </li>
-            </ul>
-            {% endif %}
-        </div>
-    </nav>
-
-    <!-- Подключаем Bootstrap JS и зависимости -->
-    <script src="https://code.jquery.com/jquery-3.7.1.slim.js" integrity="sha256-UgvvN8vBkgO0luPSUl2s8TIlOSYRoGFAX4jlCIm9Adc=" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
-
+    {% include 'elements/main_scripts.html' %}
+    {% include 'elements/svg_icons.html' %}
+    {% include 'elements/headers.html' %}
     <div class="container-fluid mt-4">
         {% block body %}{% endblock %}
     </div>
-
-    <footer class="d-flex flex-wrap justify-content-between align-items-center py-3 my-2 border-top">
-        <div class="container-fluid text-center">
-            <span style="color: #6c757d;">© 2024 Центр мониторинга ЛК-СПЕКТР</span>
-        </div>
-    </footer>
-
-    <!-- Скрипт для переключения темы с использованием куки и управления кликами вне меню -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const themeDropdownButton = document.getElementById('themeDropdown');
-            const userDropdownButton = document.getElementById('userDropdown');
-            const themeButtons = document.querySelectorAll('[data-bs-theme-value]');
-            const dropdowns = document.querySelectorAll('.dropdown-menu');
-
-            function getCookie(name) {
-                let cookieValue = null;
-                if (document.cookie && document.cookie !== '') {
-                    const cookies = document.cookie.split(';');
-                    for (let i = 0; i < cookies.length; i++) {
-                        const cookie = cookies[i].trim();
-                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                            break;
-                        }
-                    }
-                }
-                return cookieValue;
-            }
-
-            function setCookie(name, value, days) {
-                const date = new Date();
-                date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-                const expires = "expires=" + date.toUTCString();
-                document.cookie = name + "=" + encodeURIComponent(value) + ";" + expires + ";path=/";
-            }
-
-            function setTheme(theme) {
-                document.documentElement.setAttribute('data-bs-theme', theme);
-                setCookie('theme', theme, 365);
-                themeButtons.forEach(button => {
-                    if (button.getAttribute('data-bs-theme-value') === theme) {
-                        button.classList.add('active');
-                        button.setAttribute('aria-pressed', 'true');
-                    } else {
-                        button.classList.remove('active');
-                        button.setAttribute('aria-pressed', 'false');
-                    }
-                });
-                // Закрыть меню после выбора темы
-                themeDropdownButton.classList.remove('show');
-            }
-
-            themeDropdownButton.addEventListener('click', function () {
-                themeDropdownButton.classList.toggle('show');
-                userDropdownButton.classList.remove('show'); // Закрыть меню пользователя, если оно открыто
-            });
-
-            userDropdownButton.addEventListener('click', function () {
-                userDropdownButton.classList.toggle('show');
-                themeDropdownButton.classList.remove('show'); // Закрыть меню темы, если оно открыто
-            });
-
-            themeButtons.forEach(button => {
-                button.addEventListener('click', function () {
-                    const theme = button.getAttribute('data-bs-theme-value');
-                    setTheme(theme);
-                });
-            });
-
-            // Закрыть все меню при клике вне их
-            document.addEventListener('click', function (event) {
-                const target = event.target;
-                if (!target.closest('.dropdown-menu') && !target.closest('.dropdown-toggle')) {
-                    dropdowns.forEach(dropdown => dropdown.classList.remove('show'));
-                }
-            });
-
-            // Инициализация темы при загрузке страницы
-            const savedTheme = getCookie('theme') || 'auto';
-            setTheme(savedTheme);
-        });
-    </script>
+    {% include 'elements/footer.html' %}
 </body>
 </html>

@@ -1,0 +1,102 @@
+<script>
+    // Инлайн скрипт для немедленного применения темы из куки
+    (function() {
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        const savedTheme = getCookie('theme') || 'light'; // по умолчанию темная тема
+        document.documentElement.setAttribute('data-bs-theme', savedTheme);
+    })();
+</script>
+<!-- Подключаем Bootstrap JS и зависимости -->
+<script src="https://code.jquery.com/jquery-3.7.1.slim.js" integrity="sha256-UgvvN8vBkgO0luPSUl2s8TIlOSYRoGFAX4jlCIm9Adc=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+
+<!-- Скрипт для переключения темы с использованием куки и управления кликами вне меню -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const themeDropdownButton = document.getElementById('themeDropdown');
+        const userDropdownButton = document.getElementById('userDropdown');
+        const themeButtons = document.querySelectorAll('[data-bs-theme-value]');
+        const dropdowns = document.querySelectorAll('.dropdown-menu');
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        function setCookie(name, value, days) {
+            const date = new Date();
+            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+            const expires = "expires=" + date.toUTCString();
+            document.cookie = name + "=" + encodeURIComponent(value) + ";" + expires + ";path=/";
+        }
+
+        function setTheme(theme) {
+            document.documentElement.setAttribute('data-bs-theme', theme);
+            setCookie('theme', theme, 365);
+            themeButtons.forEach(button => {
+                if (button.getAttribute('data-bs-theme-value') === theme) {
+                    button.classList.add('active');
+                    button.setAttribute('aria-pressed', 'true');
+                } else {
+                    button.classList.remove('active');
+                    button.setAttribute('aria-pressed', 'false');
+                }
+            });
+            // Закрыть меню после выбора темы
+            themeDropdownButton.classList.remove('show');
+        }
+
+        themeDropdownButton.addEventListener('click', function () {
+            themeDropdownButton.classList.toggle('show');
+            userDropdownButton.classList.remove('show'); // Закрыть меню пользователя, если оно открыто
+        });
+
+        userDropdownButton.addEventListener('click', function () {
+            userDropdownButton.classList.toggle('show');
+            themeDropdownButton.classList.remove('show'); // Закрыть меню темы, если оно открыто
+        });
+
+        themeButtons.forEach(button => {
+            button.addEventListener('click', function () {
+                const theme = button.getAttribute('data-bs-theme-value');
+                setTheme(theme);
+            });
+        });
+
+        // Закрыть все меню при клике вне их
+        document.addEventListener('click', function (event) {
+            const target = event.target;
+            if (!target.closest('.dropdown-menu') && !target.closest('.dropdown-toggle')) {
+                dropdowns.forEach(dropdown => dropdown.classList.remove('show'));
+            }
+        });
+
+        // Инициализация темы при загрузке страницы
+        const savedTheme = getCookie('theme') || 'auto';
+        setTheme(savedTheme);
+    });
+</script>
