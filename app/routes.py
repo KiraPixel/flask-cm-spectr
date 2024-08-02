@@ -101,7 +101,7 @@ def login():
             return redirect(url_for('main.home'))
         else:
             error = 'Неправильный логин или пароль. Попробуйте снова.'
-    return render_template('login.html', error=error)
+    return render_template('standalone/login.html', error=error)
 
 # Выход из системы
 @bp.route('/logout')
@@ -213,7 +213,7 @@ def set_access(user_id):
 def map():
     wialon = db.session.query(CashWialon).all()
     cesar = db.session.query(CashCesar).all()
-    return render_template('map.html', cesar=cesar, wialon=wialon)
+    return render_template('standalone/map.html', cesar=cesar, wialon=wialon)
 
 @bp.route('/resources/transport')
 @login_required
