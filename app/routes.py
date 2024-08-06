@@ -1,4 +1,3 @@
-from datetime import datetime
 import time
 import re
 
@@ -11,6 +10,7 @@ from .modules import ReportGenerator, MyTime
 
 # Создаем Blueprint для основных маршрутов приложения
 bp = Blueprint('main', __name__)
+
 
 # Главная страница
 @bp.route('/', endpoint='home')
@@ -30,7 +30,8 @@ def home():
     }
 
     # Создаем базовый запрос с объединением трех таблиц
-    query = db.session.query(Transport, Storage, TransportModel).join(Storage, Transport.storage_id == Storage.ID).join(TransportModel, Transport.model_id == TransportModel.id)
+    query = db.session.query(Transport, Storage, TransportModel).join(Storage, Transport.storage_id == Storage.ID).join(
+        TransportModel, Transport.model_id == TransportModel.id)
 
     # Применяем фильтры к запросу
     if filters['nm']:
@@ -69,11 +70,13 @@ def home():
     # Отображаем шаблон с результатами фильтрации
     return render_template('filter.html', columns=columns, table_rows=columns_data, redi='/cars/', request=request)
 
-# Страница cостояния
+
+# Страница состояния
 @bp.route('/health_check')
 @login_required
 def health_check():
     return render_template('in_development.html')
+
 
 # Дашборды
 @bp.route('/dashboard')
@@ -82,7 +85,8 @@ def dashboard():
     # Wialon
     online_count = db.session.query(CashWialon).filter(CashWialon.last_time >= MyTime.five_minutes_ago_unix()).count()
     offline_count = db.session.query(CashWialon).filter(CashWialon.last_time < MyTime.five_minutes_ago_unix()).count()
-    offline_over_48_count = db.session.query(CashWialon).filter(CashWialon.last_time < MyTime.forty_eight_hours_ago_unix()).count()
+    offline_over_48_count = db.session.query(CashWialon).filter(
+        CashWialon.last_time < MyTime.forty_eight_hours_ago_unix()).count()
     wialon = {
         'online': online_count,
         'offline': offline_count,
@@ -90,13 +94,14 @@ def dashboard():
     }
 
     # Cesar
-    online_count = db.session.query(CashWialon).filter(CashWialon.last_time >= MyTime.get_time_minus_three_days()).count()
-    offline_count = db.session.query(CashWialon).filter(CashWialon.last_time < MyTime.get_time_minus_three_days()).count()
+    online_count = db.session.query(CashWialon).filter(
+        CashWialon.last_time >= MyTime.get_time_minus_three_days()).count()
+    offline_count = db.session.query(CashWialon).filter(
+        CashWialon.last_time < MyTime.get_time_minus_three_days()).count()
     cesar = {
         'online': online_count,
         'offline': offline_count
     }
-
 
     # Последнее подключение к Wialon
     last_wialon = db.session.query(CashWialon).order_by(CashWialon.last_time.desc()).first()
@@ -113,14 +118,15 @@ def dashboard():
         'last_cesar': last_cesar
     }
 
-
     return render_template('dashboard.html', wialon=wialon, connections=connections, cesar=cesar)
+
 
 # Страница отчетов
 @bp.route('/rep')
 @login_required
 def reports():
     return render_template('reports.html')
+
 
 # Страница входа
 @bp.route('/login', methods=['GET', 'POST'], endpoint='login')
@@ -138,6 +144,7 @@ def login():
             error = 'Неправильный логин или пароль. Попробуйте снова.'
     return render_template('standalone/login.html', error=error)
 
+
 # Выход из системы
 @bp.route('/logout')
 @login_required
@@ -145,6 +152,7 @@ def logout():
     session.pop('username', None)
     flash('Вы вышли из системы', 'info')
     return redirect(url_for('main.login'))
+
 
 # Страница информации о конкретной машине
 @bp.route('/cars/<string:car_id>')
@@ -177,6 +185,7 @@ def get_car(car_id):
         jira=jira_info
     )
 
+
 # Скачивание отчета
 @bp.route('/download', endpoint="download")
 @login_required
@@ -191,6 +200,7 @@ def download():
 
     return ReportGenerator.filegen(report_name)
 
+
 # Панель администратора
 @bp.route('/admin/', methods=['GET', 'POST'])
 @login_required
@@ -202,13 +212,15 @@ def admin_panel():
         password = request.form['password']
         role = request.form['role']
 
-        new_user = User(username=username, email=email, password=password, role=role, last_activity="1999-12-02 00:00:00")
+        new_user = User(username=username, email=email, password=password, role=role,
+                        last_activity="1999-12-02 00:00:00")
         db.session.add(new_user)
         db.session.commit()
         return redirect(url_for('main.admin_panel'))
 
     users = User.query.all()
     return render_template('admin_panel.html', users=users)
+
 
 # Редактирование пользователя
 @bp.route('/edit_user/<int:user_id>', methods=['POST'])
@@ -225,6 +237,7 @@ def edit_user(user_id):
 
     return redirect(url_for('main.admin_panel'))
 
+
 # Удаление пользователя
 @bp.route('/delete_user/<int:user_id>')
 @login_required
@@ -235,20 +248,23 @@ def delete_user(user_id):
     db.session.commit()
     return redirect(url_for('main.admin_panel'))
 
+
 # Назначение доступов пользователю
 @bp.route('/set_access/<int:user_id>')
 @login_required
 @admin_required
 def set_access(user_id):
     user = User.query.get_or_404(user_id)
-    return f"Назначить доступы для пользователя {user_id}"
+    return f"Назначить доступы для пользователя {user}"
+
 
 @bp.route('/map/')
 @login_required
-def map():
+def map_page():
     wialon = db.session.query(CashWialon).all()
     cesar = db.session.query(CashCesar).all()
     return render_template('standalone/map.html', cesar=cesar, wialon=wialon)
+
 
 @bp.route('/resources/transport')
 @login_required
@@ -257,11 +273,13 @@ def transport_page():
     models = TransportModel.query.all()
     return render_template('resources/transport.html', storages=storages, models=models)
 
+
 @bp.route('/resources/storage')
 @login_required
 def storage_page():
     storages = Storage.query.all()
     return render_template('resources/storage.html', storages=storages)
+
 
 @bp.route('/resources/models', methods=['GET'])
 def models_page():

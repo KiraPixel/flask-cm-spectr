@@ -1,5 +1,6 @@
 from . import db
 
+
 class User(db.Model):
     __tablename__ = 'users'
 
@@ -13,6 +14,7 @@ class User(db.Model):
     def __repr__(self):
         return '<User %r>' % self.username
 
+
 class Transport(db.Model):
     __tablename__ = 'transport'
 
@@ -21,10 +23,15 @@ class Transport(db.Model):
     uNumber = db.Column(db.String(10))
     model_id = db.Column(db.Integer, db.ForeignKey('transport_model.id'), nullable=False)  # Указание внешнего ключа
     storage = db.relationship('Storage', back_populates='transports', primaryjoin="Storage.ID == Transport.storage_id")
-    transport_model = db.relationship('TransportModel', back_populates='transports', primaryjoin="Transport.model_id == TransportModel.id")
+    transport_model = db.relationship(
+        'TransportModel',
+        back_populates='transports',
+        primaryjoin="Transport.model_id == TransportModel.id"
+    )
 
     def __repr__(self):
         return '<Transport %r>' % self.uNumber
+
 
 class Storage(db.Model):
     __tablename__ = 'storage'
@@ -35,10 +42,12 @@ class Storage(db.Model):
     region = db.Column(db.String(100))
     address = db.Column(db.String(100))
     organization = db.Column(db.String(100))
-    transports = db.relationship('Transport', back_populates='storage', primaryjoin="Storage.ID == Transport.storage_id")
+    transports = db.relationship('Transport', back_populates='storage',
+                                 primaryjoin="Storage.ID == Transport.storage_id")
 
     def __repr__(self):
         return '<Storage %r>' % self.name
+
 
 class TransportModel(db.Model):
     __tablename__ = 'transport_model'
@@ -48,10 +57,12 @@ class TransportModel(db.Model):
     name = db.Column(db.String(100))
     lift_type = db.Column(db.String(100))
     engine = db.Column(db.String(100))
-    transports = db.relationship('Transport', back_populates='transport_model', primaryjoin="Transport.model_id == TransportModel.id")
+    transports = db.relationship('Transport', back_populates='transport_model',
+                                 primaryjoin="Transport.model_id == TransportModel.id")
 
     def __repr__(self):
         return '<TransportModel %r>' % self.name
+
 
 class CashCesar(db.Model):
     __tablename__ = 'cash_cesar'
@@ -64,6 +75,7 @@ class CashCesar(db.Model):
     pos_y = db.Column(db.Float, default=0.0)
     created_at = db.Column(db.Integer, default=0)
     device_type = db.Column(db.Text, nullable=False)
+
 
 class CashWialon(db.Model):
     __tablename__ = 'cash_wialon'

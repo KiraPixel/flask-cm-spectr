@@ -2,14 +2,18 @@ from datetime import timedelta
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from geopy.geocoders import Nominatim
-import json
 import os
 
 from custom_api.jira import jirasearcher
 from .modules import MyTime
 
-Jira = jirasearcher.JiraConnector(os.getenv('JIRA_URL', 'http://localhost:8080'), os.getenv('JIRA_USERNAME', 'default_bot_username'), os.getenv('JIRA_PASSWORD', 'default_bot_password'))
+Jira = jirasearcher.JiraConnector(
+    os.getenv('JIRA_URL', 'http://localhost:8080'),
+    os.getenv('JIRA_USERNAME', 'default_bot_username'),
+    os.getenv('JIRA_PASSWORD', 'default_bot_password')
+)
 db = SQLAlchemy()
+
 
 def create_app():
     app = Flask(__name__)

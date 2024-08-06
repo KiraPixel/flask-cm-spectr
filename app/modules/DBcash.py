@@ -1,6 +1,6 @@
 from custom_api.cesar import CesarConnector
 from custom_api.wialon import WialonConnector
-from sqlalchemy import create_engine, Column, Integer, Float, Text
+from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 import datetime
 import time
@@ -36,7 +36,7 @@ def __ClearDB():
 def __FetchData():
     # Fetch data from APIs
     cesar_connector = CesarConnector.CesarApi()
-    wialon_connector = WialonConnector # Если класс внутри модуля
+    wialon_connector = WialonConnector
 
     cesar_result = cesar_connector.get_cars_info()
     wialon_result = wialon_connector.search_all_items()
@@ -72,7 +72,7 @@ def __CashDB(cesar_result, wialon_result):
             session.add(cesar_entry)
 
         for item in wialon_result:
-            id = item['id']
+            obj_id = item['id']
             uid = item['uid']
             nm = item['nm']
             pos = item['pos']
@@ -94,7 +94,7 @@ def __CashDB(cesar_result, wialon_result):
                 uid = 0
 
             wialon_entry = CashWialon(
-                id=id,
+                id=obj_id,
                 uid=uid,
                 nm=nm,
                 pos_x=pos_x,

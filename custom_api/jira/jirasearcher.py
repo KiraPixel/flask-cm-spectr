@@ -35,22 +35,3 @@ class JiraConnector:
     def close_issue(self, issue_key):
         self.jira.transition_issue(issue_key, "Готово")
         print(f'JiraConnector | Close Issue  {issue_key}')
-
-
-# Print configuration for debugging purposes (remove in production)
-#print(f'Config | URL: {jira_url}, Username: {jira_username}')
-
-# import json
-# with open('jira.json', 'r') as f:
-#     config = json.load(f)
-
-
-# jira_url = config['jira']['url']
-# jira_username = config['jira']['username']
-# jira_password = config['jira']['password']
-# Connector = JiraConnector(jira_url, jira_username, jira_password)
-
-# Connector.search('Нет связи больше 24 часов (I 014468 Dingli BA28RT реле)', 'ALERT')
-# Connector.create_issue("Нет связи больше 24 часов (I 01753 Aurora AS0808)", "I 01753 Aurora AS0808: связь потеряна более 24 часов. 2024-06-25 00:23:26 он двигался со скоростью  около ''.", "ALERT")
-# Connector.add_comment_to_issue("ALERT-8", "test")
-# Connector.close_issue("ALERT-99")

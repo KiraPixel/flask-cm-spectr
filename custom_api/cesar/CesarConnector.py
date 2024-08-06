@@ -1,4 +1,3 @@
-import csv
 from datetime import datetime, timedelta, timezone
 import time
 import requests
@@ -100,28 +99,3 @@ class CesarApi:
 
         return result_items
 
-# Cesar = CesarApi()
-# all_unit = Cesar.get_all_unit()
-# Cesar.get_cars_info(toString=True)
-
-# x =Cesar.get_cars_info(toString=True, offline=True)
-# with open('cesar_car.txt', 'w', newline='', encoding='utf-8') as file_all:
-#     writer = csv.DictWriter(file_all, fieldnames=['unitId', 'name'], delimiter=';')
-#
-#     # Записываем заголовки (имена полей)
-#     writer.writeheader()
-#
-#     # Записываем строки данных
-#     writer.writerows(all_unit)
-
-# url = 'https://apicsp.csat.ru/api/v1/units'
-# headers = {
-#     'accept': '*/*',
-#     'Authorization': f'Bearer {token}',
-#     'Content-Type': 'application/json'
-# }
-#
-# response = requests.get(url, headers=headers)
-#
-# data = response.json()
-# print(data)

@@ -3,6 +3,7 @@ from flask import session, flash, redirect, url_for, render_template
 from .models import db, User
 from datetime import datetime
 
+
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -14,7 +15,9 @@ def login_required(f):
             user.last_activity = datetime.now()
             db.session.commit()
         return f(*args, **kwargs)
+
     return decorated_function
+
 
 def admin_required(f):
     @wraps(f)
@@ -23,4 +26,5 @@ def admin_required(f):
         if user.role != 1:
             return render_template('error.html', error_message='Нет прав')
         return f(*args, **kwargs)
+
     return decorated_function

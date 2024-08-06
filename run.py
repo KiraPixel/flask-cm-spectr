@@ -5,6 +5,7 @@ from datetime import datetime
 from app import create_app
 from app.modules import DBcash
 
+
 def update_db_periodically():
     while True:
         start_time = time.time()  # Сохраняем время начала обновления
@@ -21,7 +22,6 @@ def update_db_periodically():
 
 # Создаем приложение
 app = create_app()
-
 
 if __name__ == '__main__':
     if not any(t.name == 'UpdateDBThread' and t.is_alive() for t in threading.enumerate()):

@@ -4,8 +4,10 @@ import pytz
 
 moscow_tz = pytz.timezone('Europe/Moscow')
 
+
 def now_unix_time():
     return time.time()
+
 
 def five_minutes_ago_unix():
     return int((datetime.datetime.now() - datetime.timedelta(minutes=5)).timestamp())
@@ -45,8 +47,8 @@ def to_unix_time(time_str):
 def tz_to_moscow_time(z_time):
     try:
         dt = datetime.datetime.strptime(z_time, "%Y-%m-%dT%H:%M:%SZ")
-        moscow_tz = datetime.timezone(datetime.timedelta(hours=3))
-        moscow_time = dt.astimezone(moscow_tz)
+        moscow_tzz = datetime.timezone(datetime.timedelta(hours=3))
+        moscow_time = dt.astimezone(moscow_tzz)
         return moscow_time.strftime("%d-%m-%Y %H:%M")
     except:
         return 0

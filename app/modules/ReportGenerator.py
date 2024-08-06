@@ -6,29 +6,50 @@ from sqlalchemy import func
 from app.models import Transport, CashCesar, CashWialon
 from . import MyTime, LocationModule, CoordMath
 from app import db
-from math import radians, sin, cos, sqrt, atan2
+
 
 def filegen(args):
     output = io.StringIO()
     if 'wialon' in args:
         if args == 'wialon':
-            output.write('wialon_id;uNumber;uid;last_time;last_pos_time;x_y poistion' + '\n')
+            output.write('wialon_id;uNumber;uid;last_time;last_pos_time;x_y position' + '\n')
             query = CashWialon.query.all()
             for row in query:
-                final_str = f'{row.id};{row.nm};{row.uid};{MyTime.unix_to_moscow_time(row.last_time)};{MyTime.unix_to_moscow_time(row.last_pos_time)};{row.pos_x},{row.pos_y}'
+                final_str = (
+                    f'{row.id};'
+                    f'{row.nm};'
+                    f'{row.uid};'
+                    f'{MyTime.unix_to_moscow_time(row.last_time)};'
+                    f'{MyTime.unix_to_moscow_time(row.last_pos_time)};'
+                    f'{row.pos_x},{row.pos_y}'
+                )
                 output.write(final_str + '\n')
         elif args == 'wialon_with_address':
             output.write('wialon_id;uNumber;uid;last_time;last_pos_time;address' + '\n')
             query = CashWialon.query.all()
             for row in query:
                 location = LocationModule.get_address(row.pos_y, row.pos_x)
-                final_str = f'{row.id};{row.nm};{row.uid};{MyTime.unix_to_moscow_time(row.last_time)};{MyTime.unix_to_moscow_time(row.last_pos_time)};{location}'
+                final_str = (
+                    f'{row.id};'
+                    f'{row.nm};'
+                    f'{row.uid};'
+                    f'{MyTime.unix_to_moscow_time(row.last_time)};'
+                    f'{MyTime.unix_to_moscow_time(row.last_pos_time)};'
+                    f'{location}'
+                )
                 output.write(final_str + '\n')
         elif args == 'wialon_offline':
-            output.write('wialon_id;uNumber;uid;last_time;last_pos_time;x_y poistion' + '\n')
+            output.write('wialon_id;uNumber;uid;last_time;last_pos_time;x_y position' + '\n')
             query = CashWialon.query.filter(CashWialon.last_time < MyTime.get_time_minus_three_days()).all()
             for row in query:
-                final_str = f'{row.id};{row.nm};{row.uid};{MyTime.unix_to_moscow_time(row.last_time)};{MyTime.unix_to_moscow_time(row.last_pos_time)};{row.pos_x},{row.pos_y}'
+                final_str = (
+                    f'{row.id};'
+                    f'{row.nm};'
+                    f'{row.uid};'
+                    f'{MyTime.unix_to_moscow_time(row.last_time)};'
+                    f'{MyTime.unix_to_moscow_time(row.last_pos_time)};'
+                    f'{row.pos_x},{row.pos_y}'
+                )
                 output.write(final_str + '\n')
         else:
             return None
@@ -37,12 +58,26 @@ def filegen(args):
         if args == 'cesar':
             query = CashCesar.query.all()
             for row in query:
-                final_str = f'{row.unit_id};{row.object_name};{row.pin};{MyTime.unix_to_moscow_time(row.created_at)};{MyTime.unix_to_moscow_time(row.last_time)}'
+                final_str = (
+                    f'{row.unit_id};'
+                    f'{row.object_name};'
+                    f'{row.pin};'
+                    f'{MyTime.unix_to_moscow_time(row.created_at)};'
+                    f'{MyTime.unix_to_moscow_time(row.last_time)}'
+                )
+
                 output.write(final_str + '\n')
         elif args == 'cesar_offline':
             query = CashCesar.query.filter(CashCesar.last_time < MyTime.get_time_minus_three_days()).all()
             for row in query:
-                final_str = f'{row.unit_id};{row.object_name};{row.pin};{MyTime.unix_to_moscow_time(row.created_at)};{MyTime.unix_to_moscow_time(row.last_time)}'
+                final_str = (
+                    f'{row.unit_id};'
+                    f'{row.object_name};'
+                    f'{row.pin};'
+                    f'{MyTime.unix_to_moscow_time(row.created_at)};'
+                    f'{MyTime.unix_to_moscow_time(row.last_time)}'
+                )
+
                 output.write(final_str + '\n')
         else:
             return None
@@ -53,7 +88,9 @@ def filegen(args):
                 join(CashWialon, CashWialon.nm.like(func.concat('%', Transport.uNumber, '%'))). \
                 all()
             for transport, cash_wialon in query:
-                wialon_pos = (cash_wialon.pos_y, cash_wialon.pos_x) #это баг виалона, нужно привнуть или мб однажды поменять
+                # это баг виалона, нужно привыкнуть или мб однажды поменять
+                wialon_pos = (cash_wialon.pos_y, cash_wialon.pos_x)
+
                 office_pos = (55.913856, 37.417132)
                 if cash_wialon.pos_y == 0:
                     final_str = f'{transport.uNumber};{cash_wialon.nm};None'
