@@ -79,7 +79,42 @@ def health_check():
 @bp.route('/dashboard')
 @login_required
 def dashboard():
-    return render_template('in_development.html')
+    # Wialon
+    online_count = db.session.query(CashWialon).filter(CashWialon.last_time >= MyTime.five_minutes_ago_unix()).count()
+    offline_count = db.session.query(CashWialon).filter(CashWialon.last_time < MyTime.five_minutes_ago_unix()).count()
+    offline_over_48_count = db.session.query(CashWialon).filter(CashWialon.last_time < MyTime.forty_eight_hours_ago_unix()).count()
+    wialon = {
+        'online': online_count,
+        'offline': offline_count,
+        'offline_over_48': offline_over_48_count
+    }
+
+    # Cesar
+    online_count = db.session.query(CashWialon).filter(CashWialon.last_time >= MyTime.get_time_minus_three_days()).count()
+    offline_count = db.session.query(CashWialon).filter(CashWialon.last_time < MyTime.get_time_minus_three_days()).count()
+    cesar = {
+        'online': online_count,
+        'offline': offline_count
+    }
+
+
+    # Последнее подключение к Wialon
+    last_wialon = db.session.query(CashWialon).order_by(CashWialon.last_time.desc()).first()
+    last_wialon = last_wialon.last_time if last_wialon else None
+
+    # Последнее подключение к Cesar
+    last_cesar = db.session.query(CashCesar).order_by(CashCesar.last_time.desc()).first()
+    if last_cesar.last_time > MyTime.now_unix_time():
+        last_cesar = MyTime.now_unix_time()
+    else:
+        last_cesar = last_cesar.last_time if last_cesar else None
+    connections = {
+        'last_wialon': last_wialon,
+        'last_cesar': last_cesar
+    }
+
+
+    return render_template('dashboard.html', wialon=wialon, connections=connections, cesar=cesar)
 
 # Страница отчетов
 @bp.route('/rep')

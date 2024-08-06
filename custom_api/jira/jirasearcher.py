@@ -37,8 +37,6 @@ class JiraConnector:
         print(f'JiraConnector | Close Issue  {issue_key}')
 
 
-
-
 # Print configuration for debugging purposes (remove in production)
 #print(f'Config | URL: {jira_url}, Username: {jira_username}')
 

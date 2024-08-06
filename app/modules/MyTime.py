@@ -7,6 +7,13 @@ moscow_tz = pytz.timezone('Europe/Moscow')
 def now_unix_time():
     return time.time()
 
+def five_minutes_ago_unix():
+    return int((datetime.datetime.now() - datetime.timedelta(minutes=5)).timestamp())
+
+
+def forty_eight_hours_ago_unix():
+    return int((datetime.datetime.now() - datetime.timedelta(hours=48)).timestamp())
+
 
 def online_check(unix_time):
     try:

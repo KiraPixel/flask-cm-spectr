@@ -1,0 +1,151 @@
+{% extends "main.html" %}
+
+{% block body %}
+<div class="container mt-4">
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0">Оборудование Wialon</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header bg-success text-white" data-bs-toggle="tooltip" data-bs-placement="top" title="Оборудование считается онлайн если оно отбивалось последние 15 минут">
+                                    Онлайн
+                                </div>
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ wialon['online'] }}</h5>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header bg-danger text-white" data-bs-toggle="tooltip" data-bs-placement="top" title="Оборудование считается оффлайн если оно не отбивалось последние 15 минут">
+                                    Оффлайн
+                                </div>
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ wialon['offline'] }}</h5>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header bg-warning text-dark" data-bs-toggle="tooltip" data-bs-placement="top" title="">
+                                    Оффлайн >48 часов
+                                </div>
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ wialon['offline_over_48'] }}</h5>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header bg-secondary text-white" data-bs-toggle="tooltip" data-bs-placement="top" title="ТС находится не там, где заложено в 1С">
+                                    Розыск
+                                </div>
+                                <div class="card-body">
+                                    <h5 class="card-title">0</h5>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0">Оборудование Cesar</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-4 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header bg-success text-white" data-bs-toggle="tooltip" data-bs-placement="top" title="Оборудование считается онлайн если оно отбивалось последние 3 дня">
+                                    Активно
+                                </div>
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ cesar['online'] }}</h5>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header bg-danger text-white" data-bs-toggle="tooltip" data-bs-placement="top" title="Нет отбивки больше 3 дней">
+                                    Нет отбивки больше 3 днех
+                                </div>
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ cesar['offline'] }}</h5>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header bg-secondary text-white" data-bs-toggle="tooltip" data-bs-placement="top" title="ТС находится не там, где заложено в 1С">
+                                    Розыск
+                                </div>
+                                <div class="card-body">
+                                    <h5 class="card-title">0</h5>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0">Подключение к системам мониторинга</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <div class="card">
+                                <div class="card-header bg-primary text-white">
+                                    Wialon
+                                </div>
+                                <div class="card-body">
+                                    <p class="card-text">{{ connections['last_wialon'] | unix_to_datetime }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="card">
+                                <div class="card-header bg-primary text-white">
+                                    Cesar
+                                </div>
+                                <div class="card-body">
+                                    <p class="card-text">{{ connections['last_cesar'] | unix_to_datetime }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Подключение скриптов Bootstrap -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Инициализация всех тултипов на странице
+    document.addEventListener('DOMContentLoaded', function () {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        })
+    });
+</script>
+{% endblock %}
