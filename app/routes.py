@@ -75,7 +75,7 @@ def home():
 @bp.route('/health_check')
 @login_required
 def health_check():
-    return render_template('in_development.html')
+    return render_template('danger.html')
 
 
 # Дашборды

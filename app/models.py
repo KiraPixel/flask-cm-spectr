@@ -20,9 +20,13 @@ class Transport(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     storage_id = db.Column(db.Integer, db.ForeignKey('storage.ID'), nullable=False)
-    uNumber = db.Column(db.String(10))
     model_id = db.Column(db.Integer, db.ForeignKey('transport_model.id'), nullable=False)  # Указание внешнего ключа
     storage = db.relationship('Storage', back_populates='transports', primaryjoin="Storage.ID == Transport.storage_id")
+
+    uNumber = db.Column(db.Text)
+    vin = db.Column(db.Text)
+    equipment = db.Column(db.JSON)
+
     transport_model = db.relationship(
         'TransportModel',
         back_populates='transports',
@@ -75,6 +79,7 @@ class CashCesar(db.Model):
     pos_y = db.Column(db.Float, default=0.0)
     created_at = db.Column(db.Integer, default=0)
     device_type = db.Column(db.Text, nullable=False)
+    linked = db.Column(db.Boolean, nullable=True, default=False)  # TINYINT(1) NULL DEFAULT '0'
 
 
 class CashWialon(db.Model):
@@ -86,3 +91,4 @@ class CashWialon(db.Model):
     pos_y = db.Column(db.Float, default=0.0)
     last_time = db.Column(db.Integer, default=0)
     last_pos_time = db.Column(db.Integer, default=0)
+    linked = db.Column(db.Boolean, nullable=True, default=False)  # TINYINT(1) NULL DEFAULT '0'

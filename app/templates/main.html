@@ -29,14 +29,15 @@
             margin-bottom: 0.5rem; /* Отступ между пунктами меню */
         }
     </style>
-</head>
-<body>
     {% include 'elements/main_scripts.html' %}
     {% include 'elements/svg_icons.html' %}
     {% include 'elements/headers.html' %}
+</head>
+<body>
+
     <div class="container-fluid mt-4">
         {% block body %}{% endblock %}
     </div>
-    {% include 'elements/footer.html' %}
 </body>
+{% include 'elements/footer.html' %}
 </html>
