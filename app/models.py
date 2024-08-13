@@ -24,6 +24,7 @@ class Transport(db.Model):
     storage = db.relationship('Storage', back_populates='transports', primaryjoin="Storage.ID == Transport.storage_id")
 
     uNumber = db.Column(db.Text)
+    manufacture_year = db.Column(db.Text)
     vin = db.Column(db.Text)
     equipment = db.Column(db.JSON)
 
@@ -61,6 +62,7 @@ class TransportModel(db.Model):
     name = db.Column(db.String(100))
     lift_type = db.Column(db.String(100))
     engine = db.Column(db.String(100))
+    country = db.Column(db.String(100))
     transports = db.relationship('Transport', back_populates='transport_model',
                                  primaryjoin="Transport.model_id == TransportModel.id")
 

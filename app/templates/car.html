@@ -95,9 +95,10 @@
                                 <h3>Модель транспортного средства</h3>
                             </div>
                             <div class="card-body">
-                                <p><strong>Тип:</strong> {{ transport_model.type }}</p>
-                                <p><strong>Название:</strong> {{ transport_model.name }}</p>
-                                <p><strong>Тип лифта:</strong> {{ transport_model.lift_type }}</p>
+                                <p><strong>Тип:</strong> {{ transport_model.type }} - {{ transport_model.name }}</p>
+                                <p><strong>Год выпуска:</strong> {{ car.manufacture_year }} ({{ transport_model.country }})</p>
+                                <p><strong>VIN:</strong> {{ car.vin }}</p>
+                                <p><strong>Лифта:</strong> {{ transport_model.lift_type }}</p>
                                 <p><strong>Двигатель:</strong> {{ transport_model.engine }}</p>
                             </div>
                         </div>

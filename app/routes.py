@@ -177,6 +177,7 @@ def get_car(car_id):
     jira_info = Jira.search(search_pattern)
     return render_template(
         'car.html',
+        car=car,
         car_name=car_id,
         cesar=cesar,
         wialon=wialon,
