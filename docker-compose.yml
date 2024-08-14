@@ -8,6 +8,7 @@ services:
     network_mode: host
     environment:
       HOST: ${HOST}
+      PORT: ${PORT}
       SECRET_KEY: ${SECRET_KEY}
       SQLALCHEMY_DATABASE_URL: ${SQLALCHEMY_DATABASE_URL}
       CESAR_USERNAME: ${CESAR_USERNAME}
