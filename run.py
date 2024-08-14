@@ -9,4 +9,6 @@ app = create_app()
 
 if __name__ == '__main__':
     app.debug = True
-    app.run(host=os.getenv('HOST', '0.0.0.0'))
+    HOST = os.getenv('HOST', '0.0.0.0')
+    PORT = int(os.getenv('PORT', '5000'))  # Преобразуем порт в целое число
+    app.run(host=HOST, port=PORT)
