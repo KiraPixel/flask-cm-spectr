@@ -4,6 +4,7 @@ import time
 from datetime import datetime
 from app import create_app
 
+
 # Создаем приложение
 app = create_app()
 
