@@ -1,7 +1,7 @@
 from functools import wraps
 from flask import session, flash, redirect, url_for, render_template
 from .models import db, User
-from modules import MyTime
+from .modules import MyTime
 from datetime import datetime
 
 
