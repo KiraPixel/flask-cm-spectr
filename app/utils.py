@@ -1,8 +1,9 @@
 from functools import wraps
 from flask import session, flash, redirect, url_for, render_template
 from .models import db, User
-from datetime import datetime
-
+from .modules import MyTime
+import time
+import datetime
 
 def login_required(f):
     @wraps(f)
@@ -11,8 +12,10 @@ def login_required(f):
             flash('Вы пытались зайти на страницу к которой требуется авторизация.', 'warning')
             return redirect(url_for('main.login'))
         else:
+            msk_time = datetime.datetime.fromtimestamp(MyTime.now_unix_time(), tz=datetime.timezone(datetime.timedelta(hours=3)))
             user = User.query.filter_by(username=session['username']).first_or_404()
-            user.last_activity = datetime.now()
+            user.last_activity = msk_time.strftime('%Y-%m-%d %H:%M')
+
             db.session.commit()
         return f(*args, **kwargs)
 
