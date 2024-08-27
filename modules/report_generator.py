@@ -4,7 +4,7 @@ from flask import send_file
 from sqlalchemy import func
 
 from app.models import Transport, CashCesar, CashWialon
-from . import MyTime, LocationModule, CoordMath
+from . import my_time, location_module, coord_math
 from app import db
 
 
@@ -19,8 +19,8 @@ def filegen(args):
                     f'{row.id};'
                     f'{row.nm};'
                     f'{row.uid};'
-                    f'{MyTime.unix_to_moscow_time(row.last_time)};'
-                    f'{MyTime.unix_to_moscow_time(row.last_pos_time)};'
+                    f'{my_time.unix_to_moscow_time(row.last_time)};'
+                    f'{my_time.unix_to_moscow_time(row.last_pos_time)};'
                     f'{row.pos_x},{row.pos_y}'
                 )
                 output.write(final_str + '\n')
@@ -28,26 +28,26 @@ def filegen(args):
             output.write('wialon_id;uNumber;uid;last_time;last_pos_time;address' + '\n')
             query = CashWialon.query.all()
             for row in query:
-                location = LocationModule.get_address(row.pos_y, row.pos_x)
+                location = location_module.get_address(row.pos_y, row.pos_x)
                 final_str = (
                     f'{row.id};'
                     f'{row.nm};'
                     f'{row.uid};'
-                    f'{MyTime.unix_to_moscow_time(row.last_time)};'
-                    f'{MyTime.unix_to_moscow_time(row.last_pos_time)};'
+                    f'{my_time.unix_to_moscow_time(row.last_time)};'
+                    f'{my_time.unix_to_moscow_time(row.last_pos_time)};'
                     f'{location}'
                 )
                 output.write(final_str + '\n')
         elif args == 'wialon_offline':
             output.write('wialon_id;uNumber;uid;last_time;last_pos_time;x_y position' + '\n')
-            query = CashWialon.query.filter(CashWialon.last_time < MyTime.get_time_minus_three_days()).all()
+            query = CashWialon.query.filter(CashWialon.last_time < my_time.get_time_minus_three_days()).all()
             for row in query:
                 final_str = (
                     f'{row.id};'
                     f'{row.nm};'
                     f'{row.uid};'
-                    f'{MyTime.unix_to_moscow_time(row.last_time)};'
-                    f'{MyTime.unix_to_moscow_time(row.last_pos_time)};'
+                    f'{my_time.unix_to_moscow_time(row.last_time)};'
+                    f'{my_time.unix_to_moscow_time(row.last_pos_time)};'
                     f'{row.pos_x},{row.pos_y}'
                 )
                 output.write(final_str + '\n')
@@ -62,20 +62,20 @@ def filegen(args):
                     f'{row.unit_id};'
                     f'{row.object_name};'
                     f'{row.pin};'
-                    f'{MyTime.unix_to_moscow_time(row.created_at)};'
-                    f'{MyTime.unix_to_moscow_time(row.last_time)}'
+                    f'{my_time.unix_to_moscow_time(row.created_at)};'
+                    f'{my_time.unix_to_moscow_time(row.last_time)}'
                 )
 
                 output.write(final_str + '\n')
         elif args == 'cesar_offline':
-            query = CashCesar.query.filter(CashCesar.last_time < MyTime.get_time_minus_three_days()).all()
+            query = CashCesar.query.filter(CashCesar.last_time < my_time.get_time_minus_three_days()).all()
             for row in query:
                 final_str = (
                     f'{row.unit_id};'
                     f'{row.object_name};'
                     f'{row.pin};'
-                    f'{MyTime.unix_to_moscow_time(row.created_at)};'
-                    f'{MyTime.unix_to_moscow_time(row.last_time)}'
+                    f'{my_time.unix_to_moscow_time(row.created_at)};'
+                    f'{my_time.unix_to_moscow_time(row.last_time)}'
                 )
 
                 output.write(final_str + '\n')
@@ -95,7 +95,7 @@ def filegen(args):
                 if cash_wialon.pos_y == 0:
                     final_str = f'{transport.uNumber};{cash_wialon.nm};None'
                 else:
-                    delta = CoordMath.calculate_distance(wialon_pos, office_pos)
+                    delta = coord_math.calculate_distance(wialon_pos, office_pos)
                     final_str = f'{transport.uNumber};{cash_wialon.nm};{delta}'
                 output.write(final_str + '\n')
         elif args == 'health_no_equip':

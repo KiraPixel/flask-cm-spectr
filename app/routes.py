@@ -3,10 +3,9 @@ import re
 
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 
-from . import Jira
-from .models import db, User, Transport, TransportModel, Storage, CashWialon, CashCesar
+from .models import db, User, Transport, TransportModel, Storage, CashWialon, CashCesar, Alert
 from .utils import login_required, admin_required
-from .modules import ReportGenerator, MyTime
+from modules import report_generator, my_time
 
 # Создаем Blueprint для основных маршрутов приложения
 bp = Blueprint('main', __name__)
@@ -48,8 +47,8 @@ def home():
 
     # Обрабатываем фильтрацию по дате
     if filters['last_time_start'] or filters['last_time_end']:
-        last_time_start_unix = MyTime.to_unix_time(filters['last_time_start']) if filters['last_time_start'] else 0
-        last_time_end_unix = MyTime.to_unix_time(filters['last_time_end']) if filters['last_time_end'] else time.time()
+        last_time_start_unix = my_time.to_unix_time(filters['last_time_start']) if filters['last_time_start'] else 0
+        last_time_end_unix = my_time.to_unix_time(filters['last_time_end']) if filters['last_time_end'] else time.time()
 
         # Получаем данные из CashWialon в указанный временной интервал
         cash_wialon_data = db.session.query(CashWialon).filter(
@@ -72,10 +71,20 @@ def home():
 
 
 # Страница состояния
-@bp.route('/health_check')
+@bp.route('/virtual_operator')
 @login_required
-def health_check():
-    return render_template('danger.html')
+def virtual_operator():
+    distance = db.session.query(Alert).filter(Alert.status == 0, Alert.type.in_(['distance', 'gps'])).order_by(Alert.date.desc()).all()
+    not_work = db.session.query(Alert).filter(Alert.status == 0, Alert.type == 'not_work').order_by(Alert.date.desc()).all()
+    no_equipment = db.session.query(Alert).filter(Alert.status == 0, Alert.type == 'no_equipment').order_by(Alert.date.desc()).all()
+    last_100_alerts = db.session.query(Alert).order_by(Alert.date.desc()).limit(100).all()
+
+    return render_template('virtual_operator.html',
+                           distance=distance,
+                           not_work=not_work,
+                           no_equipment=no_equipment,
+                           last_100_alerts=last_100_alerts)
+
 
 
 # Дашборды
@@ -83,10 +92,10 @@ def health_check():
 @login_required
 def dashboard():
     # Wialon
-    online_count = db.session.query(CashWialon).filter(CashWialon.last_time >= MyTime.five_minutes_ago_unix()).count()
-    offline_count = db.session.query(CashWialon).filter(CashWialon.last_time < MyTime.five_minutes_ago_unix()).count()
+    online_count = db.session.query(CashWialon).filter(CashWialon.last_time >= my_time.five_minutes_ago_unix()).count()
+    offline_count = db.session.query(CashWialon).filter(CashWialon.last_time < my_time.five_minutes_ago_unix()).count()
     offline_over_48_count = db.session.query(CashWialon).filter(
-        CashWialon.last_time < MyTime.forty_eight_hours_ago_unix()).count()
+        CashWialon.last_time < my_time.forty_eight_hours_ago_unix()).count()
     wialon = {
         'online': online_count,
         'offline': offline_count,
@@ -95,9 +104,9 @@ def dashboard():
 
     # Cesar
     online_count = db.session.query(CashWialon).filter(
-        CashWialon.last_time >= MyTime.get_time_minus_three_days()).count()
+        CashWialon.last_time >= my_time.get_time_minus_three_days()).count()
     offline_count = db.session.query(CashWialon).filter(
-        CashWialon.last_time < MyTime.get_time_minus_three_days()).count()
+        CashWialon.last_time < my_time.get_time_minus_three_days()).count()
     cesar = {
         'online': online_count,
         'offline': offline_count
@@ -109,8 +118,8 @@ def dashboard():
 
     # Последнее подключение к Cesar
     last_cesar = db.session.query(CashCesar).order_by(CashCesar.last_time.desc()).first()
-    if last_cesar.last_time > MyTime.now_unix_time():
-        last_cesar = MyTime.now_unix_time()
+    if last_cesar.last_time > my_time.now_unix_time():
+        last_cesar = my_time.now_unix_time()
     else:
         last_cesar = last_cesar.last_time if last_cesar else None
     connections = {
@@ -174,7 +183,6 @@ def get_car(car_id):
     storage = db.session.query(Storage).filter(Storage.ID == car.storage_id).first()
     transport_model = db.session.query(TransportModel).filter(TransportModel.id == car.model_id).first()
 
-    jira_info = Jira.search(search_pattern)
     return render_template(
         'car.html',
         car=car,
@@ -183,7 +191,6 @@ def get_car(car_id):
         wialon=wialon,
         storage=storage,
         transport_model=transport_model,
-        jira=jira_info
     )
 
 
@@ -199,7 +206,7 @@ def download():
             flash('Нет прав', 'warning')
             return redirect(url_for('main.home'))
 
-    return ReportGenerator.filegen(report_name)
+    return report_generator.filegen(report_name)
 
 
 # Панель администратора

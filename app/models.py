@@ -27,6 +27,8 @@ class Transport(db.Model):
     manufacture_year = db.Column(db.Text)
     vin = db.Column(db.Text)
     equipment = db.Column(db.JSON)
+    x = db.Column(db.Float)
+    y = db.Column(db.Float)
 
     transport_model = db.relationship(
         'TransportModel',
@@ -94,3 +96,14 @@ class CashWialon(db.Model):
     last_time = db.Column(db.Integer, default=0)
     last_pos_time = db.Column(db.Integer, default=0)
     linked = db.Column(db.Boolean, nullable=True, default=False)  # TINYINT(1) NULL DEFAULT '0'
+
+
+class Alert(db.Model):
+    __tablename__ = 'alert'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    date = db.Column(db.Integer, nullable=False, default=0)
+    uNumber = db.Column(db.Text, nullable=False)
+    type = db.Column(db.Text, nullable=False)
+    data = db.Column(db.Text, nullable=False)
+    status = db.Column(db.Integer, nullable=True, default=0)
+
