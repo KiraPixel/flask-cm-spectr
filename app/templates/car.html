@@ -315,6 +315,18 @@
             zoom: 3
         });
 
+        // Добавление метки "Место работы", если car.x != 0
+        {% if car.x != 0 %}
+        var workPlaceMark = new ymaps.Placemark([{{ car.x }}, {{ car.y }}], {
+            hintContent: 'Место работы',
+            balloonContent: 'Здесь работает автомобиль'
+        },
+        {
+            preset: 'islands#yellowIcon'
+        });
+        myMap.geoObjects.add(workPlaceMark);
+        {% endif %}
+
         // Добавление меток Cesar
         {% for item in cesar %}
         var cesarMark = new ymaps.Placemark([{{ item.pos_x }}, {{ item.pos_y }}], {
