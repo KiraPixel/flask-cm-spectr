@@ -67,7 +67,7 @@ def home():
         columns_data.append([transport.uNumber, transport_model.name, storage.name, storage.region])
 
     # Отображаем шаблон с результатами фильтрации
-    return render_template('filter.html', columns=columns, table_rows=columns_data, redi='/cars/', request=request)
+    return render_template('pages/search/page.html', columns=columns, table_rows=columns_data, redi='/cars/', request=request)
 
 
 # Страница состояния
@@ -79,7 +79,7 @@ def virtual_operator():
     no_equipment = db.session.query(Alert).filter(Alert.status == 0, Alert.type == 'no_equipment').order_by(Alert.date.desc()).all()
     last_100_alerts = db.session.query(Alert).order_by(Alert.date.desc()).limit(100).all()
 
-    return render_template('virtual_operator.html',
+    return render_template('pages/virtual_operator/page.html',
                            distance=distance,
                            not_work=not_work,
                            no_equipment=no_equipment,
@@ -127,14 +127,14 @@ def dashboard():
         'last_cesar': last_cesar
     }
 
-    return render_template('dashboard.html', wialon=wialon, connections=connections, cesar=cesar)
+    return render_template('pages/dashboard/page.html', wialon=wialon, connections=connections, cesar=cesar)
 
 
 # Страница отчетов
 @bp.route('/rep')
 @login_required
 def reports():
-    return render_template('reports.html')
+    return render_template('pages/reports/page.html')
 
 
 # Страница входа
@@ -184,7 +184,7 @@ def get_car(car_id):
     transport_model = db.session.query(TransportModel).filter(TransportModel.id == car.model_id).first()
 
     return render_template(
-        'car.html',
+        'pages/car/page.html',
         car=car,
         car_name=car_id,
         cesar=cesar,
@@ -209,61 +209,11 @@ def download():
     return report_generator.filegen(report_name)
 
 
-# Панель администратора
-@bp.route('/admin/', methods=['GET', 'POST'])
+@bp.route('/user_setting')
 @login_required
-@admin_required
-def admin_panel():
-    if request.method == 'POST':
-        username = request.form['username']
-        email = request.form['email']
-        password = request.form['password']
-        role = request.form['role']
-
-        new_user = User(username=username, email=email, password=password, role=role,
-                        last_activity="1999-12-02 00:00:00")
-        db.session.add(new_user)
-        db.session.commit()
-        return redirect(url_for('main.admin_panel'))
-
-    users = User.query.all()
-    return render_template('admin_panel.html', users=users)
-
-
-# Редактирование пользователя
-@bp.route('/edit_user/<int:user_id>', methods=['POST'])
-@login_required
-@admin_required
-def edit_user(user_id):
-    user = User.query.get_or__404(user_id)
-    if request.method == 'POST':
-        user.username = request.form['username']
-        user.email = request.form['email']
-        user.role = request.form['role']
-        db.session.commit()
-        return redirect(url_for('main.admin_panel'))
-
-    return redirect(url_for('main.admin_panel'))
-
-
-# Удаление пользователя
-@bp.route('/delete_user/<int:user_id>')
-@login_required
-@admin_required
-def delete_user(user_id):
-    user = User.query.get_or_404(user_id)
-    db.session.delete(user)
-    db.session.commit()
-    return redirect(url_for('main.admin_panel'))
-
-
-# Назначение доступов пользователю
-@bp.route('/set_access/<int:user_id>')
-@login_required
-@admin_required
-def set_access(user_id):
-    user = User.query.get_or_404(user_id)
-    return f"Назначить доступы для пользователя {user}"
+def user_setting():
+    user = User.query.filter_by(username=session['username']).first_or_404()
+    return(render_template('pages/user_settings/page.html', user=user))
 
 
 @bp.route('/map/')
@@ -279,16 +229,18 @@ def map_page():
 def transport_page():
     storages = Storage.query.all()
     models = TransportModel.query.all()
-    return render_template('resources/transport.html', storages=storages, models=models)
+    return render_template('pages/resources/transport.html', storages=storages, models=models)
 
 
 @bp.route('/resources/storage')
 @login_required
 def storage_page():
     storages = Storage.query.all()
-    return render_template('resources/storage.html', storages=storages)
+    return render_template('pages/resources/storage.html', storages=storages)
 
 
 @bp.route('/resources/models', methods=['GET'])
 def models_page():
-    return render_template('resources/models.html')
+    return render_template('pages/resources/models.html')
+
+

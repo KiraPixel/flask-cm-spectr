@@ -1,0 +1,60 @@
+{% extends 'main.html' %}
+
+{% block title %}
+Настройки пользователя
+{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <h2 class="mb-4">Настройки пользователя</h2>
+
+    <!-- Профиль пользователя -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h4 class="card-title">Профиль пользователя</h4>
+        </div>
+        <div class="card-body">
+            <p><strong>Имя пользователя:</strong> {{ user.username }}</p>
+            <p><strong>Электронная почта:</strong> {{ user.email }}</p>
+            <p><strong>Роль:</strong> {{ 'Администратор' if user.role == 1 else 'Пользователь' }}</p>
+            <p><strong>Последняя активность:</strong> {{ user.last_activity.strftime('%d-%m-%Y %H:%M:%S') }}</p>
+        </div>
+    </div>
+
+    <!-- Форма для изменения почты -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h4 class="card-title">Изменить почту</h4>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="">
+                <div class="form-group">
+                    <label for="email">Новая почта:</label>
+                    <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Форма для изменения пароля -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h4 class="card-title">Изменить пароль</h4>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="">
+                <div class="form-group">
+                    <label for="new_password">Новый пароль:</label>
+                    <input type="password" class="form-control" id="new_password" name="new_password" required>
+                </div>
+                <div class="form-group">
+                    <label for="confirm_password">Подтвердите новый пароль:</label>
+                    <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

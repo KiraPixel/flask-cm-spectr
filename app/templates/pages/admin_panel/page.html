@@ -41,9 +41,10 @@
                         <td>{{ user.last_activity.strftime('%Y-%m-%d') if user.last_activity else 'Н/Д' }}</td>
                         <td>{{ user.email }}</td>
                         <td>
-                            <a href="{{ url_for('main.set_access', user_id=user.id) }}" class="btn btn-info btn-sm">Назначить доступы</a>
+                            <a href="{{ url_for('admin.set_access', user_id=user.id) }}" class="btn btn-info btn-sm">Назначить доступы</a>
+                            <a href="{{ url_for('admin.reset_pass', user_id=user.id) }}" class="btn btn-warning btn-sm">Сбросить пароль</a>
                             <a href="#" class="btn btn-warning btn-sm edit-user-btn" data-bs-toggle="modal" data-bs-target="#editUserModal" data-id="{{ user.id }}" data-username="{{ user.username }}" data-email="{{ user.email }}" data-role="{{ user.role }}">Редактировать</a>
-                            <a href="{{ url_for('main.delete_user', user_id=user.id) }}" class="btn btn-danger btn-sm">Удалить</a>
+                            <a href="{{ url_for('admin.delete_user', user_id=user.id) }}" class="btn btn-danger btn-sm">Удалить</a>
                             </td>
                     </tr>
                     {% endfor %}
@@ -61,7 +62,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form id="addUserForm" action="{{ url_for('main.admin_panel') }}" method="POST">
+                <form id="addUserForm" action="{{ url_for('admin.admin_panel') }}" method="POST">
                     <div class="mb-3">
                         <label for="addUsername" class="form-label">Имя пользователя</label>
                         <input type="text" class="form-control" id="addUsername" name="username" required>

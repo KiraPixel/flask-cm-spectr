@@ -14,9 +14,9 @@ services:
       CESAR_USERNAME: ${CESAR_USERNAME}
       CESAR_PASSWORD: ${CESAR_PASSWORD}
       WIALON_TOKEN: ${WIALON_TOKEN}
-      JIRA_USERNAME: ${JIRA_USERNAME}
-      JIRA_PASSWORD: ${JIRA_PASSWORD}
-      JIRA_URL: ${JIRA_URL}
+      MAIL_MAIL: ${MAIL_MAIL}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      MAIL_USERNAME: ${MAIL_USERNAME}
     ports:
       - "5000:5000"
     stdin_open: true   # Открывает стандартный вход

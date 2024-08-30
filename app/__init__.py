@@ -24,9 +24,11 @@ def create_app():
 
     from .routes import bp as main_bp
     from .routes_api import api_bp
+    from .routes_admin import admin_bp
 
     app.register_blueprint(main_bp)
     app.register_blueprint(api_bp, url_prefix='/api')
+    app.register_blueprint(admin_bp)
 
     app.jinja_env.filters['unix_to_datetime'] = my_time.unix_to_moscow_time
     app.jinja_env.filters['online_check'] = my_time.online_check
