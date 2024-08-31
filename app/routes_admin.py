@@ -4,7 +4,7 @@ import string
 from flask import Blueprint, request, render_template, redirect, url_for
 from .utils import login_required, admin_required
 from .models import db, User
-from modules import mail_sender
+from modules import mail_sender, hash_password
 
 
 admin_bp = Blueprint('admin', __name__)
@@ -18,6 +18,7 @@ def admin_panel():
         username = request.form['username']
         email = request.form['email']
         password = request.form['password']
+        password = hash_password.hash_password(password)
         role = request.form['role']
 
         new_user = User(username=username, email=email, password=password, role=role,
@@ -69,6 +70,9 @@ def set_access(user_id):
 # Функция для обновления пароля пользователя
 def update_user_password(user_id, new_password):
     user = User.query.get_or_404(user_id)
+    print(new_password)
+    new_password = hash_password.hash_password(new_password)
+    print(new_password)
     user.password = new_password
     db.session.commit()
 

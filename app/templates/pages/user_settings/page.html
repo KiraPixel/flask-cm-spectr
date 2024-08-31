@@ -18,43 +18,103 @@
             <p><strong>Электронная почта:</strong> {{ user.email }}</p>
             <p><strong>Роль:</strong> {{ 'Администратор' if user.role == 1 else 'Пользователь' }}</p>
             <p><strong>Последняя активность:</strong> {{ user.last_activity.strftime('%d-%m-%Y %H:%M:%S') }}</p>
+            <a href="#" id="change-email-btn" class="btn btn-secondary mt-3">Изменить почту</a>
+            <a href="#" id="change-password-btn" class="btn btn-secondary mt-3">Изменить пароль</a>
         </div>
     </div>
 
-    <!-- Форма для изменения почты -->
-    <div class="card mb-4">
-        <div class="card-header">
-            <h4 class="card-title">Изменить почту</h4>
-        </div>
-        <div class="card-body">
-            <form method="POST" action="">
-                <div class="form-group">
-                    <label for="email">Новая почта:</label>
-                    <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}" required>
-                </div>
-                <button type="submit" class="btn btn-primary">Сохранить изменения</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Форма для изменения пароля -->
-    <div class="card mb-4">
-        <div class="card-header">
-            <h4 class="card-title">Изменить пароль</h4>
-        </div>
-        <div class="card-body">
-            <form method="POST" action="">
-                <div class="form-group">
-                    <label for="new_password">Новый пароль:</label>
-                    <input type="password" class="form-control" id="new_password" name="new_password" required>
-                </div>
-                <div class="form-group">
-                    <label for="confirm_password">Подтвердите новый пароль:</label>
-                    <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
-                </div>
-                <button type="submit" class="btn btn-primary">Сохранить изменения</button>
-            </form>
-        </div>
-    </div>
+    <!-- Здесь будет загружаться форма для изменения почты или пароля -->
+    <div id="user-settings-content"></div>
 </div>
+
+<script>
+    function loadContent(url, callback) {
+        fetch(url)
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById('user-settings-content').innerHTML = html;
+                if (callback) {
+                    callback();
+                }
+            });
+    }
+
+    document.getElementById('change-email-btn').addEventListener('click', function(event) {
+        event.preventDefault();
+        loadContent('/user_settings/email', initEmailForm);
+    });
+
+    document.getElementById('change-password-btn').addEventListener('click', function(event) {
+        event.preventDefault();
+        loadContent('/user_settings/pass', initPasswordForm);
+    });
+
+    function initEmailForm() {
+        const emailInput = document.getElementById('email');
+        const submitBtn = document.querySelector('form button[type="submit"]');
+
+        function validateEmail() {
+            const email = emailInput.value;
+            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+            if (emailPattern.test(email)) {
+                emailInput.classList.remove('is-invalid');
+                emailInput.classList.add('is-valid');
+                submitBtn.disabled = false;
+            } else {
+                emailInput.classList.remove('is-valid');
+                emailInput.classList.add('is-invalid');
+                submitBtn.disabled = true;
+            }
+        }
+
+        emailInput.addEventListener('input', validateEmail);
+    }
+
+
+    function initPasswordForm() {
+    const newPassword = document.getElementById('new_password');
+    const confirmPassword = document.getElementById('confirm_password');
+    const submitBtn = document.getElementById('submitBtn');
+
+    function validatePassword() {
+        const password = newPassword.value;
+        const confirm = confirmPassword.value;
+
+        // Проверка на количество символов, наличие цифр или спецсимволов, и наличие хотя бы одной буквы
+        const hasLength = password.length >= 6;
+        const hasNumberOrSpecial = /[0-9!@#$%^&*]/.test(password);
+        const hasLetter = /[a-zA-Z]/.test(password);
+
+        // Управление состоянием валидации для нового пароля
+        if (hasLength && hasNumberOrSpecial && hasLetter) {
+            newPassword.classList.remove('is-invalid');
+            newPassword.classList.add('is-valid');
+        } else {
+            newPassword.classList.remove('is-valid');
+            newPassword.classList.add('is-invalid');
+        }
+
+        // Проверка совпадения паролей
+        if (password === confirm && hasLength && hasNumberOrSpecial && hasLetter) {
+            confirmPassword.classList.remove('is-invalid');
+            confirmPassword.classList.add('is-valid');
+        } else {
+            confirmPassword.classList.remove('is-valid');
+            confirmPassword.classList.add('is-invalid');
+        }
+
+        // Включение кнопки отправки, если все условия выполнены
+        submitBtn.disabled = !(hasLength && hasNumberOrSpecial && hasLetter && password === confirm);
+    }
+
+    // Добавляем обработчики событий
+    newPassword.addEventListener('input', validatePassword);
+    confirmPassword.addEventListener('input', validatePassword);
+}
+
+</script>
+
+
+
 {% endblock %}

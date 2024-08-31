@@ -5,7 +5,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, sessio
 
 from .models import db, User, Transport, TransportModel, Storage, CashWialon, CashCesar, Alert
 from .utils import login_required, admin_required
-from modules import report_generator, my_time
+from modules import report_generator, my_time, hash_password
 
 # Создаем Blueprint для основных маршрутов приложения
 bp = Blueprint('main', __name__)
@@ -145,7 +145,7 @@ def login():
         username = request.form['username']
         password = request.form['password']
         user = User.query.filter_by(username=username).first()
-        if user and user.password == password:
+        if hash_password.compare_passwords(user.password, password):
             session.permanent = True
             session['username'] = username
             return redirect(url_for('main.home'))
@@ -209,11 +209,7 @@ def download():
     return report_generator.filegen(report_name)
 
 
-@bp.route('/user_setting')
-@login_required
-def user_setting():
-    user = User.query.filter_by(username=session['username']).first_or_404()
-    return(render_template('pages/user_settings/page.html', user=user))
+
 
 
 @bp.route('/map/')
@@ -242,5 +238,7 @@ def storage_page():
 @bp.route('/resources/models', methods=['GET'])
 def models_page():
     return render_template('pages/resources/models.html')
+
+
 
 
