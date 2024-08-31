@@ -23,6 +23,9 @@
                 <li class="nav-item">
                     <a class="nav-link {% if request.endpoint == 'main.dashboard' %}active{% endif %}" href="/dashboard">Дашборд</a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'main.reports' %}active{% endif %}" href="/rep">Отчеты</a>
+                </li>
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="resourcesDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         Ресурсы
@@ -32,9 +35,6 @@
                         <li><a class="dropdown-item" href="/resources/storage">Склады</a></li>
                         <li><a class="dropdown-item" href="/resources/models">Модели ТС</a></li>
                     </ul>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {% if request.endpoint == 'main.reports' %}active{% endif %}" href="/rep">Отчеты</a>
                 </li>
             </ul>
 
@@ -70,7 +70,7 @@
                     <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userDropdown">
                         <li><a class="dropdown-item" href="/map">Все объекты на карте</a></li>
                         <li><a class="dropdown-item" href="/admin">Админ панель</a></li>
-                        <li><a class="dropdown-item" href="#">Настройки</a></li>
+                        <li><a class="dropdown-item" href="/user_setting">Настройки</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="{{ url_for('main.logout') }}">Выйти</a></li>
                     </ul>

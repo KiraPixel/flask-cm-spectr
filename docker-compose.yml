@@ -15,8 +15,8 @@ services:
       CESAR_PASSWORD: ${CESAR_PASSWORD}
       WIALON_TOKEN: ${WIALON_TOKEN}
       MAIL_MAIL: ${MAIL_MAIL}
-      MAIL_PASSWORD: ${MAIL_PASSWORD}
       MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
     ports:
       - "5000:5000"
     stdin_open: true   # Открывает стандартный вход
