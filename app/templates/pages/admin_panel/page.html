@@ -11,7 +11,7 @@
     <!-- Кнопка для создания нового пользователя -->
     <div class="mb-4">
         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
-            Добавить пользователя
+            Пригласить пользователя
         </button>
     </div>
 
@@ -58,7 +58,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="addUserModalLabel">Создать пользователя</h5>
+                <h5 class="modal-title" id="addUserModalLabel">Пригласить пользователя</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -71,22 +71,11 @@
                         <label for="addEmail" class="form-label">Email</label>
                         <input type="email" class="form-control" id="addEmail" name="email" required>
                     </div>
-                    <div class="mb-3">
-                        <label for="addPassword" class="form-label">Пароль</label>
-                        <input type="password" class="form-control" id="addPassword" name="password" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="addRole" class="form-label">Роль</label>
-                        <select class="form-control" id="addRole" name="role" required>
-                            <option value="1">Администратор</option>
-                            <option value="2">Пользователь</option>
-                        </select>
-                    </div>
                 </form>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
-                <button type="submit" form="addUserForm" class="btn btn-primary">Создать</button>
+                <button type="submit" form="addUserForm" class="btn btn-primary">Пригласить</button>
             </div>
         </div>
     </div>

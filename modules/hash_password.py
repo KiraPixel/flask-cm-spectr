@@ -1,6 +1,12 @@
 import hashlib
 import binascii
 import os
+import secrets
+import string
+
+
+def generator_password():
+    return ''.join(secrets.choice(string.ascii_letters + string.digits + string.punctuation) for _ in range(12))
 
 
 def hash_password(password):
