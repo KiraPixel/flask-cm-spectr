@@ -33,6 +33,7 @@ def send_email(target_email, subject, body, attachment_name=None, attachment_con
         msg.send()
         return True
     except Exception as e:
+        print(e)
         return False
 
 
