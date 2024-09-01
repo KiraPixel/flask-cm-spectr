@@ -195,18 +195,30 @@ def get_car(car_id):
 
 
 # Скачивание отчета
-@bp.route('/download', endpoint="download")
+@bp.route('/send_report', endpoint="send_report")
 @login_required
-def download():
+def send_report():
     report_name = request.args.get('report')
+    print(f"Received report name: {report_name}")
+
+    if not report_name:
+        flash('Не указан отчет для отправки', 'warning')
+        return redirect(url_for('main.home'))
+
+    user = User.query.filter_by(username=session['username']).first_or_404()
 
     if report_name == 'wialon_with_address':
-        user = User.query.filter_by(username=session['username']).first_or_404()
         if user.role != 1:
             flash('Нет прав', 'warning')
             return redirect(url_for('main.home'))
 
-    return report_generator.filegen(report_name)
+    if report_generator.generate_and_send_report(report_name, user):
+        flash('Отчет отправлен на почту', 'info')
+
+        return redirect(url_for('main.reports'))
+    else:
+        flash('Произошла ошибка, обратитесь к системному администратору', 'warning')
+        return redirect(url_for('main.reports'))
 
 
 

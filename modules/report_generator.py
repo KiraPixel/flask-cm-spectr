@@ -1,11 +1,12 @@
 import io
+import tempfile
 
-from flask import send_file
 from sqlalchemy import func
 
 from app.models import Transport, CashCesar, CashWialon
 from . import my_time, location_module, coord_math
 from app import db
+from modules import mail_sender
 
 
 def filegen(args):
@@ -86,16 +87,16 @@ def filegen(args):
             output.write('Номер лота;Название в Wialon;Дистанция до офиса' + '\n')
             query = db.session.query(Transport, CashWialon). \
                 join(CashWialon, CashWialon.nm.like(func.concat('%', Transport.uNumber, '%'))). \
+                filter(Transport.x != 0). \
                 all()
             for transport, cash_wialon in query:
-                # это баг виалона, нужно привыкнуть или мб однажды поменять
                 wialon_pos = (cash_wialon.pos_y, cash_wialon.pos_x)
 
-                office_pos = (55.913856, 37.417132)
+                work_pos = (transport.x, transport.y)
                 if cash_wialon.pos_y == 0:
                     final_str = f'{transport.uNumber};{cash_wialon.nm};None'
                 else:
-                    delta = coord_math.calculate_distance(wialon_pos, office_pos)
+                    delta = coord_math.calculate_distance(wialon_pos, work_pos)
                     final_str = f'{transport.uNumber};{cash_wialon.nm};{delta}'
                 output.write(final_str + '\n')
         elif args == 'health_no_equip':
@@ -132,9 +133,21 @@ def filegen(args):
         return None
 
     output.seek(0)
-    return send_file(
-        io.BytesIO(output.getvalue().encode('utf-8')),
-        mimetype='text/plain',
-        as_attachment=True,
-        download_name=f'{args}.txt'
-    )
+    return output.getvalue()
+
+
+def generate_and_send_report(args, user):
+    # Генерация отчёта
+    report_content = filegen(args)
+
+    # Если отчёт не сгенерирован, возвращаем ошибку
+    if report_content is None:
+        return False
+
+    subject = f'Отчет: {args}'
+    body = f'Во вложении заказанный отчет {args}.'
+    attachment_name = f'{args}.csv'
+
+    # Отправка отчёта по email
+    success = mail_sender.send_email(user.email, subject, body, attachment_name, report_content.encode('windows-1251'))
+    return success

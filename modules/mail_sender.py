@@ -1,12 +1,12 @@
 import os
-from exchangelib import Credentials, Account, Message, DELEGATE, HTMLBody
+from exchangelib import Credentials, Account, Message, DELEGATE, HTMLBody, FileAttachment
 
 sender_email = os.getenv('MAIL_MAIL', 'nomail@nomail')
 sender_login = os.getenv('MAIL_USERNAME', 'user')
 sender_password = os.getenv('MAIL_PASSWORD', 'password')
 
 
-def send_email(target_email, subject, body):
+def send_email(target_email, subject, body, attachment_name=None, attachment_content=None):
     try:
         # Создаем учетные данные
         credentials = Credentials(username=sender_login, password=sender_password)
@@ -22,6 +22,12 @@ def send_email(target_email, subject, body):
             body=HTMLBody(body),
             to_recipients=[target_email]
         )
+        if attachment_name:
+            attachment = FileAttachment(
+                name=attachment_name,
+                content=attachment_content,
+            )
+            msg.attach(attachment)
 
         # Отправляем сообщение
         msg.send()
