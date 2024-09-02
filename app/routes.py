@@ -210,7 +210,7 @@ def send_report():
     if report_name == 'wialon_with_address':
         if user.role != 1:
             flash('Нет прав', 'warning')
-            return redirect(url_for('main.home'))
+            return redirect(url_for('main.reports'))
 
     if report_generator.generate_and_send_report(report_name, user):
         flash('Отчет отправлен на почту', 'info')
