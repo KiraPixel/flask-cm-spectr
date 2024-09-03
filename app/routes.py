@@ -1,3 +1,4 @@
+import json
 import time
 import re
 
@@ -33,6 +34,7 @@ def home():
     query = db.session.query(Transport, Storage, TransportModel).join(Storage, Transport.storage_id == Storage.ID).join(
         TransportModel, Transport.model_id == TransportModel.id)
 
+
     # Применяем фильтры к запросу
     if filters['nm']:
         query = query.filter(Transport.uNumber.like(f'%{filters["nm"]}%'))
@@ -45,6 +47,12 @@ def home():
 
     # Выполняем запрос и получаем данные
     data_db = query.all()
+
+    # Фильтруем транспорт по доступам пользователя
+    user = User.query.filter_by(username=session['username']).first_or_404()
+    if user.role <= -1:
+        user_access = json.loads(user.access)  # Предполагаем, что доступы хранятся в формате JSON
+        data_db = [item for item in data_db if item[0].manager in user_access]
 
     # Обрабатываем фильтрацию по дате
     if filters['last_time_start'] or filters['last_time_end']:
