@@ -26,6 +26,9 @@ def need_access(required_role):
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
+            if 'username' not in session:
+                flash('Вы пытались зайти на страницу к которой требуется авторизация.', 'warning')
+                return redirect(url_for('main.login'))
             user = User.query.filter_by(username=session['username']).first_or_404()
             if user.role < required_role:
                 flash('Недостаточно прав для доступа', 'warning')
