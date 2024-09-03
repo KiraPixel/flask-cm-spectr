@@ -22,12 +22,14 @@ def login_required(f):
     return decorated_function
 
 
-def admin_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        user = User.query.filter_by(username=session['username']).first_or_404()
-        if user.role != 1:
-            return render_template('error.html', error_message='Нет прав')
-        return f(*args, **kwargs)
-
-    return decorated_function
+def need_access(required_role):
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            user = User.query.filter_by(username=session['username']).first_or_404()
+            if user.role < required_role:
+                flash('Недостаточно прав для доступа', 'warning')
+                return redirect(url_for('main.home'))
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator

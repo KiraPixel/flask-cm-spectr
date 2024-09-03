@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from . import db
-from .utils import login_required, admin_required
+from .utils import login_required, need_access
 from .models import Transport, TransportModel, Storage
 
 # Создаем Blueprint для API маршрутов приложения
@@ -9,7 +9,7 @@ api_bp = Blueprint('api', __name__)
 
 @api_bp.route('/search_transport')
 @login_required
-@admin_required
+@need_access(1)
 def search_transport():
     uNumber = request.args.get('uNumber')
     transports = Transport.query.filter(Transport.uNumber.like(f'%{uNumber}%')).all()
@@ -26,7 +26,7 @@ def search_transport():
 
 @api_bp.route('/get_transport')
 @login_required
-@admin_required
+@need_access(1)
 def get_transport():
     transport_id = request.args.get('id')
     transport = Transport.query.get(transport_id)
@@ -45,7 +45,7 @@ def get_transport():
 
 @api_bp.route('/add_transport', methods=['POST'])
 @login_required
-@admin_required
+@need_access(1)
 def add_transport():
     data = request.json
     uNumber = data['uNumber']
@@ -65,7 +65,7 @@ def add_transport():
 
 @api_bp.route('/update_transport', methods=['POST'])
 @login_required
-@admin_required
+@need_access(1)
 def update_transport():
     transport_id = request.form['id']
     transport = Transport.query.get(transport_id)
@@ -83,7 +83,7 @@ def update_transport():
 
 @api_bp.route('/search_storage', methods=['GET'])
 @login_required
-@admin_required
+@need_access(1)
 def search_storage():
     name_query = request.args.get('name', '')
     storages = Storage.query.filter(Storage.name.ilike(f'%{name_query}%')).all()
@@ -99,7 +99,7 @@ def search_storage():
 
 @api_bp.route('/get_storage', methods=['GET'])
 @login_required
-@admin_required
+@need_access(1)
 def get_storage():
     storage_id = request.args.get('id')
     storage = Storage.query.get(storage_id)
@@ -118,7 +118,7 @@ def get_storage():
 
 @api_bp.route('/add_storage', methods=['POST'])
 @login_required
-@admin_required
+@need_access(1)
 def add_storage():
     data = request.json
     existing_storage = Storage.query.filter_by(name=data['name']).first()
@@ -139,7 +139,7 @@ def add_storage():
 
 @api_bp.route('/update_storage', methods=['POST'])
 @login_required
-@admin_required
+@need_access(1)
 def update_storage():
     data = request.form
     storage = Storage.query.get(data['ID'])
@@ -159,7 +159,7 @@ def update_storage():
 
 @api_bp.route('/delete_storage', methods=['POST'])
 @login_required
-@admin_required
+@need_access(1)
 def delete_storage():
     data = request.json
     storage_id = data['ID']
@@ -175,7 +175,7 @@ def delete_storage():
 
 @api_bp.route('/search_model', methods=['POST'])
 @login_required
-@admin_required
+@need_access(1)
 def search_model():
     data = request.json
     name = data.get('name', '')
@@ -191,7 +191,7 @@ def search_model():
 
 @api_bp.route('/add_model', methods=['POST'])
 @login_required
-@admin_required
+@need_access(1)
 def add_model():
     data = request.json
     new_model = TransportModel(
@@ -207,7 +207,7 @@ def add_model():
 
 @api_bp.route('/delete_model', methods=['POST'])
 @login_required
-@admin_required
+@need_access(1)
 def delete_model():
     data = request.json
     model_id = data.get('id')
@@ -222,7 +222,7 @@ def delete_model():
 
 @api_bp.route('/get_model', methods=['GET'])
 @login_required
-@admin_required
+@need_access(1)
 def get_model():
     model_id = request.args.get('id')
     model = TransportModel.query.get(model_id)
@@ -240,7 +240,7 @@ def get_model():
 
 @api_bp.route('/update_model', methods=['POST'])
 @login_required
-@admin_required
+@need_access(1)
 def update_model():
     data = request.json
     model_id = data.get('id')

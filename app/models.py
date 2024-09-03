@@ -10,6 +10,7 @@ class User(db.Model):
     role = db.Column(db.Integer, nullable=False)
     last_activity = db.Column(db.DateTime, nullable=False)
     email = db.Column(db.String, nullable=False)
+    access = db.Column(db.JSON)
 
     def __repr__(self):
         return '<User %r>' % self.username
@@ -29,6 +30,8 @@ class Transport(db.Model):
     equipment = db.Column(db.JSON)
     x = db.Column(db.Float)
     y = db.Column(db.Float)
+    customer = db.Column(db.Text)
+    manager = db.Column(db.Text)
 
     transport_model = db.relationship(
         'TransportModel',

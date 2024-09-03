@@ -4,7 +4,7 @@ import re
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 
 from .models import db, User, Transport, TransportModel, Storage, CashWialon, CashCesar, Alert
-from .utils import login_required, admin_required
+from .utils import login_required, need_access
 from modules import report_generator, my_time, hash_password
 
 # Создаем Blueprint для основных маршрутов приложения
@@ -13,6 +13,7 @@ bp = Blueprint('main', __name__)
 
 # Главная страница
 @bp.route('/', endpoint='home')
+@need_access(-2)
 @login_required
 def home():
     columns = ['№ Лота', 'Модель', 'Склад', 'Регион']
@@ -72,6 +73,7 @@ def home():
 
 # Страница состояния
 @bp.route('/virtual_operator')
+@need_access(0)
 @login_required
 def virtual_operator():
     distance = db.session.query(Alert).filter(Alert.status == 0, Alert.type.in_(['distance', 'gps'])).order_by(Alert.date.desc()).all()
@@ -90,6 +92,7 @@ def virtual_operator():
 # Дашборды
 @bp.route('/dashboard')
 @login_required
+@need_access(0)
 def dashboard():
     # Wialon
     online_count = db.session.query(CashWialon).filter(CashWialon.last_time >= my_time.five_minutes_ago_unix()).count()
@@ -133,6 +136,7 @@ def dashboard():
 # Страница отчетов
 @bp.route('/rep')
 @login_required
+@need_access(0)
 def reports():
     return render_template('pages/reports/page.html')
 
@@ -145,7 +149,10 @@ def login():
         username = request.form['username']
         password = request.form['password']
         user = User.query.filter_by(username=username).first()
-        if hash_password.compare_passwords(user.password, password):
+        print(user)
+        if user is None:
+            error = 'Неправильный логин или пароль. Попробуйте снова.'
+        elif hash_password.compare_passwords(user.password, password):
             session.permanent = True
             session['username'] = username
             return redirect(url_for('main.home'))
@@ -166,6 +173,7 @@ def logout():
 # Страница информации о конкретной машине
 @bp.route('/cars/<string:car_id>')
 @login_required
+@need_access(-1)
 def get_car(car_id):
     text = car_id.replace(' ', '')
     if re.match(r'^[A-Z]+\d{5}$', text):
@@ -197,6 +205,7 @@ def get_car(car_id):
 # Скачивание отчета
 @bp.route('/send_report', endpoint="send_report")
 @login_required
+@need_access(0)
 def send_report():
     report_name = request.args.get('report')
     print(f"Received report name: {report_name}")
@@ -226,6 +235,7 @@ def send_report():
 
 @bp.route('/map/')
 @login_required
+@need_access(0)
 def map_page():
     wialon = db.session.query(CashWialon).all()
     cesar = db.session.query(CashCesar).all()
@@ -233,6 +243,7 @@ def map_page():
 
 
 @bp.route('/resources/transport')
+@need_access(1)
 @login_required
 def transport_page():
     storages = Storage.query.all()
@@ -241,6 +252,7 @@ def transport_page():
 
 
 @bp.route('/resources/storage')
+@need_access(1)
 @login_required
 def storage_page():
     storages = Storage.query.all()
@@ -248,6 +260,8 @@ def storage_page():
 
 
 @bp.route('/resources/models', methods=['GET'])
+@need_access(1)
+@login_required
 def models_page():
     return render_template('pages/resources/models.html')
 
