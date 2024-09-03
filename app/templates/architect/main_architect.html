@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Архитектор</title>
+    <link rel="icon" href="{{ url_for('static', filename='img/logo.png') }}">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .navbar-bg { background-color: #4A4A4A; } /* Темно-серый для навигации */
+        .sidebar-bg { background-color: #333333; } /* Еще темнее для бокового меню */
+        .sidebar-hidden { transform: translateX(-100%); } /* Скрытое состояние бокового меню */
+        .sidebar-visible { transform: translateX(0); } /* Видимое состояние бокового меню */
+        .transition-transform { transition: transform 0.3s ease; }
+        .transition-margin { transition: margin-left 0.3s ease; }
+        .sidebar-toggle-btn {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            top: 50%;
+            right: -1.25rem;
+            transform: translateY(-50%);
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            z-index: 30; /* Чтобы кнопка всегда была выше меню */
+            border: none; /* Убираем обводку */
+            background-color: transparent; /* Убираем заливку кнопки */
+        }
+        .sidebar-toggle-btn:hover {
+            background-color: transparent; /* Убираем заливку при наведении */
+        }
+        .sidebar-toggle-btn span {
+            font-size: 1.5rem;
+            color: #4A4A4A; /* Цвет иконки кнопки */
+        }
+        .sidebar {
+            width: 16rem; /* Ширина бокового меню */
+            height: calc(100vh - 3rem); /* Высота бокового меню, исключая шапку */
+        }
+        .main-content {
+            transition: margin-left 0.3s ease;
+            margin-left: 18em; /* Начальное значение отступа */
+        }
+        .main-content.shift {
+            margin-left: 0; /* Значение отступа, когда меню скрыто */
+        }
+        /* Стили для шапки */
+        .navbar-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+        .navbar-left {
+            margin-right: auto;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 flex flex-col min-h-screen">
+
+    <!-- Navbar -->
+    <header class="navbar-bg text-white p-3 shadow-md w-full z-30 flex items-center">
+        <div class="navbar-container">
+            <div class="navbar-left">
+                 <p class="text-xl font-semibold">Архитектор</p>
+            </div>
+            <a href="{{ url_for('main.home') }}" class="link-primary text-sm hover:underline">
+            Вернуться в центр мониторинга
+            </a>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="flex flex-1 relative">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="sidebar-bg text-white p-4 sidebar-visible transition-transform fixed top-0 left-0 h-full z-20">
+            <div id="sidebar-content">
+                <h2 class="text-xl font-semibold mb-6">Базы данных</h2>
+                <ul class="space-y-2">
+                    <li><a href="#" class="block py-2 px-4 rounded hover:bg-gray-600 transition">Парк техники</a></li>
+                    <li><a href="#" class="block py-2 px-4 rounded hover:bg-gray-600 transition">Модели транспортных средств</a></li>
+                    <li><a href="#" class="block py-2 px-4 rounded hover:bg-gray-600 transition">Регионы</a></li>
+                    <li><a href="#" class="block py-2 px-4 rounded hover:bg-gray-600 transition">Склады</a></li>
+                    <li><a href="#" class="block py-2 px-4 rounded hover:bg-gray-600 transition">Организации</a></li>
+                </ul>
+            </div>
+            <div id="toggle-sidebar" class="sidebar-toggle-btn">
+                <span id="sidebar-icon">&#9664;</span>
+            </div>
+        </aside>
+
+        <!-- Main Section -->
+        <main id="main-content" class="main-content flex-1 p-6 bg-white shadow-lg rounded-lg">
+            <!-- Это место для встраивания других шаблонов -->
+            {% block content %}
+            <p class="text-gray-700">Выберите базу данных слева для работы с ней.</p>
+            {% endblock %}
+        </main>
+    </div>
+
+    <script>
+        document.getElementById('toggle-sidebar').addEventListener('click', function() {
+            var sidebar = document.getElementById('sidebar');
+            var mainContent = document.getElementById('main-content');
+            var sidebarIcon = document.getElementById('sidebar-icon');
+
+            if (sidebar.classList.contains('sidebar-visible')) {
+                sidebar.classList.remove('sidebar-visible');
+                sidebar.classList.add('sidebar-hidden');
+                mainContent.classList.add('shift');
+                sidebarIcon.innerHTML = '&#9654;'; // Стрелка вправо
+            } else {
+                sidebar.classList.remove('sidebar-hidden');
+                sidebar.classList.add('sidebar-visible');
+                mainContent.classList.remove('shift');
+                sidebarIcon.innerHTML = '&#9664;'; // Стрелка влево
+            }
+        });
+    </script>
+</body>
+</html>

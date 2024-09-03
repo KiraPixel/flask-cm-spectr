@@ -37,13 +37,15 @@
                     <tr>
                         <td>{{ user.id }}</td>
                         <td>{{ user.username }}</td>
-                        <td>{{ 'Администратор' if user.role == 1 else 'Пользователь' }}</td>
+                        <td>{{ 'Администратор' if user.role == 1 else 'Пользователь' if user.role == 0 else 'Ограниченный доступ' }}</td>
                         <td>{{ user.last_activity.strftime('%Y-%m-%d') if user.last_activity else 'Н/Д' }}</td>
                         <td>{{ user.email }}</td>
                         <td>
-                            <a href="{{ url_for('admin.set_access', user_id=user.id) }}" class="btn btn-info btn-sm">Назначить доступы</a>
+                            {% if user.role <= -1 %}
+                                <a href="{{ url_for('admin.set_access', user_id=user.id) }}" class="btn btn-success btn-sm">Назначить доступы</a>
+                            {% endif %}
                             <a href="{{ url_for('admin.reset_pass', user_id=user.id) }}" class="btn btn-warning btn-sm">Сбросить пароль</a>
-                            <a href="#" class="btn btn-warning btn-sm edit-user-btn" data-bs-toggle="modal" data-bs-target="#editUserModal" data-id="{{ user.id }}" data-username="{{ user.username }}" data-email="{{ user.email }}" data-role="{{ user.role }}">Редактировать</a>
+                            <a href="#" class="btn btn-secondary btn-sm edit-user-btn" data-bs-toggle="modal" data-bs-target="#editUserModal" data-id="{{ user.id }}" data-username="{{ user.username }}" data-email="{{ user.email }}" data-role="{{ user.role }}">Редактировать</a>
                             <a href="{{ url_for('admin.delete_user', user_id=user.id) }}" class="btn btn-danger btn-sm">Удалить</a>
                             </td>
                     </tr>
