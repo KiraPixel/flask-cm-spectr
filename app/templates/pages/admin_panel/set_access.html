@@ -1,0 +1,105 @@
+{% extends 'main.html' %}
+
+{% block title %}
+Назначение доступов
+{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <!-- Заголовок страницы с именем пользователя -->
+    <h2>Назначение доступов: {{ user.username }}</h2>
+
+    <!-- Новая строка с кнопками, расположенная над двумя колонками -->
+    <div class="mt-4">
+        <form method="post" action="{{ url_for('admin.set_access', user_id=user.id) }}">
+            <input type="hidden" name="access_data" id="access_data">
+            <button type="submit" class="btn btn-success">Сохранить доступы</button>
+        </form>
+    </div>
+    <div class="row mt-4 justify-content-center">
+        <div class="col-md-3 d-flex justify-content-end">
+            <button id="move-right" class="btn btn-primary">&rarr;</button>
+        </div>
+        <div class="col-md-3 d-flex justify-content-start">
+            <button id="move-left" class="btn btn-secondary">&larr;</button>
+        </div>
+    </div>
+
+    <div class="row mt-2">
+        <div class="col-md-5">
+            <h5>Доступные</h5>
+            <ul id="available" class="list-group">
+                {% for customer in customers %}
+                    <li class="list-group-item">{{ customer }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="col-md-5 offset-md-2">
+            <h5>Текущие</h5>
+            <ul id="current" class="list-group">
+                <!-- Сюда будут добавляться элементы, которые уже есть в user.access -->
+            </ul>
+        </div>
+    </div>
+
+
+</div>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Инициализация уже выбранных доступов из user.access
+        const currentAccess = {{ user.access | safe }};  // JSON-представление массива access
+        const availableItems = document.getElementById('available').children;
+
+        [...availableItems].forEach(item => {
+            if (currentAccess.includes(item.textContent.trim())) {
+                document.getElementById('current').appendChild(item);
+            }
+        });
+
+        updateAccessData();
+    });
+
+    // JavaScript для перемещения элементов между колонками
+    document.getElementById('move-right').addEventListener('click', function() {
+        moveItems('available', 'current');
+    });
+
+    document.getElementById('move-left').addEventListener('click', function() {
+        moveItems('current', 'available');
+    });
+
+    function moveItems(from, to) {
+        const fromList = document.getElementById(from);
+        const toList = document.getElementById(to);
+
+        const selectedItems = [...fromList.querySelectorAll('.list-group-item.selected')];
+        selectedItems.forEach(item => {
+            item.classList.remove('selected');
+            toList.appendChild(item);
+        });
+        updateAccessData();
+    }
+
+    // Обновление скрытого поля для отправки данных на сервер
+    function updateAccessData() {
+        const currentItems = [...document.getElementById('current').children].map(item => item.textContent.trim());
+        document.getElementById('access_data').value = JSON.stringify(currentItems);
+    }
+
+    // Добавление возможности выделять элементы
+    document.querySelectorAll('.list-group-item').forEach(item => {
+        item.addEventListener('click', function() {
+            this.classList.toggle('selected');
+        });
+    });
+</script>
+
+<style>
+    .list-group-item.selected {
+        background-color: #007bff;
+        color: white;
+    }
+</style>
+{% endblock %}
