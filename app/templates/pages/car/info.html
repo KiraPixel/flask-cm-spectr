@@ -1,0 +1,54 @@
+<div class="row mt-4">
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3>Информация о складе</h3>
+            </div>
+            <div class="card-body">
+                <p><strong>Название:</strong> {{ storage.name }}</p>
+                <p><strong>Тип:</strong> {{ storage.type }}</p>
+                <p><strong>Регион:</strong> {{ storage.region }}</p>
+                <p><strong>Адрес:</strong> {{ storage.address }}</p>
+                <p><strong>Организация:</strong> {{ storage.organization }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3>Модель транспортного средства</h3>
+            </div>
+            <div class="card-body">
+                <p><strong>Тип:</strong> {{ transport_model.type }} - {{ transport_model.name }}</p>
+                <p><strong>Год выпуска:</strong> {{ car.manufacture_year }} ({{ transport_model.country }})</p>
+                <p><strong>VIN:</strong> {{ car.vin }}</p>
+                <p><strong>Лифт:</strong> {{ transport_model.lift_type }}</p>
+                <p><strong>Двигатель:</strong> {{ transport_model.engine }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Аренда</h3>
+                </div>
+                <div class="card-body">
+                    <p><strong>Клиент:</strong> {{ car.customer }}</p>
+                    <p><strong>Контакт клиента:</strong> {{ car.customer_contact }}</p>
+                    <p><strong>Менеджер:</strong> {{ car.manager }}</p>
+                    <p><strong>Место работы:</strong>
+                        {% set address = (car.x, car.y) | get_address %}
+                        {{ address }}
+                        {% if address %}
+                            ({{ car.x }}, {{ car.y }})
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

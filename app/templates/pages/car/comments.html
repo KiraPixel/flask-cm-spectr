@@ -1,0 +1,44 @@
+<h3>Комментарии</h3>
+    <div class="alert alert-info" role="alert">
+        Данный раздел в разработке и скоро будет работать. Мы работаем над добавлением информации и функционала.
+    </div>
+
+    <!-- Комментарии -->
+    <div class="mt-4">
+        <h4>Список комментариев</h4>
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Иван Иванов</h5>
+                <h6 class="card-subtitle mb-2 text-muted">2024-07-28</h6>
+                <p class="card-text">Комментарий 1</p>
+                <a href="#" class="btn btn-secondary btn-sm disabled">Посмотреть файл</a>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Петр Петров</h5>
+                <h6 class="card-subtitle mb-2 text-muted">2024-07-29</h6>
+                <p class="card-text">Комментарий 2</p>
+                <a href="#" class="btn btn-secondary btn-sm disabled">Посмотреть файл</a>
+            </div>
+        </div>
+
+        <!-- Дополнительные карточки комментариев будут добавляться здесь -->
+    </div>
+
+    <!-- Форма для добавления комментария -->
+    <div class="mt-4">
+        <h4>Добавить комментарий</h4>
+        <form>
+            <div class="form-group">
+                <label for="commentText">Комментарий</label>
+                <textarea id="commentText" class="form-control" rows="3" placeholder="Введите ваш комментарий" disabled></textarea>
+            </div>
+            <div class="form-group">
+                <label for="commentFile">Прикрепить файл</label>
+                <input type="file" id="commentFile" class="form-control-file" disabled>
+            </div>
+            <button type="submit" class="btn btn-primary" disabled>Добавить комментарий</button>
+        </form>
+    </div>

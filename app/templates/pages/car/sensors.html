@@ -1,0 +1,101 @@
+<h3>Датчики</h3>
+<div class="alert alert-info" role="alert">
+    Данный раздел в разработке и скоро будет работать. Мы работаем над добавлением информации и функционала.
+</div>
+
+<!-- Графики -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <h4>Время работы по дням</h4>
+        <canvas id="work-time-chart" width="400" height="200"></canvas>
+    </div>
+    <div class="col-md-6">
+        <h4>Километраж</h4>
+        <canvas id="mileage-chart" width="400" height="200"></canvas>
+    </div>
+</div>
+
+<!-- Реле датчиков -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <h4>Реле датчиков</h4>
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="sunroof-open" disabled>
+            <label class="form-check-label" for="sunroof-open">
+                Люк открыт
+            </label>
+        </div>
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="sunroof-closed" disabled>
+            <label class="form-check-label" for="sunroof-closed">
+                Люк закрыт
+            </label>
+        </div>
+    </div>
+</div>
+
+<!-- Кнопки -->
+<div class="row mt-4">
+    <div class="col-md-12">
+        <h4>Действия</h4>
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-primary disabled">Заблокировать двигатель</button>
+            <button type="button" class="btn btn-primary disabled">Перезапустить Wialon</button>
+            <button type="button" class="btn btn-primary disabled">Выполнить GSM поиск CESAR и Wialon</button>
+        </div>
+    </div>
+</div>
+
+<!-- Подключение Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script type="text/javascript">
+    // Пример данных для графиков
+    const workTimeData = {
+        labels: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'],
+        datasets: [{
+            label: 'Время работы (часы)',
+            data: [8, 7, 8, 6, 8, 5, 4],
+            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1
+        }]
+    };
+
+    const mileageData = {
+        labels: ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл'],
+        datasets: [{
+            label: 'Километраж (км)',
+            data: [1200, 1100, 1150, 1300, 1250, 1400, 1350],
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            borderColor: 'rgba(75, 192, 192, 1)',
+            borderWidth: 1
+        }]
+    };
+
+    // Инициализация графиков
+    const ctxWorkTime = document.getElementById('work-time-chart').getContext('2d');
+    const workTimeChart = new Chart(ctxWorkTime, {
+        type: 'bar',
+        data: workTimeData,
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    const ctxMileage = document.getElementById('mileage-chart').getContext('2d');
+    const mileageChart = new Chart(ctxMileage, {
+        type: 'line',
+        data: mileageData,
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+</script>
