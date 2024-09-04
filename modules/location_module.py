@@ -16,12 +16,14 @@ def get_address_decorator(coords=None):
         return ''
 
     location = geolocator.reverse((x, y), exactly_one=True)
+    if location is None:
+        return 'Ошибка определения'
     address = location.raw.get('address', {})
     print(address)
 
     # Попробуем получить нужные части адреса
     city = address.get('city') or address.get('town') or address.get('state', '') or address.get('county')
-    road = address.get('road') or address.get('city_district', '') or address.get('municipality') or address.get('suburb') or address.get('house') or address.get('hamlet')
+    road = address.get('road') or address.get('city_district', '') or address.get('county') or address.get('municipality') or address.get('suburb') or address.get('house') or address.get('industrial') or address.get('hamlet')
     house_number = address.get('house_number') or address.get('amenity') or address.get('village') or address.get(
         'neighbourhood', '') or address.get('municipality') or address.get('postcode')
 

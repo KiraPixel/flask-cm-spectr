@@ -125,6 +125,13 @@
                                     <p><strong>Клиент:</strong> {{ car.customer }}</p>
                                     <p><strong>Контакт клиента:</strong> {{ car.customer_contact }}</p>
                                     <p><strong>Менеджер:</strong> {{ car.manager }}</p>
+                                    <p><strong>Место работы:</strong>
+                                        {% set address = (car.x, car.y) | get_address %}
+                                        {{ address }}
+                                        {% if address %}
+                                            ({{ car.x }}, {{ car.y }})
+                                        {% endif %}
+                                    </p>
                                 </div>
                             </div>
                         </div>
