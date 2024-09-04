@@ -31,6 +31,7 @@ class Transport(db.Model):
     x = db.Column(db.Float)
     y = db.Column(db.Float)
     customer = db.Column(db.Text)
+    customer_contact = db.Column(db.Text)
     manager = db.Column(db.Text)
 
     transport_model = db.relationship(

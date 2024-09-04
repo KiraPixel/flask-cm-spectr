@@ -1,10 +1,9 @@
 from datetime import timedelta
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-from geopy.geocoders import Nominatim
 import os
 
-from modules import my_time
+from modules import my_time, location_module
 
 
 db = SQLAlchemy()
@@ -20,7 +19,6 @@ def create_app():
     os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "false"
 
     db.init_app(app)
-    geolocator = Nominatim(user_agent="KiraPixel")
 
     from .routes import bp as main_bp
     from .routes_api import api_bp
@@ -36,5 +34,5 @@ def create_app():
 
     app.jinja_env.filters['unix_to_datetime'] = my_time.unix_to_moscow_time
     app.jinja_env.filters['online_check'] = my_time.online_check
-
+    app.jinja_env.filters['get_address'] = location_module.get_address_decorator
     return app

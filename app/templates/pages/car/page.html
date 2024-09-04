@@ -22,39 +22,51 @@
     <div id="map" style="width: 100%; height: 400px;"></div>
     <br><br>
     <div class="row mt-4">
-        <div class="col">
+        <div class="col-12">
             <h4>Wialon</h4>
             <table class="table table-sm table-bordered">
                 <thead class="thead-light">
                     <tr>
-                        <th>Название объекта в системе</th>
+                        <th>Название объекта</th>
+                        <th>IMEI</th>
                         <th>Последний онлайн</th>
+                        <th>Координаты</th>
+                        <th>Адрес</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for item in wialon %}
                     <tr>
-                        <td>{{ item.nm }} | {{item.uid}}</td>
+                        <td>{{ item.nm }}</td>
+                        <td>{{item.uid}}</td>
                         <td>{{ item.last_time | unix_to_datetime }}</td>
+                        <td>{{ item.pos_y }}, {{ item.pos_x }}</td>
+                        <td>{{ (item.pos_y, item.pos_x) | get_address }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
-        <div class="col">
+        <div class="col-12">
             <h4>Цезарь</h4>
             <table class="table table-sm table-bordered">
                 <thead class="thead-light">
                     <tr>
-                        <th>Название объекта в системе</th>
+                        <th>Название объекта</th>
+                        <th>PIN</th>
                         <th>Последний онлайн</th>
+                        <th>Координаты</th>
+                        <th>Адрес</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for item in cesar %}
                     <tr>
                         <td>{{ item.object_name }}</td>
+                        <td>{{ item.pin }}</td>
                         <td>{{ item.last_time | unix_to_datetime }}</td>
+                        <td>{{ item.pos_x }}, {{ item.pos_y }}</td>
+                        <td>{{ (item.pos_x, item.pos_y) | get_address }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -111,6 +123,7 @@
                                 </div>
                                 <div class="card-body">
                                     <p><strong>Клиент:</strong> {{ car.customer }}</p>
+                                    <p><strong>Контакт клиента:</strong> {{ car.customer_contact }}</p>
                                     <p><strong>Менеджер:</strong> {{ car.manager }}</p>
                                 </div>
                             </div>
