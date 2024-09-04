@@ -112,6 +112,8 @@ def dashboard():
         'offline': offline_count,
         'offline_over_48': offline_over_48_count
     }
+    #розыск
+    distance = len(db.session.query(Alert).filter(Alert.status == 0, Alert.type.in_(['distance', 'gps'])).all())
 
     # Cesar
     online_count = db.session.query(CashWialon).filter(
@@ -138,7 +140,7 @@ def dashboard():
         'last_cesar': last_cesar
     }
 
-    return render_template('pages/dashboard/page.html', wialon=wialon, connections=connections, cesar=cesar)
+    return render_template('pages/dashboard/page.html', wialon=wialon, connections=connections, cesar=cesar, distance=distance)
 
 
 # Страница отчетов

@@ -47,7 +47,7 @@
                                     Розыск
                                 </div>
                                 <div class="card-body">
-                                    <h5 class="card-title">0</h5>
+                                    <h5 class="card-title">{{ distance }}</h5>
                                 </div>
                             </div>
                         </div>
@@ -65,7 +65,7 @@
                 </div>
                 <div class="card-body">
                     <div class="row text-center">
-                        <div class="col-md-4 mb-4">
+                        <div class="col-md-6 mb-4">
                             <div class="card h-100">
                                 <div class="card-header bg-success text-white" data-bs-toggle="tooltip" data-bs-placement="top" title="Оборудование считается онлайн если оно отбивалось последние 3 дня">
                                     Активно
@@ -75,23 +75,13 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-4 mb-4">
+                        <div class="col-md-6 mb-4">
                             <div class="card h-100">
                                 <div class="card-header bg-danger text-white" data-bs-toggle="tooltip" data-bs-placement="top" title="Нет отбивки больше 3 дней">
                                     Нет отбивки больше 3 дней
                                 </div>
                                 <div class="card-body">
                                     <h5 class="card-title">{{ cesar['offline'] }}</h5>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4 mb-4">
-                            <div class="card h-100">
-                                <div class="card-header bg-secondary text-white" data-bs-toggle="tooltip" data-bs-placement="top" title="ТС находится не там, где заложено в 1С">
-                                    Розыск
-                                </div>
-                                <div class="card-body">
-                                    <h5 class="card-title">0</h5>
                                 </div>
                             </div>
                         </div>
