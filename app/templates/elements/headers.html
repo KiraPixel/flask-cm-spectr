@@ -18,6 +18,9 @@
                     <a class="nav-link {% if request.endpoint == 'main.home' %}active{% endif %}" href="/">Главная</a>
                 </li>
                 <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'main.maps' %}active{% endif %}" href="/maps">Объекты на карте</a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link {% if request.endpoint == 'main.virtual_operator' %}active{% endif %}" href="/virtual_operator">Виртуальный диспетчер</a>
                 </li>
                 <li class="nav-item">
@@ -26,15 +29,8 @@
                 <li class="nav-item">
                     <a class="nav-link {% if request.endpoint == 'main.reports' %}active{% endif %}" href="/rep">Отчеты</a>
                 </li>
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="resourcesDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        Ресурсы
-                    </a>
-                    <ul class="dropdown-menu" aria-labelledby="resourcesDropdown">
-                        <li><a class="dropdown-item" href="/resources/transport">Транспорт</a></li>
-                        <li><a class="dropdown-item" href="/resources/storage">Склады</a></li>
-                        <li><a class="dropdown-item" href="/resources/models">Модели ТС</a></li>
-                    </ul>
+                <li class="nav-item">
+                    <a class="nav-link" href="/architect">Архитектор</a>
                 </li>
             </ul>
 

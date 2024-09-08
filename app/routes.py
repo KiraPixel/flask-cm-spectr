@@ -240,9 +240,6 @@ def send_report():
         return redirect(url_for('main.reports'))
 
 
-
-
-
 @bp.route('/map/')
 @login_required
 @need_access(0)
@@ -250,6 +247,22 @@ def map_page():
     wialon = db.session.query(CashWialon).all()
     cesar = db.session.query(CashCesar).all()
     return render_template('standalone/map.html', cesar=cesar, wialon=wialon)
+
+
+@bp.route('/maps/')
+@login_required
+@need_access(0)
+def maps():
+    # Выполняем запрос и получаем данные
+    data_db = db.session.query(CashWialon).all()
+
+    # Фильтруем транспорт по доступам пользователя
+    user = User.query.filter_by(username=session['username']).first_or_404()
+    if user.role <= -1:
+        user_access = json.loads(user.access)
+        data_db = [item for item in data_db if item[0].manager in user_access]
+    print(data_db)
+    return render_template('pages/maps/page.html', cars=data_db)
 
 
 @bp.route('/resources/transport')

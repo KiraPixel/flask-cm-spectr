@@ -1,0 +1,138 @@
+{% extends 'main.html' %}
+
+{% block title %}
+Объекты на карте
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid" style="height: calc(100vh - 200px);"> <!-- Отнимаем 200px для хедера и футера -->
+    <div class="row" style="height: 100%;">
+        <!-- Сообщение о поддержке мобильных устройств -->
+        <div id="mobileWarning" class="alert alert-warning" style="display: none;">
+            Эта страница не поддерживает маленькие дисплеи.
+        </div>
+
+        <!-- Список машин слева (20%) с поиском -->
+        <div class="col-3" style="height: 100%; overflow-y: auto;">
+            <h5>Объекты на карте</h5>
+
+            <!-- Кнопки для включения/выключения всех -->
+            <div class="mb-3">
+                <button class="btn btn-sm btn-outline-primary" onclick="toggleAllMarkers(true)">Выбрать все</button>
+                <button class="btn btn-sm btn-outline-secondary ms-2" onclick="toggleAllMarkers(false)">Отменить все</button>
+                <button class="btn btn-sm btn-outline-secondary float-end" onclick="location.reload();">Перезагрузка</button>
+            </div>
+
+            <!-- Поле поиска -->
+            <input type="text" id="carSearch" class="form-control" placeholder="Поиск по машинам" onkeyup="filterCars()">
+
+            <ul id="carList" class="list-group mt-3">
+                {% for car in cars %}
+                <li class="list-group-item" data-pos-x="{{ car.pos_x }}" data-pos-y="{{ car.pos_y }}">
+                    <!-- Полоска статуса online/offline -->
+                    <span class="status-indicator me-2" style="display: inline-block; width: 5px; height: 20px; background-color: {% if car.last_time | online_check == 'online' %}green{% else %}red{% endif %};"></span>
+
+                    <!-- Чекбокс для выбора машины -->
+                    <input type="checkbox" class="form-check-input me-1" id="car{{ car.nm }}" onclick="toggleCarMarker('{{ car.nm }}', {{ car.pos_y }}, {{ car.pos_x }}, this)">
+
+                    <!-- Название машины и последний онлайн -->
+                    <label class="form-check-label" for="car{{ car.nm }}">
+                        {{ car.nm }}
+                        <span style="font-size: 0.8em; color: gray;"> - {{ car.last_time | unix_to_datetime }}</span>
+                    </label>
+
+                    <!-- Ссылка на страницу карточки ТС -->
+                    <a href="{{ url_for('main.get_car', car_id=car.nm) }}" class="btn btn-sm btn-outline-secondary float-end">Карточка ТС</a>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <!-- Карта справа (80%) на всю высоту страницы -->
+        <div class="col-9" style="height: 100%;">
+            <div id="map" style="width: 100%; height: 100%;"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Подключение Yandex Map без API ключа -->
+<script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU" type="text/javascript"></script>
+<script type="text/javascript">
+    var markers = {};  // Для хранения добавленных меток
+
+    ymaps.ready(init);
+    function init() {
+        var myMap = new ymaps.Map("map", {
+            center: [60, 80], // Центр карты
+            zoom: 3
+        });
+
+        // Функция для добавления/удаления метки при выборе чекбокса
+        window.toggleCarMarker = function(carName, posX, posY, checkbox) {
+            if (checkbox.checked) {
+                if (!markers[carName]) {  // Проверка, добавлена ли метка
+                    var carMark = new ymaps.Placemark([posX, posY], {
+                        hintContent: 'Машина ' + carName,
+                        balloonContent: carName
+                    });
+                    markers[carName] = carMark;
+                    myMap.geoObjects.add(carMark);
+                }
+            } else {
+                if (markers[carName]) {
+                    myMap.geoObjects.remove(markers[carName]);
+                    delete markers[carName];  // Удаляем метку из объекта markers
+                }
+            }
+        };
+
+        // Функция для выбора всех чекбоксов и добавления всех меток
+        window.toggleAllMarkers = function(selectAll) {
+            var checkboxes = document.querySelectorAll('#carList input[type="checkbox"]');
+            checkboxes.forEach(function(checkbox) {
+                var carName = checkbox.id.replace('car', '');
+                var carItem = checkbox.parentElement;
+                var posX = parseFloat(carItem.getAttribute('data-pos-x'));
+                var posY = parseFloat(carItem.getAttribute('data-pos-y'));
+
+                // Проверяем состояние чекбокса и обновляем его только если нужно
+                if (checkbox.checked !== selectAll) {
+                    checkbox.checked = selectAll;
+                    toggleCarMarker(carName, posY, posX, checkbox);  // Обновляем метку на карте
+                }
+            });
+        };
+    }
+
+    // Функция для фильтрации списка машин по поиску
+    function filterCars() {
+        var input = document.getElementById("carSearch");
+        var filter = input.value.toLowerCase();
+        var ul = document.getElementById("carList");
+        var li = ul.getElementsByTagName("li");
+
+        for (var i = 0; i < li.length; i++) {
+            var label = li[i].getElementsByTagName("label")[0];
+            if (label.innerHTML.toLowerCase().indexOf(filter) > -1) {
+                li[i].style.display = "";
+            } else {
+                li[i].style.display = "none";
+            }
+        }
+    }
+
+    // Функция для отображения предупреждения на мобильных устройствах
+    function checkMobileScreen() {
+        var mobileWarning = document.getElementById("mobileWarning");
+        if (window.innerWidth < 1450) {
+            mobileWarning.style.display = "block";
+        } else {
+            mobileWarning.style.display = "none";
+        }
+    }
+
+    // Проверяем размер экрана при загрузке страницы и при изменении размера окна
+    window.addEventListener('load', checkMobileScreen);
+    window.addEventListener('resize', checkMobileScreen);
+</script>
+{% endblock %}
