@@ -140,6 +140,9 @@
             }
         });
 
+        // Сохраняем значение поля поиска
+        var searchQuery = document.getElementById('carSearch').value.toLowerCase();
+
         fetch('/api/cars')
             .then(response => response.json())
             .then(data => {
@@ -178,10 +181,20 @@
                     });
                 }
 
+                // Применяем сохраненный фильтр поиска
+                document.getElementById('carSearch').value = searchQuery;
+                filterCars(); // Применяем фильтр заново
+
                 // Скрываем индикатор загрузки
+                document.getElementById('loadingIndicator').style.display = 'none';
+            })
+            .catch(error => {
+                console.error('Ошибка при загрузке данных:', error);
+                // Скрываем индикатор загрузки в случае ошибки
                 document.getElementById('loadingIndicator').style.display = 'none';
             });
     }
+
 
     // Автоматическое обновление списка каждые 10 секунд
     setInterval(updateCarList, 10000);

@@ -1,101 +1,147 @@
-<h3>Датчики</h3>
-<div class="alert alert-info" role="alert">
-    Данный раздел в разработке и скоро будет работать. Мы работаем над добавлением информации и функционала.
-</div>
-
-<!-- Графики -->
-<div class="row mt-4">
-    <div class="col-md-6">
-        <h4>Время работы по дням</h4>
-        <canvas id="work-time-chart" width="400" height="200"></canvas>
+<div class="container mt-4">
+    <h3 class="mb-4">Датчики</h3>
+    <button type="button" class="btn btn-secondary mb-3" id="refreshSensorsBtn">Обновить</button>
+    <div class="alert alert-info" id="loadingIndicator" style="display: none;">
+        Обновление данных, пожалуйста, подождите...
     </div>
-    <div class="col-md-6">
-        <h4>Километраж</h4>
-        <canvas id="mileage-chart" width="400" height="200"></canvas>
+    <div class="row" id="sensorsContainer">
+        {% if wialon_sens %}
+            {% for id, sensor in wialon_sens.items() %}
+            <div class="col-md-4 mb-3 sensor-card" data-sensor-id="{{ id }}">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Датчик {{ id }} - {{ sensor }}</h5>
+                        <p class="card-value">Значение: <span class="value-placeholder">Нажмите кнопку "Обновить"</span></p>
+                        <div class="modal fade" id="sensorInfoModal{{ id }}" tabindex="-1" role="dialog" aria-labelledby="sensorInfoModalLabel{{ id }}" aria-hidden="true">
+                            <div class="modal-dialog" role="document">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="sensorInfoModalLabel{{ id }}">Детали датчика {{ id }}</h5>
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>Информация о датчике: {{ sensor }}</p>
+                                        <!-- Дополнительные данные о датчике -->
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12">
+                <div class="alert alert-warning" role="alert">
+                    Датчики не найдены.
+                </div>
+            </div>
+        {% endif %}
     </div>
-</div>
 
-<!-- Реле датчиков -->
-<div class="row mt-4">
-    <div class="col-md-6">
-        <h4>Реле датчиков</h4>
-        <div class="form-check">
-            <input class="form-check-input" type="checkbox" id="sunroof-open" disabled>
-            <label class="form-check-label" for="sunroof-open">
-                Люк открыт
-            </label>
+    <h3 class="mt-5 mb-4">Команды</h3>
+    <div class="row">
+        <div class="col-12">
+            {% if wialon_cmd %}
+                <div class="btn-group" role="group">
+                    {% for id, command in wialon_cmd.items() %}
+                    <button type="button" class="btn btn-primary command-btn" data-command="{{ command }}" data-unit-id="{{ wialon[0].id }}">{{ command }}</button>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="alert alert-warning" role="alert">
+                    Команды не найдены.
+                </div>
+            {% endif %}
         </div>
-        <div class="form-check">
-            <input class="form-check-input" type="checkbox" id="sunroof-closed" disabled>
-            <label class="form-check-label" for="sunroof-closed">
-                Люк закрыт
-            </label>
-        </div>
     </div>
 </div>
 
-<!-- Кнопки -->
-<div class="row mt-4">
-    <div class="col-md-12">
-        <h4>Действия</h4>
-        <div class="btn-group" role="group">
-            <button type="button" class="btn btn-primary disabled">Заблокировать двигатель</button>
-            <button type="button" class="btn btn-primary disabled">Перезапустить Wialon</button>
-            <button type="button" class="btn btn-primary disabled">Выполнить GSM поиск CESAR и Wialon</button>
-        </div>
-    </div>
-</div>
-
-<!-- Подключение Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Скрипт для выполнения команд и обновления данных датчиков -->
+<!-- Скрипт для выполнения команд и обновления данных датчиков -->
 <script type="text/javascript">
-    // Пример данных для графиков
-    const workTimeData = {
-        labels: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'],
-        datasets: [{
-            label: 'Время работы (часы)',
-            data: [8, 7, 8, 6, 8, 5, 4],
-            backgroundColor: 'rgba(54, 162, 235, 0.2)',
-            borderColor: 'rgba(54, 162, 235, 1)',
-            borderWidth: 1
-        }]
-    };
-
-    const mileageData = {
-        labels: ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл'],
-        datasets: [{
-            label: 'Километраж (км)',
-            data: [1200, 1100, 1150, 1300, 1250, 1400, 1350],
-            backgroundColor: 'rgba(75, 192, 192, 0.2)',
-            borderColor: 'rgba(75, 192, 192, 1)',
-            borderWidth: 1
-        }]
-    };
-
-    // Инициализация графиков
-    const ctxWorkTime = document.getElementById('work-time-chart').getContext('2d');
-    const workTimeChart = new Chart(ctxWorkTime, {
-        type: 'bar',
-        data: workTimeData,
-        options: {
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
-            }
-        }
+    document.addEventListener('DOMContentLoaded', function () {
+        handleCommandButtons();
+        handleRefreshSensors();
     });
 
-    const ctxMileage = document.getElementById('mileage-chart').getContext('2d');
-    const mileageChart = new Chart(ctxMileage, {
-        type: 'line',
-        data: mileageData,
-        options: {
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
+    function handleCommandButtons() {
+        const commandButtons = document.querySelectorAll('.command-btn');
+
+        commandButtons.forEach(button => {
+            button.addEventListener('click', function () {
+                const commandName = button.getAttribute('data-command');
+                const unitId = button.getAttribute('data-unit-id');
+
+                fetch(`/api/wialon_exec_cmd/${unitId}/${commandName}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'OK') {
+                            alert(`Команда ${commandName} - выполнена успешно`);
+                        } else {
+                            alert(`При выполнении команды ${commandName} - произошла ошибка: ${data.error || 'Неизвестная ошибка'}`);
+                        }
+                    })
+                    .catch(error => {
+                        alert(`При выполнении команды ${commandName} - произошла ошибка: ${error.message || 'Неизвестная ошибка'}`);
+                    });
+
+                // После выполнения команды обновляем URL-хэш
+                const currentHash = window.location.hash || '#info';
+                window.location.hash = currentHash;
+            });
+        });
+    }
+
+    function handleRefreshSensors() {
+        const refreshBtn = document.getElementById('refreshSensorsBtn');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+
+        refreshBtn.addEventListener('click', function () {
+            const unitId = "{{ wialon[0].id if wialon|length > 0 else 'undefined' }}"; // Проверяем, существует ли элемент
+
+            if (unitId === 'undefined') {
+                alert('Не удалось получить идентификатор устройства.');
+                return;
             }
-        }
-    });
+
+            loadingIndicator.style.display = 'block'; // Показываем индикатор загрузки
+
+            fetch(`/api/wialon_get_sensor/${unitId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    updateSensors(data);
+                    loadingIndicator.style.display = 'none'; // Скрываем индикатор загрузки
+                })
+                .catch(error => {
+                    alert(`При обновлении датчиков произошла ошибка: ${error.message || 'Неизвестная ошибка'}`);
+                    loadingIndicator.style.display = 'none'; // Скрываем индикатор загрузки
+                });
+        });
+    }
+
+    function updateSensors(data) {
+        const sensorsContainer = document.getElementById('sensorsContainer');
+        const sensorCards = sensorsContainer.querySelectorAll('.sensor-card');
+
+        sensorCards.forEach(card => {
+            const sensorId = card.getAttribute('data-sensor-id');
+            const newValue = data[sensorId];
+
+            const valuePlaceholder = card.querySelector('.value-placeholder');
+            if (newValue === undefined) {
+                valuePlaceholder.innerText = 'Неизвестное значение';
+            } else if (newValue < -1) {
+                valuePlaceholder.innerText = 'Ошибка сервера Wialon';
+            } else {
+                valuePlaceholder.innerText = newValue;
+            }
+        });
+    }
 </script>
+

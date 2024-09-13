@@ -1,3 +1,4 @@
+import ast
 import json
 import os
 import time
@@ -194,6 +195,14 @@ def get_car(car_id):
     if not car:
         return "Car not found", 404
 
+    if wialon:
+        # Обработка строковых данных
+        wialon_cmd = ast.literal_eval((wialon[0].cmd) if wialon[0].cmd else {})
+        wialon_sens = ast.literal_eval((wialon[0].sens) if wialon[0].sens else {})
+    else:
+        wialon_cmd = {}
+        wialon_sens = {}
+
     storage = db.session.query(Storage).filter(Storage.ID == car.storage_id).first()
     transport_model = db.session.query(TransportModel).filter(TransportModel.id == car.model_id).first()
 
@@ -205,6 +214,8 @@ def get_car(car_id):
         wialon=wialon,
         storage=storage,
         transport_model=transport_model,
+        wialon_cmd=wialon_cmd,
+        wialon_sens=wialon_sens,
     )
 
 

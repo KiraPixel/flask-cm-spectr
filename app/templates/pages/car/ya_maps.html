@@ -1,83 +1,50 @@
-<!-- Подключение Yandex Map без API ключа -->
+<!-- Код для подключения Яндекс карты -->
 <script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU" type="text/javascript"></script>
 <script type="text/javascript">
-    ymaps.ready(init);
-    function init(){
+    ymaps.ready(initMap);
+
+    function initMap() {
         var myMap = new ymaps.Map("map", {
             center: [60, 80],
             zoom: 3
         });
 
-        // Добавление метки "Место работы", если car.x != 0
+        addWorkPlaceMark(myMap);
+        addCesarMarks(myMap);
+        addWialonMarks(myMap);
+    }
+
+    function addWorkPlaceMark(map) {
         {% if car.x != 0 %}
         var workPlaceMark = new ymaps.Placemark([{{ car.x }}, {{ car.y }}], {
             hintContent: 'Место работы',
             balloonContent: 'Здесь работает автомобиль'
-        },
-        {
+        }, {
             preset: 'islands#yellowIcon'
         });
-        myMap.geoObjects.add(workPlaceMark);
+        map.geoObjects.add(workPlaceMark);
         {% endif %}
+    }
 
-        // Добавление меток Cesar
+    function addCesarMarks(map) {
         {% for item in cesar %}
         var cesarMark = new ymaps.Placemark([{{ item.pos_x }}, {{ item.pos_y }}], {
             hintContent: 'Метка Cesar',
             balloonContent: 'UID блока: {{ item.object_name }}'
-        },
-        {
+        }, {
             preset: 'islands#redIcon'
         });
-        myMap.geoObjects.add(cesarMark);
-        {% endfor %}
-
-        // Добавление меток Wialon
-        {% for item in wialon %}
-        var wialonMark = new ymaps.Placemark([{{ item.pos_y }}, {{ item.pos_x }}], {
-            hintContent: 'Метка Wialon ',
-            balloonContent: 'UUID блока: {{ item.nm }}'
-        });
-        myMap.geoObjects.add(wialonMark);
+        map.geoObjects.add(cesarMark);
         {% endfor %}
     }
 
-    document.addEventListener('DOMContentLoaded', function () {
-        const tabs = document.querySelectorAll('.btn-group .btn');
-        const tabContent = document.querySelectorAll('.tab-pane');
-
-        function showTab(tab) {
-            tabs.forEach(tab => {
-                tab.classList.remove('btn-primary');
-                tab.classList.add('btn-outline-primary');
-            });
-
-            tab.classList.remove('btn-outline-primary');
-            tab.classList.add('btn-primary');
-
-            const tabName = tab.getAttribute('href').substring(1);
-            tabContent.forEach(content => {
-                if (content.getAttribute('id') === `${tabName}-content`) {
-                    content.classList.add('active');
-                } else {
-                    content.classList.remove('active');
-                }
-            });
-        }
-
-        tabs.forEach(tab => {
-            tab.addEventListener('click', function (e) {
-                e.preventDefault();
-                showTab(tab);
-                window.location.hash = tab.getAttribute('href');
-            });
+    function addWialonMarks(map) {
+        {% for item in wialon %}
+        var wialonMark = new ymaps.Placemark([{{ item.pos_y }}, {{ item.pos_x }}], {
+            hintContent: 'Метка Wialon',
+            balloonContent: 'UUID блока: {{ item.nm }}'
         });
-
-        // Initial tab based on hash
-        const currentHash = window.location.hash || '#info';
-        const initialTab = document.querySelector(`.btn[href="${currentHash}"]`);
-        if (initialTab) {
-            showTab(initialTab);
-        }
-    });
+        map.geoObjects.add(wialonMark);
+        {% endfor %}
+    }
 </script>

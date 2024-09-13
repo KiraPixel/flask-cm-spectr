@@ -102,6 +102,54 @@
     </div>
 </div>
 
+<!-- Основной скрипт для переключения вкладок -->
+<script type="text/javascript">
+    document.addEventListener('DOMContentLoaded', function () {
+        handleTabSwitching();
+    });
+
+    function handleTabSwitching() {
+        const tabs = document.querySelectorAll('.btn-group .btn');
+        const tabContent = document.querySelectorAll('.tab-pane');
+
+        function showTab(tab) {
+            tabs.forEach(tab => {
+                tab.classList.remove('btn-primary');
+                tab.classList.add('btn-outline-primary');
+            });
+
+            tab.classList.remove('btn-outline-primary');
+            tab.classList.add('btn-primary');
+
+            const tabName = tab.getAttribute('href').substring(1);
+            tabContent.forEach(content => {
+                if (content.getAttribute('id') === `${tabName}-content`) {
+                    content.classList.add('active');
+                } else {
+                    content.classList.remove('active');
+                }
+            });
+        }
+
+        // Show tab based on URL hash
+        const currentHash = window.location.hash || '#info';
+        const initialTab = document.querySelector(`.btn[href="${currentHash}"]`);
+        if (initialTab) {
+            showTab(initialTab);
+        }
+
+        // Add click event to tabs
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function (e) {
+                e.preventDefault();
+                showTab(tab);
+                window.location.hash = tab.getAttribute('href');
+            });
+        });
+    }
+</script>
+
+
 {% include 'pages/car/ya_maps.html' %}
 
 {% endblock %}

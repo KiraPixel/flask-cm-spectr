@@ -100,6 +100,9 @@ class CashWialon(db.Model):
     last_time = db.Column(db.Integer, default=0)
     last_pos_time = db.Column(db.Integer, default=0)
     linked = db.Column(db.Boolean, nullable=True, default=False)  # TINYINT(1) NULL DEFAULT '0'
+    cmd = db.Column(db.Text, nullable=True, default='')
+    sens = db.Column(db.Text, nullable=True, default='')
+
 
 
 class Alert(db.Model):
