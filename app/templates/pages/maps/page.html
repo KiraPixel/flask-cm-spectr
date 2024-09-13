@@ -20,11 +20,16 @@
             <div class="mb-3">
                 <button class="btn btn-sm btn-outline-primary" onclick="toggleAllMarkers(true)">Выбрать все</button>
                 <button class="btn btn-sm btn-outline-secondary ms-2" onclick="toggleAllMarkers(false)">Отменить все</button>
-                <button class="btn btn-sm btn-outline-secondary float-end" onclick="location.reload();">Перезагрузка</button>
+                <button class="btn btn-sm btn-outline-secondary float-end" onclick="updateCarList();">Обновить</button> <!-- Запуск скрипта на обновление -->
             </div>
 
             <!-- Поле поиска -->
             <input type="text" id="carSearch" class="form-control" placeholder="Поиск по машинам" onkeyup="filterCars()">
+
+            <!-- Загрузочный индикатор -->
+            <div id="loadingIndicator" class="alert alert-light" style="display: none;">
+                <strong>Обновление данных...</strong>
+            </div>
 
             <ul id="carList" class="list-group mt-3">
                 {% for car in cars %}
@@ -120,6 +125,69 @@
             }
         }
     }
+
+    // Функция для обновления списка машин
+    function updateCarList() {
+        // Показываем индикатор загрузки
+        document.getElementById('loadingIndicator').style.display = 'block';
+
+        // Сохраняем состояние выбранных чекбоксов
+        var checkedCars = {};
+        document.querySelectorAll('#carList input[type="checkbox"]').forEach(function(checkbox) {
+            if (checkbox.checked) {
+                var carName = checkbox.id.replace('car', '');
+                checkedCars[carName] = true;
+            }
+        });
+
+        fetch('/api/cars')
+            .then(response => response.json())
+            .then(data => {
+                // Очищаем список машин
+                var carList = document.getElementById('carList');
+                carList.innerHTML = '';
+
+                if (data.length > 0) {
+                    // Добавляем новые данные
+                    data.forEach(car => {
+                        var li = document.createElement('li');
+                        li.className = 'list-group-item';
+                        li.setAttribute('data-pos-x', car.pos_x);
+                        li.setAttribute('data-pos-y', car.pos_y);
+
+                        // Преобразуем last_time в timestamp (учитывая, что last_time может быть в секундах)
+                        var lastTime = new Date(car.last_time * 1000).getTime();
+                        var statusColor = (lastTime > Date.now() - 300000) ? 'green' : 'red';  // online/offline условие
+
+                        var checked = checkedCars[car.nm] ? 'checked' : '';  // Проверяем, был ли чекбокс нажат
+
+                        li.innerHTML = `
+                            <span class="status-indicator me-2" style="display: inline-block; width: 5px; height: 20px; background-color: ${statusColor};"></span>
+                            <input type="checkbox" class="form-check-input me-1" id="car${car.nm}" onclick="toggleCarMarker('${car.nm}', ${car.pos_y}, ${car.pos_x}, this)" ${checked}>
+                            <label class="form-check-label" for="car${car.nm}">
+                                ${car.nm} <span style="font-size: 0.8em; color: gray;"> - ${new Date(car.last_time * 1000).toLocaleString()}</span>
+                            </label>
+                            <a href="/get_car/${car.nm}" class="btn btn-sm btn-outline-secondary float-end">Карточка ТС</a>
+                        `;
+                        carList.appendChild(li);
+
+                        // Если машина была выбрана, восстанавливаем метку на карте
+                        if (checked) {
+                            toggleCarMarker(car.nm, car.pos_y, car.pos_x, li.querySelector('input[type="checkbox"]'));
+                        }
+                    });
+                }
+
+                // Скрываем индикатор загрузки
+                document.getElementById('loadingIndicator').style.display = 'none';
+            });
+    }
+
+    // Автоматическое обновление списка каждые 10 секунд
+    setInterval(updateCarList, 10000);
+
+    // Проверяем размер экрана при загрузке страницы и при изменении размера окна
+    window.addEventListener('load', updateCarList);  // Первоначальный вызов при загрузке страницы
 
     // Функция для отображения предупреждения на мобильных устройствах
     function checkMobileScreen() {

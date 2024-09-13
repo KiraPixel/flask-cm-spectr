@@ -8,7 +8,7 @@ from app import create_app
 app = create_app()
 
 if __name__ == '__main__':
-    if os.getenv('DEV', 0) == 1:
+    if os.getenv('DEV', 0) == '1':
         app.debug = True
     HOST = os.getenv('HOST', '0.0.0.0')
     PORT = int(os.getenv('PORT', '5000'))

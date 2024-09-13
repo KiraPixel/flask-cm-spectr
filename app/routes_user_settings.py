@@ -1,5 +1,5 @@
 from flask import Blueprint, request, render_template, redirect, url_for, session, flash
-from .utils import login_required
+from .utils import need_access
 from .models import db, User
 from modules import hash_password
 
@@ -7,14 +7,14 @@ us_bp = Blueprint('user_settings', __name__)
 
 
 @us_bp.route('/')
-@login_required
+@need_access(-2)
 def index():
     user = User.query.filter_by(username=session['username']).first_or_404()
     return(render_template('pages/user_settings/page.html', user=user))
 
 
 @us_bp.route('/email', methods=['GET', 'POST'])
-@login_required
+@need_access(-2)
 def change_email():
     if request.method == 'POST':
         new_email = request.form.get('email')
@@ -28,7 +28,7 @@ def change_email():
 
 
 @us_bp.route('/pass', methods=['GET', 'POST'])
-@login_required
+@need_access(-2)
 def change_password():
     if request.method == 'POST':
         new_password = request.form.get('new_password')

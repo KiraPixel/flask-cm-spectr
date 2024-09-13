@@ -1,5 +1,5 @@
 from flask import Blueprint, request, render_template, redirect, url_for, flash
-from .utils import login_required, need_access
+from .utils import need_access, need_access
 from .models import db, User, Transport
 from modules import mail_sender, hash_password
 
@@ -8,7 +8,6 @@ admin_bp = Blueprint('admin', __name__)
 
 
 @admin_bp.route('/admin/', methods=['GET', 'POST'])
-@login_required
 @need_access(1)
 def admin_panel():
     if request.method == 'POST':
@@ -31,7 +30,6 @@ def admin_panel():
 
 # Редактирование пользователя
 @admin_bp.route('/edit_user/<int:user_id>', methods=['POST'])
-@login_required
 @need_access(1)
 def edit_user(user_id):
     user = User.query.get_or_404(user_id)
@@ -48,7 +46,6 @@ def edit_user(user_id):
 
 # Удаление пользователя
 @admin_bp.route('/delete_user/<int:user_id>')
-@login_required
 @need_access(1)
 def delete_user(user_id):
     user = User.query.get_or_404(user_id)
@@ -60,7 +57,6 @@ def delete_user(user_id):
 
 # Назначение доступов пользователю
 @admin_bp.route('/set_access/<int:user_id>', methods=['GET', 'POST'])
-@login_required
 @need_access(1)
 def set_access(user_id):
     user = User.query.get_or_404(user_id)
@@ -86,7 +82,6 @@ def update_user_password(user_id, new_password):
 
 # Изменить пароль
 @admin_bp.route('/change_pass/<int:user_id>/<string:password>')
-@login_required
 @need_access(1)
 def change_pass(user_id, password):
     update_user_password(user_id, password)
@@ -96,7 +91,6 @@ def change_pass(user_id, password):
 
 # Сброс пароля
 @admin_bp.route('/reset_pass/<int:user_id>')
-@login_required
 @need_access(1)
 def reset_pass(user_id):
     user = User.query.get_or_404(user_id)
