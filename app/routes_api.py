@@ -61,8 +61,6 @@ def get_wialon_sid():
 @api_bp.route('/wialon_exec_cmd/<int:unit_id>/<string:command_name>', methods=['GET'])
 @need_access(0)
 def wialon_exec_cmd(unit_id, command_name):
-    print(unit_id)
-    print(command_name)
     params = {
         'itemId': unit_id,
         'commandName': f"{command_name}",
