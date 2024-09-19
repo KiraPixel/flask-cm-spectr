@@ -1,7 +1,4 @@
 import os
-import threading
-import time
-from datetime import datetime
 from app import create_app
 
 # Создаем приложение
