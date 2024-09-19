@@ -3,6 +3,7 @@ import os
 import time
 import uuid
 
+import bleach
 import requests
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 import warnings
@@ -46,34 +47,25 @@ def get_cars():
 @api_bp.route('/add_comment', methods=['POST'])
 @need_access(-1)
 def add_comment():
-    text = request.form['text']
-    author = session['username']
-    uNumber = request.form['uNumber']
+    text = request.form.get('text', '').strip()
+    if not text:
+        return jsonify({'status': 'comment_deny'})
 
-    # Обработка файла
-    file = request.files['file'] if 'file' in request.files else None
-    filename = None
-    if file and file.filename != '':
-        # Генерация уникального имени для файла
-        filename = f"{uuid.uuid4().hex}_{file.filename}"
-        file_path = os.path.join(UPLOAD_FOLDER, filename)
-        file.save(file_path)
+    clean_text = bleach.clean(text, strip=True)
+    if len(clean_text) > 500 or len(clean_text) <= 1:
+        return jsonify({'status': 'comment_deny'})
 
-    # Сохранение комментария в базу данных
-    new_comment = Comments(author=author, text=text, uNumber=uNumber, file=filename)
+    author = session.get('username')
+    if not author:
+        return jsonify({'status': 'comment_deny'})  # Можно также проверять авторизацию
+
+    uNumber = request.form.get('uNumber')
+
+    new_comment = Comments(author=author, text=clean_text, uNumber=uNumber)
     db.session.add(new_comment)
     db.session.commit()
 
     return jsonify({'status': 'comment_ok'})
-
-
-@api_bp.route('/download_file/<filename>', methods=['GET'])
-@need_access(-1)
-def download_file(filename):
-    try:
-        return send_from_directory(UPLOAD_FOLDER, filename, as_attachment=True)
-    except FileNotFoundError:
-        abort(404, description="File not found")
 
 
 def get_wialon_sid():
@@ -159,4 +151,3 @@ def wialon_get_sensor(unit_id):
 
     # После 6 неудачных попыток возвращаем ошибку
     return jsonify({'error': 'Failed to fetch valid sensor data after multiple attempts'}), 500
-

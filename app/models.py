@@ -120,5 +120,4 @@ class Comments(db.Model):
     author = db.Column(db.Text, nullable=False)
     text = db.Column(db.Text, nullable=False)
     uNumber = db.Column(db.Text, nullable=False)
-    file = db.Column(db.Text, nullable=True)
 
