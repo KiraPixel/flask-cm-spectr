@@ -1,13 +1,17 @@
 import json
 import os
 import time
+import uuid
+
 import requests
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 import warnings
-from flask import Blueprint, request, jsonify, session
+from flask import Blueprint, request, jsonify, session, send_from_directory, abort
+
 from . import db
 from .utils import need_access, need_access
-from .models import Transport, TransportModel, Storage, User, CashWialon
+from .models import Transport, TransportModel, Storage, User, CashWialon, Comments
+from .config import UPLOAD_FOLDER
 
 # Создаем Blueprint для API маршрутов приложения
 api_bp = Blueprint('api', __name__)
@@ -37,6 +41,39 @@ def get_cars():
     } for car in data_db]
 
     return jsonify(cars_json)
+
+
+@api_bp.route('/add_comment', methods=['POST'])
+@need_access(-1)
+def add_comment():
+    text = request.form['text']
+    author = session['username']
+    uNumber = request.form['uNumber']
+
+    # Обработка файла
+    file = request.files['file'] if 'file' in request.files else None
+    filename = None
+    if file and file.filename != '':
+        # Генерация уникального имени для файла
+        filename = f"{uuid.uuid4().hex}_{file.filename}"
+        file_path = os.path.join(UPLOAD_FOLDER, filename)
+        file.save(file_path)
+
+    # Сохранение комментария в базу данных
+    new_comment = Comments(author=author, text=text, uNumber=uNumber, file=filename)
+    db.session.add(new_comment)
+    db.session.commit()
+
+    return jsonify({'status': 'comment_ok'})
+
+
+@api_bp.route('/download_file/<filename>', methods=['GET'])
+@need_access(-1)
+def download_file(filename):
+    try:
+        return send_from_directory(UPLOAD_FOLDER, filename, as_attachment=True)
+    except FileNotFoundError:
+        abort(404, description="File not found")
 
 
 def get_wialon_sid():
@@ -103,6 +140,7 @@ def fetch_sensor_data(unit_id):
 
 
 @api_bp.route('/wialon_get_sensor/<int:unit_id>/', methods=['GET'])
+@need_access(-1)
 def wialon_get_sensor(unit_id):
     max_retries = 4
     delay = 10

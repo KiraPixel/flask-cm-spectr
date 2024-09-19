@@ -104,7 +104,6 @@ class CashWialon(db.Model):
     sens = db.Column(db.Text, nullable=True, default='')
 
 
-
 class Alert(db.Model):
     __tablename__ = 'alert'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -113,4 +112,13 @@ class Alert(db.Model):
     type = db.Column(db.Text, nullable=False)
     data = db.Column(db.Text, nullable=False)
     status = db.Column(db.Integer, nullable=True, default=0)
+
+
+class Comments(db.Model):
+    __tablename__ = 'comments'
+    comment_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    author = db.Column(db.Text, nullable=False)
+    text = db.Column(db.Text, nullable=False)
+    uNumber = db.Column(db.Text, nullable=False)
+    file = db.Column(db.Text, nullable=True)
 

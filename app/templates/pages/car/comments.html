@@ -1,44 +1,42 @@
 <h3>Комментарии</h3>
-    <div class="alert alert-info" role="alert">
-        Данный раздел в разработке и скоро будет работать. Мы работаем над добавлением информации и функционала.
-    </div>
+<div class="alert alert-info" role="alert">
+    Данный раздел в разработке и скоро будет работать. Мы работаем над добавлением информации и функционала.
+</div>
 
-    <!-- Комментарии -->
-    <div class="mt-4">
-        <h4>Список комментариев</h4>
+<!-- Комментарии -->
+<div class="mt-4">
+    <h4>Список комментариев</h4>
+
+    {% if comments %}
+        {% for comment in comments %}
         <div class="card mb-3">
             <div class="card-body">
-                <h5 class="card-title">Иван Иванов</h5>
-                <h6 class="card-subtitle mb-2 text-muted">2024-07-28</h6>
-                <p class="card-text">Комментарий 1</p>
-                <a href="#" class="btn btn-secondary btn-sm disabled">Посмотреть файл</a>
+                <h5 class="card-title">{{ comment.author }}</h5>
+                <p class="card-text">{{ comment.text }}</p>
+
+                {% if comment.file and comment.file != '' %}
+                    <a href="{{ url_for('api.download_file', filename=comment.file) }}" class="btn btn-secondary btn-sm">Скачать файл</a>
+                {% endif %}
             </div>
         </div>
+        {% endfor %}
+    {% else %}
+        <p>Пока нет комментариев.</p>
+    {% endif %}
+</div>
 
-        <div class="card mb-3">
-            <div class="card-body">
-                <h5 class="card-title">Петр Петров</h5>
-                <h6 class="card-subtitle mb-2 text-muted">2024-07-29</h6>
-                <p class="card-text">Комментарий 2</p>
-                <a href="#" class="btn btn-secondary btn-sm disabled">Посмотреть файл</a>
-            </div>
+<div class="mt-4">
+    <h4>Добавить комментарий</h4>
+    <form action="{{ url_for('api.add_comment') }}" method="post" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="commentText">Комментарий</label>
+            <textarea id="commentText" name="text" class="form-control" rows="3" placeholder="Введите ваш комментарий"></textarea>
         </div>
-
-        <!-- Дополнительные карточки комментариев будут добавляться здесь -->
-    </div>
-
-    <!-- Форма для добавления комментария -->
-    <div class="mt-4">
-        <h4>Добавить комментарий</h4>
-        <form>
-            <div class="form-group">
-                <label for="commentText">Комментарий</label>
-                <textarea id="commentText" class="form-control" rows="3" placeholder="Введите ваш комментарий" disabled></textarea>
-            </div>
-            <div class="form-group">
-                <label for="commentFile">Прикрепить файл</label>
-                <input type="file" id="commentFile" class="form-control-file" disabled>
-            </div>
-            <button type="submit" class="btn btn-primary" disabled>Добавить комментарий</button>
-        </form>
-    </div>
+        <div class="form-group">
+            <label for="commentFile">Прикрепить файл</label>
+            <input type="file" id="commentFile" name="file" class="form-control-file">
+        </div>
+        <input type="hidden" name="uNumber" value="{{ car_name }}">
+        <button type="submit" class="btn btn-primary">Добавить комментарий</button>
+    </form>
+</div>

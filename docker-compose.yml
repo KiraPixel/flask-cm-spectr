@@ -5,6 +5,7 @@ services:
       dockerfile: Dockerfile
     volumes:
       - .:/ref
+      - ./uploads:/app/uploads
     network_mode: host
     environment:
       HOST: ${HOST}
@@ -22,6 +23,6 @@ services:
       DEV: ${DEV}
     ports:
       - "5000:5000"
-    stdin_open: true   # Открывает стандартный вход
-    tty: true          # Позволяет использовать терминал
+    stdin_open: true
+    tty: true
     restart: always

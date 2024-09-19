@@ -6,7 +6,7 @@ import re
 
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash, make_response, send_file
 
-from .models import db, User, Transport, TransportModel, Storage, CashWialon, CashCesar, Alert
+from .models import db, User, Transport, TransportModel, Storage, CashWialon, CashCesar, Alert, Comments
 from .utils import need_access, need_access
 from modules import report_generator, my_time, hash_password
 
@@ -191,6 +191,7 @@ def get_car(car_id):
     wialon = db.session.query(CashWialon).filter(CashWialon.nm.like(search_pattern)).all()
     cesar = db.session.query(CashCesar).filter(CashCesar.object_name.like(search_pattern)).all()
     car = db.session.query(Transport).filter(Transport.uNumber == car_id).first()
+    comments = db.session.query(Comments).filter(Comments.uNumber == car_id).all()
 
     if not car:
         return "Car not found", 404
@@ -216,6 +217,7 @@ def get_car(car_id):
         transport_model=transport_model,
         wialon_cmd=wialon_cmd,
         wialon_sens=wialon_sens,
+        comments=comments,
     )
 
 
