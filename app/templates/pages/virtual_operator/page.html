@@ -7,35 +7,27 @@
 {% block body %}
 <div class="container-fluid mt-4">
     <div class="row">
-
         <!-- Список "Последние уведомления" -->
         <div class="col-md-3">
             <h5 class="mb-3">Последние уведомления</h5>
-            <div class="list-group" style="max-height: 400px; overflow-y: auto;">
+            <div class="list-group" style="max-height: 1000px; overflow-y: auto;">
                 {% for alert in last_100_alerts %}
                 <a href="{{ url_for('main.get_car', car_id=alert.uNumber) }}"
                    class="list-group-item list-group-item-action {% if alert.status == 1 %}list-group-item-secondary{% endif %}">
-                    <div class="d-flex w-100 justify-content-between">
-                        {% if alert.status%}
+                    <div class="d-flex w-500 justify-content-between">
+                        {% if alert.status %}
                             <h6 class="mb-1">{{ alert.uNumber }} (Решено)</h6>
                         {% else %}
                             <h6 class="mb-1">{{ alert.uNumber }}</h6>
                         {% endif %}
-
                         <small>{{ alert.date | unix_to_datetime }}</small>
                     </div>
                     <p class="mb-1 text-muted">
-                        {% if alert.type == 'gps' %}
-                            Нет координат {{ alert.data }}
-                        {% elif alert.type == 'distance' %}
-                            В {{ alert.data }} км от положенного места
-                        {% elif alert.type == 'no_equipment' %}
-                            Нет оборудования {{ alert.data }}
-                        {% elif alert.type == 'not_work' %}
-                            Оборудование {{ alert.data }} не в сети
-                        {% else %}
-                            {{ alert.data }}
-                        {% endif %}
+                        {% if alert.type == 'gps' %} Нет координат {{ alert.data }}
+                        {% elif alert.type == 'distance' %} В {{ alert.data }} км от положенного места
+                        {% elif alert.type == 'no_equipment' %} Нет оборудования {{ alert.data }}
+                        {% elif alert.type == 'not_work' %} Оборудование {{ alert.data }} не в сети
+                        {% else %} {{ alert.data }} {% endif %}
                     </p>
                 </a>
                 {% endfor %}
@@ -45,22 +37,26 @@
         <!-- Основной контент с карточками -->
         <div class="col-md-9">
             <div class="card p-4 shadow-lg rounded">
-                <!-- Разделы -->
-                <ul class="nav nav-pills mb-4" id="pills-tab" role="tablist">
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link active" id="pills-theft-tab" data-bs-toggle="pill" data-bs-target="#pills-theft" type="button" role="tab" aria-controls="pills-theft" aria-selected="true">Опасность угона ({{ distance|length }})</button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="pills-loss-tab" data-bs-toggle="pill" data-bs-target="#pills-loss" type="button" role="tab" aria-controls="pills-loss" aria-selected="false">Нерабочее оборудование ({{ not_work|length }})</button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="pills-missing-equip-tab" data-bs-toggle="pill" data-bs-target="#pills-missing-equip" type="button" role="tab" aria-controls="pills-missing-equip" aria-selected="false">Отсутствие оборудования ({{ no_equipment|length }})</button>
-                    </li>
-                </ul>
+                <!-- Разделы и поиск -->
+                <div class="d-flex justify-content-between mb-4">
+                    <ul class="nav nav-pills" id="pills-tab" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="pills-theft-tab" data-bs-toggle="pill" data-bs-target="#pills-theft" type="button" role="tab" aria-controls="pills-theft" aria-selected="true">Опасность угона ({{ distance|length }})</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="pills-loss-tab" data-bs-toggle="pill" data-bs-target="#pills-loss" type="button" role="tab" aria-controls="pills-loss" aria-selected="false">Нерабочее оборудование ({{ not_work|length }})</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="pills-missing-equip-tab" data-bs-toggle="pill" data-bs-target="#pills-missing-equip" type="button" role="tab" aria-controls="pills-missing-equip" aria-selected="false">Отсутствие оборудования ({{ no_equipment|length }})</button>
+                        </li>
+                    </ul>
 
-                <!-- Карточки с опасностями -->
-                <div class="tab-content" id="pills-tabContent">
-                    <!-- Опасность угона -->
+                    <!-- Поле поиска -->
+                    <input type="text" class="form-control w-25" id="search-input" placeholder="Поиск по машинам">
+                </div>
+
+                <!-- Карточки -->
+                <div class="tab-content" id="pills-tabContent" style="min-height: 1000px;">
                     <div class="tab-pane fade show active" id="pills-theft" role="tabpanel" aria-labelledby="pills-theft-tab">
                         <div class="row" id="theft-items">
                             {% for alert in distance %}
@@ -72,26 +68,15 @@
                                             <small class="text-muted">{{ alert.date | unix_to_datetime }}</small>
                                         </div>
                                         <p class="card-text">
-                                            {% if alert.type == 'gps' %}
-                                                Нет координат от блока {{ alert.data }}
-                                            {% elif alert.type == 'distance' %}
-                                                ТС находится в {{ alert.data }} км от своего места работы
-                                            {% else %}
-                                                {{ alert.data }}
-                                            {% endif %}
+                                            {% if alert.type == 'gps' %} Нет координат от блока {{ alert.data }}
+                                            {% elif alert.type == 'distance' %} ТС находится в {{ alert.data }} км от своего места работы
+                                            {% else %} {{ alert.data }} {% endif %}
                                         </p>
                                     </div>
                                 </div>
                             </div>
                             {% endfor %}
                         </div>
-                        {% if distance|length > 15 %}
-                        <nav aria-label="Page navigation">
-                            <ul class="pagination" id="pagination-theft">
-                                <!-- Пагинация будет добавлена через JavaScript -->
-                            </ul>
-                        </nav>
-                        {% endif %}
                     </div>
 
                     <!-- Нерабочее оборудование -->
@@ -106,26 +91,15 @@
                                             <small class="text-muted">{{ alert.date | unix_to_datetime }}</small>
                                         </div>
                                         <p class="card-text">
-                                            {% if alert.data == 'Wialon' %}
-                                                Оборудование не выходило на связь больше 48 часов
-                                            {% elif alert.data == 'Cesar' %}
-                                                Оборудование не выходило на связь больше 3 дней
-                                            {% else %}
-                                                {{ alert.data }}
-                                            {% endif %}
+                                            {% if alert.data == 'Wialon' %} Оборудование не выходило на связь больше 48 часов
+                                            {% elif alert.data == 'Cesar' %} Оборудование не выходило на связь больше 3 дней
+                                            {% else %} {{ alert.data }} {% endif %}
                                         </p>
                                     </div>
                                 </div>
                             </div>
                             {% endfor %}
                         </div>
-                        {% if not_work|length > 15 %}
-                        <nav aria-label="Page navigation">
-                            <ul class="pagination" id="pagination-not-work">
-                                <!-- Пагинация будет добавлена через JavaScript -->
-                            </ul>
-                        </nav>
-                        {% endif %}
                     </div>
 
                     <!-- Отсутствие оборудования -->
@@ -145,13 +119,6 @@
                             </div>
                             {% endfor %}
                         </div>
-                        {% if no_equipment|length > 15 %}
-                        <nav aria-label="Page navigation">
-                            <ul class="pagination" id="pagination-missing-equip">
-                                <!-- Пагинация будет добавлена через JavaScript -->
-                            </ul>
-                        </nav>
-                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -159,109 +126,58 @@
     </div>
 </div>
 
-<style>
-.pagination {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-}
-</style>
-
-
 <script>
 document.addEventListener("DOMContentLoaded", function() {
-    const itemsPerPage = 15;
+    const searchInput = document.getElementById('search-input');
 
-    function paginate(containerId, paginationId, items) {
-        const container = document.querySelector(`#${containerId}`);
-        const pagination = document.querySelector(`#${paginationId}`);
-        const totalPages = Math.ceil(items.length / itemsPerPage);
+    function filterItems() {
+        const searchTerm = searchInput.value.toUpperCase();
+        const activeTab = document.querySelector('.tab-pane.active');
+        const items = Array.from(activeTab.querySelectorAll('.card-wrapper'));
 
-        function displayPage(page) {
-            const start = (page - 1) * itemsPerPage;
-            const end = start + itemsPerPage;
-            const itemsToShow = items.slice(start, end);
+        // Фильтруем элементы на основе ввода пользователя
+        const filteredItems = items.filter(item => {
+            const title = item.querySelector('.card-title').textContent.toUpperCase();
+            return title.includes(searchTerm);
+        });
 
-            // Clear the container
-            container.innerHTML = '';
+        // Скрываем все элементы
+        items.forEach(item => {
+            item.style.display = 'none';
+        });
 
-            itemsToShow.forEach(item => {
-                container.appendChild(item);
+        if (searchTerm) {
+            // Если есть текст в поиске, показываем все подходящие элементы
+            filteredItems.forEach(item => {
+                item.style.display = 'block';
             });
-        }
 
-        function createPagination() {
-            pagination.innerHTML = '';
-
-            // Create Previous button
-            const prevItem = document.createElement('li');
-            prevItem.className = 'page-item';
-            const prevLink = document.createElement('a');
-            prevLink.className = 'page-link';
-            prevLink.href = '#';
-            prevLink.innerText = 'Previous';
-            prevLink.addEventListener('click', function(event) {
-                event.preventDefault();
-                const currentPage = parseInt(pagination.querySelector('.page-item.active')?.textContent) || 1;
-                if (currentPage > 1) displayPage(currentPage - 1);
-            });
-            prevItem.appendChild(prevLink);
-            pagination.appendChild(prevItem);
-
-            // Create page numbers
-            for (let i = 1; i <= totalPages; i++) {
-                const pageItem = document.createElement('li');
-                pageItem.className = 'page-item';
-                if (i === 1) pageItem.classList.add('active');
-                const pageLink = document.createElement('a');
-                pageLink.className = 'page-link';
-                pageLink.href = '#';
-                pageLink.innerText = i;
-                pageLink.addEventListener('click', function(event) {
-                    event.preventDefault();
-                    displayPage(i);
-                    pagination.querySelectorAll('.page-item').forEach(item => item.classList.remove('active'));
-                    pageItem.classList.add('active');
-                });
-                pageItem.appendChild(pageLink);
-                pagination.appendChild(pageItem);
+            // Если ничего не найдено
+            if (filteredItems.length === 0) {
+                const container = document.querySelector(`#${activeTab.id}-items`);
+                if (container) {
+                    container.innerHTML = '<p class="text-muted">Нет результатов</p>';
+                }
             }
-
-            // Create Next button
-            const nextItem = document.createElement('li');
-            nextItem.className = 'page-item';
-            const nextLink = document.createElement('a');
-            nextLink.className = 'page-link';
-            nextLink.href = '#';
-            nextLink.innerText = 'Next';
-            nextLink.addEventListener('click', function(event) {
-                event.preventDefault();
-                const currentPage = parseInt(pagination.querySelector('.page-item.active')?.textContent) || 1;
-                if (currentPage < totalPages) displayPage(currentPage + 1);
+        } else {
+            // Если поиска нет, показываем все элементы
+            items.forEach(item => {
+                item.style.display = 'block';
             });
-            nextItem.appendChild(nextLink);
-            pagination.appendChild(nextItem);
         }
-
-        createPagination();
-        displayPage(1);
     }
 
-    // Get items for pagination
-    const distanceItems = Array.from(document.querySelectorAll('#theft-items .card-wrapper'));
-    const notWorkItems = Array.from(document.querySelectorAll('#not-work-items .card-wrapper'));
-    const missingEquipItems = Array.from(document.querySelectorAll('#missing-equip-items .card-wrapper'));
+    searchInput.addEventListener('input', filterItems);
 
-    // Apply pagination if necessary
-    if (distanceItems.length > itemsPerPage) {
-        paginate('theft-items', 'pagination-theft', distanceItems);
-    }
-    if (notWorkItems.length > itemsPerPage) {
-        paginate('not-work-items', 'pagination-not-work', notWorkItems);
-    }
-    if (missingEquipItems.length > itemsPerPage) {
-        paginate('missing-equip-items', 'pagination-missing-equip', missingEquipItems);
-    }
+    // Обновление при переключении вкладок
+    const tabs = document.querySelectorAll('.nav-link');
+    tabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            searchInput.value = ''; // Очищаем поле поиска
+            filterItems(); // Обновляем результаты поиска
+        });
+    });
 });
 </script>
+
 {% endblock %}

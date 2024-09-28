@@ -89,14 +89,15 @@ def filegen(args):
             return None
     elif 'health' in args:
         if args == 'health_coordinates':
-            output.write('Номер лота,Название в Wialon,Дистанция до офиса' + '\n')
+            output.write('Номер лота,Название в Wialon,Дистанция до объекта' + '\n')
             query = db.session.query(Transport, CashWialon). \
                 join(CashWialon, CashWialon.nm.like(func.concat('%', Transport.uNumber, '%'))). \
                 filter(Transport.x != 0). \
                 all()
             for transport, cash_wialon in query:
                 wialon_pos = (cash_wialon.pos_y, cash_wialon.pos_x)
-
+                if transport.x == 0:
+                    continue
                 work_pos = (transport.x, transport.y)
                 if cash_wialon.pos_y == 0:
                     final_str = f'{transport.uNumber},{cash_wialon.nm},None'

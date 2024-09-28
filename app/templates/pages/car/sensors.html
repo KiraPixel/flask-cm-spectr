@@ -47,9 +47,9 @@
     <div class="row">
         <div class="col-12">
             {% if wialon_cmd %}
-                <div class="btn-group" role="group">
+                <div class="" role="group">
                     {% for id, command in wialon_cmd.items() %}
-                    <button type="button" class="btn btn-primary command-btn" data-command="{{ command }}" data-unit-id="{{ wialon[0].id }}">{{ command }}</button>
+                    <button type="button" class="btn btn-secondary mb-3 command-btn" data-command="{{ command }}" data-unit-id="{{ wialon[0].id }}">{{ command }}</button>
                     {% endfor %}
                 </div>
             {% else %}
@@ -61,7 +61,7 @@
     </div>
 </div>
 
-<!-- Скрипт для выполнения команд и обновления данных датчиков -->
+
 <!-- Скрипт для выполнения команд и обновления данных датчиков -->
 <script type="text/javascript">
     document.addEventListener('DOMContentLoaded', function () {
@@ -71,22 +71,34 @@
 
     function handleCommandButtons() {
         const commandButtons = document.querySelectorAll('.command-btn');
+        const loadingIndicator = document.getElementById('loadingIndicator'); // Находим индикатор загрузки
 
         commandButtons.forEach(button => {
             button.addEventListener('click', function () {
                 const commandName = button.getAttribute('data-command');
                 const unitId = button.getAttribute('data-unit-id');
 
+                // Показываем индикатор загрузки при нажатии на кнопку
+                loadingIndicator.style.display = 'block';
+
                 fetch(`/api/wialon_exec_cmd/${unitId}/${commandName}`)
                     .then(response => response.json())
                     .then(data => {
+                        // Скрываем индикатор загрузки после успешного выполнения команды
+                        loadingIndicator.style.display = 'none';
+
                         if (data.status === 'OK') {
                             alert(`Команда ${commandName} - выполнена успешно`);
+                            // После успешного выполнения команды автоматически обновляем датчики
+                            refreshSensors(); // Вызов обновления датчиков
                         } else {
                             alert(`При выполнении команды ${commandName} - произошла ошибка: ${data.error || 'Неизвестная ошибка'}`);
                         }
                     })
                     .catch(error => {
+                        // Скрываем индикатор загрузки при ошибке
+                        loadingIndicator.style.display = 'none';
+
                         alert(`При выполнении команды ${commandName} - произошла ошибка: ${error.message || 'Неизвестная ошибка'}`);
                     });
 
@@ -97,30 +109,35 @@
         });
     }
 
-    function handleRefreshSensors() {
-        const refreshBtn = document.getElementById('refreshSensorsBtn');
+    // Вызываем обновление датчиков напрямую, без кнопки
+    function refreshSensors() {
+        const unitId = "{{ wialon[0].id if wialon|length > 0 else 'undefined' }}"; // Проверяем, существует ли элемент
         const loadingIndicator = document.getElementById('loadingIndicator');
 
+        if (unitId === 'undefined') {
+            alert('Не удалось получить идентификатор устройства.');
+            return;
+        }
+
+        loadingIndicator.style.display = 'block'; // Показываем индикатор загрузки
+
+        fetch(`/api/wialon_get_sensor/${unitId}/`)
+            .then(response => response.json())
+            .then(data => {
+                updateSensors(data);
+                loadingIndicator.style.display = 'none'; // Скрываем индикатор загрузки
+            })
+            .catch(error => {
+                alert(`При обновлении датчиков произошла ошибка: ${error.message || 'Неизвестная ошибка'}`);
+                loadingIndicator.style.display = 'none'; // Скрываем индикатор загрузки
+            });
+    }
+
+    // Изначально оставляем логику обработки клика на кнопку обновления
+    function handleRefreshSensors() {
+        const refreshBtn = document.getElementById('refreshSensorsBtn');
         refreshBtn.addEventListener('click', function () {
-            const unitId = "{{ wialon[0].id if wialon|length > 0 else 'undefined' }}"; // Проверяем, существует ли элемент
-
-            if (unitId === 'undefined') {
-                alert('Не удалось получить идентификатор устройства.');
-                return;
-            }
-
-            loadingIndicator.style.display = 'block'; // Показываем индикатор загрузки
-
-            fetch(`/api/wialon_get_sensor/${unitId}/`)
-                .then(response => response.json())
-                .then(data => {
-                    updateSensors(data);
-                    loadingIndicator.style.display = 'none'; // Скрываем индикатор загрузки
-                })
-                .catch(error => {
-                    alert(`При обновлении датчиков произошла ошибка: ${error.message || 'Неизвестная ошибка'}`);
-                    loadingIndicator.style.display = 'none'; // Скрываем индикатор загрузки
-                });
+            refreshSensors(); // Вызываем обновление при клике на кнопку
         });
     }
 
@@ -142,5 +159,6 @@
             }
         });
     }
+
 </script>
 
