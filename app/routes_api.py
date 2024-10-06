@@ -11,14 +11,70 @@ from flask import Blueprint, request, jsonify, session, send_from_directory, abo
 
 from . import db
 from .utils import need_access, need_access
-from .models import Transport, TransportModel, Storage, User, CashWialon, Comments
+from .models import Transport, TransportModel, Storage, User, CashWialon, Comments, Alert
 from .config import UPLOAD_FOLDER
+import modules.my_time as mytime
 
 # Создаем Blueprint для API маршрутов приложения
 api_bp = Blueprint('api', __name__)
 wialon_token = os.getenv('WIALON_TOKEN', 'default_token')
 wialon_api_url = os.getenv('WIALON_HOST', 'default_host')
 warnings.simplefilter('ignore', InsecureRequestWarning)
+
+
+@need_access(-1)
+@api_bp.route('/health', methods=['GET'])
+def health_check():
+    # Проверка состояния базы данных
+    try:
+        db.session.query(User).first()
+        status_db = 1
+        db_error = None
+    except Exception as e:
+        print(e)
+        status_db = 0
+        db_error = str(e)
+
+    # Проверка cashing_module
+    try:
+        last_wialon_entry = CashWialon.query.order_by(CashWialon.last_time.desc()).first()
+        if last_wialon_entry and last_wialon_entry.last_time >= mytime.one_hours_ago_unix():
+            cashing_module = 1
+            last_wialon_time = last_wialon_entry.last_time
+        else:
+            cashing_module = 0
+            last_wialon_time = "No data"
+    except Exception as e:
+        cashing_module = 0
+        last_wialon_time = "No data"
+
+    # Проверка voperator_model
+    try:
+        last_alert_entry = Alert.query.order_by(Alert.date.desc()).first()
+        if last_alert_entry and int(last_alert_entry.date) >= mytime.one_hours_ago_unix():
+            voperator = 1
+            last_alert_time = last_alert_entry.date
+        else:
+            voperator = 0
+            last_alert_time = "No data"
+    except Exception as e:
+        voperator = 0
+        last_alert_time = "No data"
+
+    return jsonify({
+        'status_db': {
+            'status': status_db,
+            'error': db_error
+        },
+        'cashing_module': {
+            'status': cashing_module,
+            'last_time': last_wialon_time
+        },
+        'voperator_model': {
+            'status': voperator,
+            'last_time': last_alert_time
+        }
+    }), 200
 
 
 @api_bp.route('/cars', methods=['GET'])

@@ -13,6 +13,10 @@ def five_minutes_ago_unix():
     return int((datetime.datetime.now() - datetime.timedelta(minutes=5)).timestamp())
 
 
+def one_hours_ago_unix():
+    return int((datetime.datetime.now() - datetime.timedelta(hours=1)).timestamp())
+
+
 def forty_eight_hours_ago_unix():
     return int((datetime.datetime.now() - datetime.timedelta(hours=48)).timestamp())
 
