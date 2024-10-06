@@ -48,7 +48,7 @@ def health_check():
         cashing_module = 0
         last_wialon_time = "No data"
 
-    # Проверка voperator_model
+    # Проверка voperator_module
     try:
         last_alert_entry = Alert.query.order_by(Alert.date.desc()).first()
         if last_alert_entry and int(last_alert_entry.date) >= mytime.one_hours_ago_unix():
@@ -70,7 +70,7 @@ def health_check():
             'status': cashing_module,
             'last_time': last_wialon_time
         },
-        'voperator_model': {
+        'voperator_module': {
             'status': voperator,
             'last_time': last_alert_time
         }
