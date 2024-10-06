@@ -97,6 +97,7 @@ class CashWialon(db.Model):
     nm = db.Column(db.Text, nullable=False)
     pos_x = db.Column(db.Float, default=0.0)
     pos_y = db.Column(db.Float, default=0.0)
+    gps = db.Column(db.Integer, default=0)
     last_time = db.Column(db.Integer, default=0)
     last_pos_time = db.Column(db.Integer, default=0)
     linked = db.Column(db.Boolean, nullable=True, default=False)  # TINYINT(1) NULL DEFAULT '0'

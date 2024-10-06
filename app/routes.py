@@ -191,6 +191,7 @@ def get_car(car_id):
     wialon = db.session.query(CashWialon).filter(CashWialon.nm.like(search_pattern)).all()
     cesar = db.session.query(CashCesar).filter(CashCesar.object_name.like(search_pattern)).all()
     car = db.session.query(Transport).filter(Transport.uNumber == car_id).first()
+    alerts = db.session.query(Alert).filter(Alert.uNumber == car_id).all()
     comments = db.session.query(Comments).filter(Comments.uNumber == car_id).all()
 
     if not car:
@@ -217,6 +218,7 @@ def get_car(car_id):
         transport_model=transport_model,
         wialon_cmd=wialon_cmd,
         wialon_sens=wialon_sens,
+        alerts=alerts,
         comments=comments,
     )
 

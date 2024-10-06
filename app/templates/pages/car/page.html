@@ -23,6 +23,7 @@
     <br><br>
     <div class="row mt-4">
         <div class="col-12">
+            {% if wialon %}
             <h4>Wialon</h4>
             <table class="table table-sm table-bordered">
                 <thead class="thead-light">
@@ -30,7 +31,7 @@
                         <th>Название объекта</th>
                         <th>IMEI</th>
                         <th>Последний онлайн</th>
-                        <th>Координаты</th>
+                        <th>Координаты (GPS/GNSS)</th>
                         <th>Адрес</th>
                     </tr>
                 </thead>
@@ -38,16 +39,18 @@
                     {% for item in wialon %}
                     <tr>
                         <td>{{ item.nm }}</td>
-                        <td>{{item.uid}}</td>
+                        <td>{{ item.uid }}</td>
                         <td>{{ item.last_time | unix_to_datetime }}</td>
-                        <td>{{ item.pos_y }}, {{ item.pos_x }}</td>
+                        <td>{{ item.pos_y }}, {{ item.pos_x }} ({{ item.gps }})</td>
                         <td>{{ (item.pos_y, item.pos_x) | get_address }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
+            {% endif %}
         </div>
         <div class="col-12">
+            {% if cesar %}
             <h4>Цезарь</h4>
             <table class="table table-sm table-bordered">
                 <thead class="thead-light">
@@ -71,6 +74,7 @@
                     {% endfor %}
                 </tbody>
             </table>
+            {% endif %}
         </div>
     </div>
     <br><br>
@@ -79,6 +83,7 @@
             <a href="#info" class="btn btn-outline-primary" id="info-tab">Инфо</a>
             <a href="#sensors" class="btn btn-outline-primary" id="sensors-tab">Датчики</a>
             <a href="#transitions" class="btn btn-outline-primary" id="transitions-tab">Переходы</a>
+                <a href="#alerts" class="btn btn-outline-primary" id="alerts-tab">Опасности</a>
             <a href="#comments" class="btn btn-outline-primary" id="comments-tab">Комментарии</a>
         </div>
     </div>
@@ -94,7 +99,9 @@
             <div class="tab-pane" id="transitions-content">
                 {% include 'pages/car/transitions.html' %}
             </div>
-
+            <div class="tab-pane" id="alerts-content">
+                {% include 'pages/car/alerts.html' %}
+            </div>
             <div class="tab-pane" id="comments-content">
                 {% include 'pages/car/comments.html' %}
             </div>
