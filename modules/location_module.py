@@ -7,6 +7,7 @@ def get_address(x, y):
     if x == 0 or y == 0:
         return None
     location = geolocator.reverse((x, y), exactly_one=True)
+    print(location)
     return location
 
 
@@ -30,5 +31,4 @@ def get_address_decorator(coords=None):
     short_address = f"{city}, {road}, {house_number}".strip(', ')
     if short_address == 'Химки, Коммунальный проезд, 141410':
         short_address = "Химки, Коммунальный проезд, 2"
-
     return short_address

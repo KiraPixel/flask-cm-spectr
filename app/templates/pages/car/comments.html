@@ -1,63 +1,168 @@
 <!-- Комментарии -->
 <div class="mt-4">
-    <h4>Список комментариев</h4>
+    <h4 class="text-center mb-4">Список комментариев</h4>
 
     {% if comments %}
         {% for comment in comments %}
-        <div class="card mb-3">
+        <div class="card mb-3 shadow-sm" id="comment-{{ comment.comment_id }}">
             <div class="card-body">
-                <h5 class="card-title">{{ comment.author }}</h5>
-                <p class="card-text" style="white-space: pre-wrap;">{{ comment.text }}</p>
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="card-title">{{ comment.author }}</h5>
+                    <span class="text-muted" style="font-size: smaller;">{{ comment.datetime_unix | unix_to_datetime }}</span>
+                </div>
+                <div class="comment-text mt-2" id="commentText-{{ comment.comment_id }}" contenteditable="false" style="white-space: pre-wrap;">{{ comment.text }}</div>
+                {% if comment.author == username %}
+                    <div class="mt-2">
+                        <button class="btn btn-danger btn-sm delete-comment" data-id="{{ comment.comment_id }}">Удалить</button>
+                        <button class="btn btn-secondary btn-sm edit-comment" data-id="{{ comment.comment_id }}">Редактировать</button>
+                        <button class="btn btn-success btn-sm save-comment" data-id="{{ comment.comment_id }}" style="display: none;">Сохранить изменения</button>
+                    </div>
+                {% endif %}
             </div>
         </div>
         {% endfor %}
     {% else %}
-        <p>Пока нет комментариев.</p>
+        <p class="text-muted text-center">Пока нет комментариев.</p>
     {% endif %}
 </div>
 
 <div class="mt-4">
-    <h4>Добавить комментарий</h4>
+    <h4 class="text-center mb-3">Добавить комментарий</h4>
     <form id="commentForm" action="{{ url_for('api.add_comment') }}" method="post" enctype="multipart/form-data">
         <div class="form-group">
-            <label for="commentText">Комментарий</label>
             <textarea id="commentText" name="text" class="form-control" rows="3" placeholder="Введите ваш комментарий"></textarea>
         </div>
         <input type="hidden" name="uNumber" value="{{ car_name }}">
-        <button type="submit" class="btn btn-primary">Добавить комментарий</button>
+        <button type="submit" class="btn btn-primary btn-block">Добавить комментарий</button>
     </form>
 </div>
 
+<style>
+    .comment-text {
+        min-height: 50px; /* Минимальная высота для текстового поля */
+        padding: 10px; /* Добавляем немного отступа */
+        border: 1px solid transparent; /* Изначально граница прозрачная */
+        border-radius: 0.25rem; /* Скругление углов */
+        transition: border-color 0.3s; /* Плавный переход для изменения цвета границы */
+    }
+
+    .comment-text.editing {
+        border-color: #007bff; /* Цвет границы при редактировании */
+        background-color: #f8f9fa; /* Цвет фона при редактировании */
+    }
+</style>
+
 <script>
     document.getElementById('commentForm').addEventListener('submit', function(event) {
-        event.preventDefault(); // Предотвращаем отправку формы
+        event.preventDefault(); // Предотвращаем стандартное поведение формы
 
-        let commentText = document.getElementById('commentText').value.trim();
+        const formData = new FormData(this);
 
-        if (!commentText) {
-            alert('Комментарий не может быть пустым');
-            return;
-        }
-
-        let formData = new FormData(this);
-
-        fetch('{{ url_for("api.add_comment") }}', {
+        fetch(this.action, {
             method: 'POST',
             body: formData
         })
         .then(response => response.json())
         .then(data => {
             if (data.status === 'comment_ok') {
-                // Обновляем страницу, если комментарий успешно добавлен
+                // Обновляем страницу при успешном добавлении комментария
                 location.reload();
-            } else if (data.status === 'comment_deny') {
-                // Показываем сообщение об ошибке
-                alert('Произошла ошибка. Попробуйте снова.');
+            } else {
+                // Выводим сообщение об ошибке
+                alert('Ошибка при добавлении комментария: ' + (data.message || 'Попробуйте снова.'));
             }
         })
         .catch(error => {
             console.error('Ошибка:', error);
             alert('Произошла ошибка на сервере.');
+        });
+    });
+
+    document.querySelectorAll('.delete-comment').forEach(button => {
+        button.addEventListener('click', function() {
+            const commentId = this.getAttribute('data-id');
+            const commentDiv = document.getElementById(`commentText-${commentId}`);
+
+            // Меняем текст комментария и добавляем "_removed" к uNumber
+            const removedText = `${commentDiv.innerText.trim()}_removed`;
+
+            // Отправляем запрос на изменение комментария
+            let formData = new FormData();
+            formData.append('text', removedText);
+            formData.append('comment_id', commentId);
+            formData.append('action', 'delete'); // Добавляем действие "удалить"
+
+            fetch('{{ url_for("api.edit_comment") }}', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'edit_ok') {
+                    // Перезагружаем страницу после успешного удаления комментария
+                    location.reload();
+                } else {
+                    alert('Произошла ошибка. Попробуйте снова.');
+                }
+            })
+            .catch(error => {
+                console.error('Ошибка:', error);
+                alert('Произошла ошибка на сервере.');
+            });
+        });
+    });
+
+    // Обработчик события для кнопок редактирования комментариев
+    document.querySelectorAll('.edit-comment').forEach(button => {
+        button.addEventListener('click', function() {
+            const commentId = this.getAttribute('data-id');
+            const commentDiv = document.getElementById(`commentText-${commentId}`);
+            commentDiv.setAttribute('contenteditable', 'true'); // Делаем текст редактируемым
+            commentDiv.classList.add('editing'); // Добавляем класс для изменения стиля
+            commentDiv.focus(); // Устанавливаем фокус на текстовое поле
+
+            this.style.display = 'none'; // Скрываем кнопку редактирования
+            const saveButton = document.querySelector(`.save-comment[data-id='${commentId}']`);
+            saveButton.style.display = 'inline-block'; // Показываем кнопку сохранения
+        });
+    });
+
+    // Обработчик события для кнопок сохранения изменений
+    document.querySelectorAll('.save-comment').forEach(button => {
+        button.addEventListener('click', function() {
+            const commentId = this.getAttribute('data-id');
+            const commentDiv = document.getElementById(`commentText-${commentId}`);
+            const commentText = commentDiv.innerText.trim();
+
+            if (!commentText) {
+                alert('Комментарий не может быть пустым');
+                return;
+            }
+
+            let formData = new FormData();
+            formData.append('text', commentText);
+            formData.append('comment_id', commentId);
+
+            fetch('{{ url_for("api.edit_comment") }}', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'edit_ok') {
+                    commentDiv.setAttribute('contenteditable', 'false'); // Делаем текст снова недоступным для редактирования
+                    commentDiv.classList.remove('editing'); // Убираем класс редактирования
+                    this.style.display = 'none'; // Скрываем кнопку сохранения
+                    const editButton = document.querySelector(`.edit-comment[data-id='${commentId}']`);
+                    editButton.style.display = 'inline-block'; // Показываем кнопку редактирования
+                } else {
+                    alert('Произошла ошибка. Попробуйте снова.');
+                }
+            })
+            .catch(error => {
+                console.error('Ошибка:', error);
+                alert('Произошла ошибка на сервере.');
+            });
         });
     });
 </script>

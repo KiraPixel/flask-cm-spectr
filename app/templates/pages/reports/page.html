@@ -7,6 +7,9 @@
 {% block body %}
 <div class="container my-5">
     <div class="row">
+        <div id="flash-message" class="alert alert-success" style="display: none;" role="alert">
+            Отчет поставлен в очередь и скоро будет доставлен на почту!
+        </div>
         <div class="col-lg-6 mb-4">
             <div class="card shadow-sm">
                 <div class="card-header bg-primary text-white">
@@ -14,15 +17,15 @@
                 </div>
                 <div class="card-body">
                     <div class="list-group">
-                        <a href="{{ url_for('main.send_report', report='wialon') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <a href="{{ url_for('main.send_report', report='wialon') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center send-report">
                             Весь транспорт
                             <span class="badge bg-success rounded-pill">Скачать</span>
                         </a>
-                        <a href="{{ url_for('main.send_report', report='wialon_offline') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <a href="{{ url_for('main.send_report', report='wialon_offline') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center send-report">
                             Давно offline (от 3 дней)
                             <span class="badge bg-success rounded-pill">Скачать</span>
                         </a>
-                        <a href="{{ url_for('main.send_report', report='wialon_with_address') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <a href="{{ url_for('main.send_report', report='wialon_with_address') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center send-report">
                             Весь транспорт с адресом (очень тяжелый отчет)
                             <span class="badge bg-danger rounded-pill d-flex align-items-center">
                                 <i class="bi bi-lock"></i>   Скачать
@@ -40,11 +43,11 @@
                 </div>
                 <div class="card-body">
                     <div class="list-group">
-                        <a href="{{ url_for('main.send_report', report='cesar') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <a href="{{ url_for('main.send_report', report='cesar') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center send-report">
                             Весь транспорт
                             <span class="badge bg-success rounded-pill">Скачать</span>
                         </a>
-                        <a href="{{ url_for('main.send_report', report='cesar_offline') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <a href="{{ url_for('main.send_report', report='cesar_offline') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center send-report">
                             Давно offline (от 3 дней)
                             <span class="badge bg-success rounded-pill">Скачать</span>
                         </a>
@@ -60,15 +63,15 @@
                 </div>
                 <div class="card-body">
                     <div class="list-group">
-                        <a href="{{ url_for('main.send_report', report='health_coordinates') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <a href="{{ url_for('main.send_report', report='health_coordinates') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center send-report">
                             Сверка координат
                             <span class="badge bg-success rounded-pill">Скачать</span>
                         </a>
-                        <a href="{{ url_for('main.send_report', report='health_no_equip') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <a href="{{ url_for('main.send_report', report='health_no_equip') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center send-report">
                             Лоты без оборудования
                             <span class="badge bg-success rounded-pill">Скачать</span>
                         </a>
-                        <a href="{{ url_for('main.send_report', report='health_no_lot') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <a href="{{ url_for('main.send_report', report='health_no_lot') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center send-report">
                             Оборудование без лота
                             <span class="badge bg-success rounded-pill">Скачать</span>
                         </a>
@@ -76,7 +79,48 @@
                 </div>
             </div>
         </div>
-
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const reportLinks = document.querySelectorAll('.send-report');
+        const flashMessage = document.getElementById('flash-message');
+
+        reportLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();  // Останавливаем стандартное поведение ссылки
+                const url = this.getAttribute('href');
+
+                // Показываем flash сообщение сразу после нажатия
+                flashMessage.style.display = 'block';
+                flashMessage.textContent = 'Отчет отправлен успешно!';
+
+                // Скрываем flash через 3 секунды
+                setTimeout(() => {
+                    flashMessage.style.display = 'none';
+                }, 3000);
+
+                // Отправляем запрос и не ждем ответа
+                fetch(url, {
+                    method: 'GET'
+                }).then(response => {
+                    console.log('Запрос отправлен');
+                }).catch(error => {
+                    console.error('Ошибка отправки запроса:', error);
+                    // Показываем flash сообщение об ошибке
+                    flashMessage.style.display = 'block';
+                    flashMessage.classList.remove('alert-success');
+                    flashMessage.classList.add('alert-danger');
+                    flashMessage.textContent = 'Ошибка отправки отчета!';
+
+                    // Скрываем flash через 3 секунды
+                    setTimeout(() => {
+                        flashMessage.style.display = 'none';
+                    }, 3000);
+                });
+            });
+        });
+    });
+</script>
 {% endblock %}

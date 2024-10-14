@@ -121,4 +121,5 @@ class Comments(db.Model):
     author = db.Column(db.Text, nullable=False)
     text = db.Column(db.Text, nullable=False)
     uNumber = db.Column(db.Text, nullable=False)
+    datetime_unix = db.Column(db.Integer, nullable=True, default=0)
 

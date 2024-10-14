@@ -117,11 +117,47 @@ def add_comment():
 
     uNumber = request.form.get('uNumber')
 
-    new_comment = Comments(author=author, text=clean_text, uNumber=uNumber)
+    new_comment = Comments(author=author, text=clean_text, uNumber=uNumber, datetime_unix=mytime.now_unix_time())
     db.session.add(new_comment)
     db.session.commit()
 
     return jsonify({'status': 'comment_ok'})
+
+
+@api_bp.route('/edit_comment', methods=['POST'])
+@need_access(-1)
+def edit_comment():
+    comment_id = request.form.get('comment_id')
+    action = request.form.get('action')  # Новый параметр для определения действия
+
+    if not comment_id:
+        return jsonify({'status': 'edit_deny'})
+
+    author = session.get('username')
+    if not author:
+        return jsonify({'status': 'edit_deny'})  # Проверка авторизации
+
+    # Находим комментарий по ID и проверяем, что автор совпадает
+    comment = Comments.query.get(comment_id)
+    if not comment or comment.author != author:
+        return jsonify({'status': 'edit_deny'})
+
+    # Если действие "удалить", обновляем uNumber
+    if action == 'delete':
+        comment.uNumber = f"{comment.uNumber}_removed"
+        db.session.commit()
+        return jsonify({'status': 'edit_ok'})
+
+    # Для редактирования текста
+    text = request.form.get('text', '').strip()
+    if not text or len(text) > 500:
+        return jsonify({'status': 'edit_deny'})
+
+    comment.text = text
+    db.session.commit()
+
+    return jsonify({'status': 'edit_ok'})
+
 
 
 def get_wialon_sid():

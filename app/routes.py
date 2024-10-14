@@ -211,6 +211,7 @@ def get_car(car_id):
     return render_template(
         'pages/car/page.html',
         car=car,
+        username=session['username'],
         car_name=car_id,
         cesar=cesar,
         wialon=wialon,
@@ -243,11 +244,11 @@ def send_report():
 
     if report_generator.generate_and_send_report(report_name, user):
         flash('Отчет отправлен на почту', 'info')
-
         return redirect(url_for('main.reports'))
     else:
         flash('Произошла ошибка, обратитесь к системному администратору', 'warning')
         return redirect(url_for('main.reports'))
+
 
 
 @bp.route('/map/')
