@@ -11,7 +11,7 @@ from flask import Blueprint, request, jsonify, session, send_from_directory, abo
 
 from . import db
 from .utils import need_access, need_access
-from .models import Transport, TransportModel, Storage, User, CashWialon, Comments, Alert
+from .models import Transport, TransportModel, Storage, User, CashWialon, Comments, Alert, CashHistoryWialon
 from .config import UPLOAD_FOLDER
 import modules.my_time as mytime
 
@@ -98,6 +98,47 @@ def get_cars():
     } for car in data_db]
 
     return jsonify(cars_json)
+
+
+@api_bp.route('/get_car_history', methods=['GET'])
+@need_access(-1)
+def get_car_history():
+    nm = request.args.get('nm')
+    time_from = request.args.get('time_from')
+    time_to = request.args.get('time_to')
+
+    if not nm or not time_from or not time_to:
+        return jsonify({'error': 'Missing required parameters: nm, time_from, time_to'}), 400
+
+    try:
+        # Преобразуем параметры времени в int для фильтрации
+        time_from_unix = int(time_from)
+        time_to_unix = int(time_to)
+    except ValueError as e:
+        return jsonify({'error': f'Invalid timestamp format: {str(e)}'}), 400
+
+        # Выполняем запрос к базе данных
+    try:
+        history_entries = db.session.query(CashHistoryWialon).filter(
+            CashHistoryWialon.nm == nm,
+            CashHistoryWialon.last_time >= time_from_unix,
+            CashHistoryWialon.last_time <= time_to_unix
+        ).order_by(CashHistoryWialon.last_time.asc()).all()
+
+        # Преобразуем результаты в JSON
+        history_json = [{
+            "uid": entry.uid,
+            "nm": entry.nm,
+            "pos_x": entry.pos_x,
+            "pos_y": entry.pos_y,
+            "last_time": entry.last_time
+        } for entry in history_entries]
+
+        return jsonify(history_json), 200
+
+    except Exception as e:
+        print(f"Error occurred while fetching car history: {e}")
+        return jsonify({'error': 'Database query failed'}), 500
 
 
 @api_bp.route('/add_comment', methods=['POST'])

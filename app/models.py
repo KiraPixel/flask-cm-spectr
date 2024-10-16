@@ -105,6 +105,16 @@ class CashWialon(db.Model):
     sens = db.Column(db.Text, nullable=True, default='')
 
 
+class CashHistoryWialon(db.Model):
+    __tablename__ = 'cash_history_wialon'
+    id = db.Column(db.Integer, primary_key=True)
+    uid = db.Column(db.Integer, nullable=False, default=0)
+    nm = db.Column(db.Text, nullable=False)
+    pos_x = db.Column(db.Float, default=0.0)
+    pos_y = db.Column(db.Float, default=0.0)
+    last_time = db.Column(db.Integer, default=0)
+
+
 class Alert(db.Model):
     __tablename__ = 'alert'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
