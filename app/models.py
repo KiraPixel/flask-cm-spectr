@@ -16,6 +16,15 @@ class User(db.Model):
         return '<User %r>' % self.username
 
 
+class Reports(db.Model):
+    __tablename__ = 'reports'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    username = db.Column(db.String(100), primary_key=True)
+    type = db.Column(db.String(100), nullable=True)
+    status = db.Column(db.String(100), nullable=True)
+
+
 class Transport(db.Model):
     __tablename__ = 'transport'
 

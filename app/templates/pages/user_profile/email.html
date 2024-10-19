@@ -3,7 +3,7 @@
         <h4 class="card-title">Изменить почту</h4>
     </div>
     <div class="card-body">
-        <form method="POST" action="{{ url_for('user_settings.change_email') }}">
+        <form method="POST" action="{{ url_for('user_profile.change_email') }}">
             <div class="form-group">
                 <label for="email">Новая почта:</label>
                 <input type="email" class="form-control" id="email" name="email" value="" required>

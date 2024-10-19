@@ -3,7 +3,7 @@
         <h4 class="card-title">Изменить пароль</h4>
     </div>
     <div class="card-body">
-        <form id="passwordForm" method="POST" action="{{ url_for('user_settings.change_password') }}">
+        <form id="passwordForm" method="POST" action="{{ url_for('user_profile.change_password') }}">
             <div class="form-group">
                 <label for="new_password">Новый пароль:</label>
                 <input type="password" class="form-control" id="new_password" name="new_password" required>

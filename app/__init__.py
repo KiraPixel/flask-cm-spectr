@@ -29,7 +29,7 @@ def create_app():
     app.register_blueprint(main_bp)
     app.register_blueprint(api_bp, url_prefix='/api')
     app.register_blueprint(admin_bp)
-    app.register_blueprint(us_bp, url_prefix='/user_settings')
+    app.register_blueprint(us_bp, url_prefix='/user_profile')
     app.register_blueprint(architect, url_prefix='/architect')
 
     app.jinja_env.filters['unix_to_datetime'] = my_time.unix_to_moscow_time

@@ -1,7 +1,7 @@
 {% extends 'main.html' %}
 
 {% block title %}
-Настройки пользователя
+Аккаунт
 {% endblock %}
 
 {% block body %}
@@ -23,6 +23,27 @@
         </div>
     </div>
 
+    <div class="card mb-4">
+        <div class="card-header">
+            <h4 class="card-title">Отчеты пользователя</h4>
+        </div>
+        <div class="card-body">
+            {% if reports %}
+                <ul class="list-group">
+                    {% for report in reports %}
+                        <li class="list-group-item">
+                            <p><strong>Тип отчета:</strong> {{ report.type }}</p>
+                            <p><strong>Статус:</strong> {{ report.status }}</p>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>Нет доступных отчетов.</p>
+            {% endif %}
+        </div>
+    </div>
+
+
     <!-- Здесь будет загружаться форма для изменения почты или пароля -->
     <div id="user-settings-content"></div>
 </div>
@@ -41,12 +62,12 @@
 
     document.getElementById('change-email-btn').addEventListener('click', function(event) {
         event.preventDefault();
-        loadContent('/user_settings/email', initEmailForm);
+        loadContent('/user_profile/email', initEmailForm);
     });
 
     document.getElementById('change-password-btn').addEventListener('click', function(event) {
         event.preventDefault();
-        loadContent('/user_settings/pass', initPasswordForm);
+        loadContent('/user_profile/pass', initPasswordForm);
     });
 
     function initEmailForm() {

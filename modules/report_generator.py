@@ -3,7 +3,7 @@ import tempfile
 
 from sqlalchemy import func
 
-from app.models import Transport, CashCesar, CashWialon
+from app.models import Transport, CashCesar, CashWialon, Reports
 from . import my_time, location_module, coord_math
 from app import db
 from modules import mail_sender
@@ -143,22 +143,48 @@ def filegen(args):
 
 
 def generate_and_send_report(args, user):
-    # Генерация отчёта
-    report_content = filegen(args)
+    # Создание записи в БД о начале генерации отчета
+    report_entry = Reports(
+        username=user.username,
+        type=args,
+        status='Генерация отчета'
+    )
+    db.session.add(report_entry)
+    db.session.commit()  # Коммитим, чтобы получить id записи
 
-    # Если отчёт не сгенерирован, возвращаем ошибку
-    if report_content is None:
+    try:
+        # Генерация отчета
+        report_content = filegen(args)
+
+        if report_content is None:
+            report_entry.status = 'Ошибка: Не удалось сгенерировать отчет'
+            db.session.commit()
+            return False
+
+        # Генерация письма
+        subject = f'Отчет: {args}'
+        body = f'Во вложении заказанный отчет {args}.'
+
+        # Создание CSV с BOM
+        attachment_name = f'{args}.csv'
+        bom = '\ufeff'
+        report_content_with_bom = bom + report_content
+
+        # Отправка письма
+        success = mail_sender.send_email(
+            user.email, subject, body, attachment_name, report_content_with_bom.encode('utf-8')
+        )
+
+        # Обновление статуса в зависимости от успеха
+        report_entry.status = 'Отчет отправлен' if success else 'Ошибка: Не удалось отправить отчет'
+        db.session.commit()
+        return success
+
+    except Exception as e:
+        # Откат транзакции при возникновении ошибки
+        db.session.rollback()
+        report_entry.status = f'Ошибка: {str(e)}'
+        db.session.add(report_entry)
+        db.session.commit()  # Сохраняем новый статус с сообщением об ошибке
         return False
 
-    # Письмо
-    subject = f'Отчет: {args}'
-    body = f'Во вложении заказанный отчет {args}.'
-
-    # Генерируем csv
-    attachment_name = f'{args}.csv'
-    bom = '\ufeff'
-    report_content_with_bom = bom + report_content
-
-    # Отправка отчёта по email
-    success = mail_sender.send_email(user.email, subject, body, attachment_name, report_content_with_bom.encode('utf-8'))
-    return success
