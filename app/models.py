@@ -42,6 +42,7 @@ class Transport(db.Model):
     customer = db.Column(db.Text)
     customer_contact = db.Column(db.Text)
     manager = db.Column(db.Text)
+    disable_virtual_operator = db.Column(db.Integer)
 
     transport_model = db.relationship(
         'TransportModel',

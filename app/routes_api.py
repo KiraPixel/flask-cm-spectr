@@ -141,6 +141,27 @@ def get_car_history():
         return jsonify({'error': 'Database query failed'}), 500
 
 
+
+@api_bp.route('/change_disable_virtual_operator', methods=['GET'])
+@need_access(1)
+def change_disable_virtual_operator():
+    car_name = request.args.get('car_name')
+    if not car_name:
+        return jsonify({'error': 'car_name is required'}), 400
+
+    # Получаем транспортное средство по номеру
+    transport = Transport.query.filter_by(uNumber=car_name).first()
+    if not transport:
+        return jsonify({'error': 'Transport not found'}), 404
+
+    # Изменяем значение disable_virtual_operator
+    transport.disable_virtual_operator = 1 - transport.disable_virtual_operator  # Меняем 0 на 1 и наоборот
+    db.session.commit()
+
+    return jsonify({'message': 'Successfully updated', 'new_state': transport.disable_virtual_operator}), 200
+
+
+
 @api_bp.route('/add_comment', methods=['POST'])
 @need_access(-1)
 def add_comment():

@@ -1,6 +1,12 @@
 <!-- Уведомления-->
 <div class="mt-4">
     <h4>Список уведомлений</h4>
+
+    <!-- Кнопка для виртуального оператора с отступом снизу -->
+    <button id="virtualOperatorButton" class="btn btn-{{ 'success' if car.disable_virtual_operator == 0 else 'danger' }} mb-3">
+        Виртуальный оператор {{ '✓' if car.disable_virtual_operator == 0 else 'X' }}
+    </button>
+
     {% if alerts %}
         <div class="row row-cols-1 row-cols-md-2 g-4">
             {% for alert in alerts %}
@@ -35,3 +41,22 @@
         <p>По этой ТС нет уведомлений от виртуального диспетчера</p>
     {% endif %}
 </div>
+
+<script>
+    document.getElementById('virtualOperatorButton').addEventListener('click', function() {
+        const carName = "{{ car.uNumber }}"; // Подставляем номер автомобиля
+        const apiUrl = "{{ url_for('api.change_disable_virtual_operator') }}?car_name=" + carName;
+
+        fetch(apiUrl)
+            .then(response => {
+                if (response.ok) {
+                    location.reload(); // Перезагружаем страницу при успешном ответе
+                } else {
+                    alert('Ошибка при изменении состояния виртуального оператора.');
+                }
+            })
+            .catch(error => {
+                console.error('Ошибка:', error);
+            });
+    });
+</script>
