@@ -47,9 +47,13 @@
     <div class="row">
         <div class="col-12">
             {% if wialon_cmd %}
-                <div class="" role="group">
+                <div role="group">
                     {% for id, command in wialon_cmd.items() %}
-                    <button type="button" class="btn btn-secondary mb-3 command-btn" data-command="{{ command }}" data-unit-id="{{ wialon[0].id }}">{{ command }}</button>
+                        <button type="button" class="btn btn-secondary mb-3 command-btn" data-command="{{ command }}" data-unit-id="{{ wialon[0].id }}">
+                            {{ command }}
+                            <!-- Добавляем круг загрузки, который будет виден только при выполнении команды -->
+                            <span class="spinner-border spinner-border-sm ms-2 loading-spinner" style="display: none;" role="status" aria-hidden="true"></span>
+                        </button>
                     {% endfor %}
                 </div>
             {% else %}
@@ -71,40 +75,35 @@
 
     function handleCommandButtons() {
         const commandButtons = document.querySelectorAll('.command-btn');
-        const loadingIndicator = document.getElementById('loadingIndicator'); // Находим индикатор загрузки
 
         commandButtons.forEach(button => {
             button.addEventListener('click', function () {
                 const commandName = button.getAttribute('data-command');
                 const unitId = button.getAttribute('data-unit-id');
+                const spinner = button.querySelector('.loading-spinner'); // Находим индикатор загрузки внутри кнопки
 
-                // Показываем индикатор загрузки при нажатии на кнопку
-                loadingIndicator.style.display = 'block';
+                // Показываем индикатор загрузки на кнопке
+                spinner.style.display = 'inline-block';
 
                 fetch(`/api/wialon_exec_cmd/${unitId}/${commandName}`)
                     .then(response => response.json())
                     .then(data => {
-                        // Скрываем индикатор загрузки после успешного выполнения команды
-                        loadingIndicator.style.display = 'none';
+                        // Скрываем индикатор загрузки после завершения команды
+                        spinner.style.display = 'none';
 
                         if (data.status === 'OK') {
-                            alert(`Команда ${commandName} - выполнена успешно`);
-                            // После успешного выполнения команды автоматически обновляем датчики
+                            alert(`Команда ${commandName} выполнена успешно`);
                             refreshSensors(); // Вызов обновления датчиков
                         } else {
-                            alert(`При выполнении команды ${commandName} - произошла ошибка: ${data.error || 'Неизвестная ошибка'}`);
+                            alert(`Ошибка при выполнении команды ${commandName}: ${data.error || 'Неизвестная ошибка'}`);
                         }
                     })
                     .catch(error => {
                         // Скрываем индикатор загрузки при ошибке
-                        loadingIndicator.style.display = 'none';
+                        spinner.style.display = 'none';
 
-                        alert(`При выполнении команды ${commandName} - произошла ошибка: ${error.message || 'Неизвестная ошибка'}`);
+                        alert(`Ошибка при выполнении команды ${commandName}: ${error.message || 'Неизвестная ошибка'}`);
                     });
-
-                // После выполнения команды обновляем URL-хэш
-                const currentHash = window.location.hash || '#info';
-                window.location.hash = currentHash;
             });
         });
     }
