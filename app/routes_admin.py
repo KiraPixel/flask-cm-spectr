@@ -1,6 +1,6 @@
 from flask import Blueprint, request, render_template, redirect, url_for, flash
 from .utils import need_access, need_access
-from .models import db, User, Transport
+from .models import db, User, Transport, IgnoredStorage
 from modules import mail_sender, hash_password
 
 
@@ -11,21 +11,51 @@ admin_bp = Blueprint('admin', __name__)
 @need_access(1)
 def admin_panel():
     if request.method == 'POST':
-        username = request.form['username']
-        email = request.form['email']
-        password = hash_password.generator_password()
-        h_password = hash_password.hash_password(password)
-        new_user = User(username=username, email=email, password=h_password, role=-1,
-                        last_activity="1999-12-02 00:00:00")
-        db.session.add(new_user)
-        db.session.commit()
+        if 'username' in request.form:
+            # Логика для добавления пользователя
+            username = request.form['username']
+            email = request.form['email']
+            password = hash_password.generator_password()
+            h_password = hash_password.hash_password(password)
+            new_user = User(username=username, email=email, password=h_password, role=-1,
+                            last_activity="1999-12-02 00:00:00")
+            db.session.add(new_user)
+            db.session.commit()
+            body = render_template('standalone/mail_new_user.html', user=new_user, password=password)
+            mail_sender.send_email(new_user.email, "Приглашение в Центр Мониторинга ЛК-СПЕКТР", body)
+            return redirect(url_for('admin.admin_panel'))
 
-        body = render_template('standalone/mail_new_user.html', user=new_user, password=password)
-        mail_sender.send_email(new_user.email, "Приглашение в Центр Мониторинга ЛК-СПЕКТР", body)
-        return redirect(url_for('admin.admin_panel'))
+        elif 'name' in request.form:
+            # Логика для добавления склада
+            name = request.form['name']
+            # Заменяем запятую на точку в координатах
+            pos_x = request.form['x_coord'].replace(',', '.')
+            pos_y = request.form['y_coord'].replace(',', '.')
+            radius = request.form['radius']
+
+            # Конвертируем строки в числа для корректного сохранения в БД
+            pos_x = float(pos_x)
+            pos_y = float(pos_y)
+            radius = int(radius)
+
+            new_storage = IgnoredStorage(named=name, pos_x=pos_x, pos_y=pos_y, radius=radius)
+            db.session.add(new_storage)
+            db.session.commit()
+            return redirect(url_for('admin.admin_panel'))
 
     users = User.query.all()
-    return render_template('pages/admin_panel/page.html', users=users)
+    ignored_storages = IgnoredStorage.query.all()
+    return render_template('pages/admin_panel/page.html', users=users, ignored_storages=ignored_storages)
+
+
+@admin_bp.route('/delete_storage/<int:storage_id>', methods=['POST'])
+@need_access(1)
+def delete_storage(storage_id):
+    storage = IgnoredStorage.query.get_or_404(storage_id)
+    db.session.delete(storage)
+    db.session.commit()
+    return redirect(url_for('admin.admin_panel'))
+
 
 
 # Редактирование пользователя

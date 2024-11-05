@@ -143,3 +143,11 @@ class Comments(db.Model):
     uNumber = db.Column(db.Text, nullable=False)
     datetime_unix = db.Column(db.Integer, nullable=True, default=0)
 
+
+class IgnoredStorage(db.Model):
+    __tablename__ = 'ignored_storage'
+    id = db.Column(db.Integer, primary_key=True)
+    named = db.Column(db.Text, nullable=False)
+    pos_x = db.Column(db.Float, nullable=False)
+    pos_y = db.Column(db.Float, nullable=False)
+    radius = db.Column(db.Integer, nullable=False)
