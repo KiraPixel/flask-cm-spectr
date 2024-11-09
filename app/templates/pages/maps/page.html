@@ -179,6 +179,8 @@
                             toggleCarMarker(car.nm, car.pos_y, car.pos_x, li.querySelector('input[type="checkbox"]'));
                         }
                     });
+                }else {
+                    carList.innerHTML = '<li class="list-group-item">Данные отсутствуют</li>';
                 }
 
                 // Применяем сохраненный фильтр поиска

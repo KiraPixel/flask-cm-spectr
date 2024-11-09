@@ -35,7 +35,6 @@ def home():
     query = db.session.query(Transport, Storage, TransportModel).join(Storage, Transport.storage_id == Storage.ID).join(
         TransportModel, Transport.model_id == TransportModel.id)
 
-
     # Применяем фильтры к запросу
     if filters['nm']:
         query = query.filter(Transport.uNumber.like(f'%{filters["nm"]}%'))
@@ -52,8 +51,21 @@ def home():
     # Фильтруем транспорт по доступам пользователя
     user = User.query.filter_by(username=session['username']).first_or_404()
     if user.role <= -1:
-        user_access = json.loads(user.access)  # Предполагаем, что доступы хранятся в формате JSON
-        data_db = [item for item in data_db if item[0].manager in user_access]
+        user_access_managers = json.loads(user.access_managers)
+        user_access_regions = json.loads(user.access_regions)
+
+        # Фильтруем по доступным регионам
+        region_filtered_data = [item for item in data_db if item[1].region in user_access_regions]
+        # Фильтруем по доступным менеджерам
+        region_users_data = [item for item in data_db if item[0].manager in user_access_managers]
+
+        # Объединяем оба списка и удаляем дубли
+        combined_data = region_filtered_data + region_users_data
+        # Используем set, чтобы удалить дубли, и преобразуем обратно в список
+        unique_combined_data = list({(transport.uNumber, storage.name, storage.region): (transport, storage, transport_model)
+                                     for transport, storage, transport_model in combined_data}.values())
+
+        data_db = unique_combined_data
 
     # Обрабатываем фильтрацию по дате
     if filters['last_time_start'] or filters['last_time_end']:
@@ -197,6 +209,21 @@ def get_car(car_id):
     if not car:
         return "Car not found", 404
 
+    user = User.query.filter_by(username=session['username']).first_or_404()
+    if user.role <= -1:
+        storage = db.session.query(Storage).filter(Storage.ID == car.storage_id).first()
+        user_access_managers = json.loads(user.access_managers)
+        user_access_regions = json.loads(user.access_regions)
+        access_value = 0
+        if storage.region in user_access_regions:
+            access_value = 1
+
+        if car.manager in user_access_managers:
+            access_value = 1
+
+        if access_value == 0:
+            return "Not access", 403
+
     if wialon:
         # Обработка строковых данных
         wialon_cmd = ast.literal_eval((wialon[0].cmd) if wialon[0].cmd else {})
@@ -250,7 +277,7 @@ def send_report():
         return redirect(url_for('main.reports'))
 
 
-
+## уже не нужно
 @bp.route('/map/')
 @need_access(0)
 def map_page():
@@ -262,15 +289,6 @@ def map_page():
 @bp.route('/maps/')
 @need_access(-1)
 def maps():
-    # Выполняем запрос и получаем данные
-    data_db = db.session.query(CashWialon).all()
-
-    # Фильтруем транспорт по доступам пользователя
-    user = User.query.filter_by(username=session['username']).first_or_404()
-    if user.role <= -1:
-        user_access = json.loads(user.access)
-        data_db = [item for item in data_db if item[0].manager in user_access]
-
     return render_template('pages/maps/page.html')
 
 

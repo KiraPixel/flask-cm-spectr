@@ -1,6 +1,6 @@
 from flask import Blueprint, request, render_template, redirect, url_for, flash
 from .utils import need_access, need_access
-from .models import db, User, Transport, IgnoredStorage
+from .models import db, User, Transport, IgnoredStorage, Storage
 from modules import mail_sender, hash_password
 
 
@@ -90,16 +90,28 @@ def delete_user(user_id):
 @need_access(1)
 def set_access(user_id):
     user = User.query.get_or_404(user_id)
+
+    # Получаем уникальных менеджеров и регионы
     unique_customers = db.session.query(Transport.manager).distinct().all()
-    customers = [customer[0] for customer in unique_customers]
+    unique_regions = db.session.query(Storage.region).distinct().all()
+
+    # Преобразуем в список
+    managers = [manager[0] for manager in unique_customers]
+    regions = [region[0] for region in unique_regions]
+
     if request.method == 'POST':
-        access_data = request.form.get('access_data')
-        user.access = access_data  # Сохраняем данные в JSON-формате
+        access_managers = request.form.get('access_managers')
+        access_regions = request.form.get('access_regions')
+
+        # Сохраняем доступы
+        user.access_managers = access_managers
+        user.access_regions = access_regions
         db.session.commit()
+
         flash('Доступы обновлены', 'success')
         return redirect(url_for('admin.admin_panel'))
 
-    return render_template('pages/admin_panel/set_access.html', user=user, customers=customers)
+    return render_template('pages/admin_panel/set_access.html', user=user, managers=managers, regions=regions)
 
 
 # Функция для обновления пароля пользователя

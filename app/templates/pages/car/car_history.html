@@ -12,7 +12,7 @@
             Маршрут ТС
         </div>
         <div class="card-body">
-            <div class="row mb-3 align-items-end"> <!-- Добавлено align-items-end для выравнивания по нижнему краю -->
+            <div class="row mb-3 align-items-end">
                 <div class="col-md-5">
                     <label for="dateFrom">Дата и время от:</label>
                     <input type="datetime-local" class="form-control" id="dateFrom">
@@ -21,15 +21,17 @@
                     <label for="dateTo">Дата и время до:</label>
                     <input type="datetime-local" class="form-control" id="dateTo">
                 </div>
-                <div class="col-md-2 d-flex align-items-end"> <!-- Используем d-flex для вертикального выравнивания -->
-                    <button class="btn btn-primary w-100" id="applyBtn">Применить</button> <!-- Кнопка "Применить" занимает 100% ширины колонки -->
+                <div class="col-md-2 d-flex align-items-end">
+                    <button class="btn btn-primary w-100" id="applyBtn">Применить</button>
+                    <div id="spinner" class="spinner-border text-primary ms-2" style="display: none;" role="status">
+                        <span class="visually-hidden">Загрузка...</span>
+                    </div>
                 </div>
             </div>
-            <div id="my_map"></div> <!-- Изменено на my_map -->
+            <div id="my_map"></div>
         </div>
     </div>
 </div>
-
 
 <script>
     let myMap;
@@ -47,37 +49,40 @@
 
     // Логика для кнопки "Применить"
     document.getElementById('applyBtn').addEventListener('click', function () {
-        const dateFrom = new Date(document.getElementById('dateFrom').value).getTime() / 1000; // Преобразование в Unix time
-        const dateTo = new Date(document.getElementById('dateTo').value).getTime() / 1000; // Преобразование в Unix time
-        const carName = "{{ car_name }}"; // Получаем значение из переменной car_name
+        const spinner = document.getElementById('spinner');
+        spinner.style.display = 'inline-block'; // Показываем спиннер
+        const dateFrom = new Date(document.getElementById('dateFrom').value).getTime() / 1000;
+        const dateTo = new Date(document.getElementById('dateTo').value).getTime() / 1000;
+        const carName = "{{ car_name }}";
 
-        // Проверка на валидность выбранных дат
         if (isNaN(dateFrom) || isNaN(dateTo) || dateFrom >= dateTo) {
             alert('Пожалуйста, выберите корректные даты и время.');
+            spinner.style.display = 'none'; // Прячем спиннер, если даты некорректны
             return;
         }
 
-        // Отправка GET-запроса
         fetch(`/api/get_car_history?nm=${carName}&time_from=${dateFrom}&time_to=${dateTo}`)
             .then(response => response.json())
             .then(data => {
+                spinner.style.display = 'none'; // Прячем спиннер после загрузки данных
                 if (data.error) {
                     alert(data.error);
                     return;
                 }
-
                 historyData = data; // Сохраняем полученные данные
                 plotRouteAndMarkers(); // Отображаем маршрут и метки
             })
-            .catch(error => console.error('Ошибка при получении истории передвижения:', error));
+            .catch(error => {
+                spinner.style.display = 'none'; // Прячем спиннер в случае ошибки
+                console.error('Ошибка при получении истории передвижения:', error);
+            });
     });
 
     function plotRouteAndMarkers() {
         myMap.geoObjects.removeAll(); // Очищаем карту перед добавлением новых объектов
 
-        const coordinates = historyData.map(entry => [entry.pos_y, entry.pos_x]); // Получаем координаты
+        const coordinates = historyData.map(entry => [entry.pos_y, entry.pos_x]);
 
-        // Добавляем первую метку на карту
         if (coordinates.length > 0) {
             const firstPlacemark = new ymaps.Placemark(coordinates[0], {
                 balloonContent: 'Начало маршрута'
@@ -85,18 +90,14 @@
             myMap.geoObjects.add(firstPlacemark);
         }
 
-        // Добавляем последнюю метку на карту и перемещаем карту к ней
         if (coordinates.length > 1) {
             const lastPlacemark = new ymaps.Placemark(coordinates[coordinates.length - 1], {
                 balloonContent: 'Конец маршрута'
             });
             myMap.geoObjects.add(lastPlacemark);
-
-            // Перемещаем карту к последней метке
-            myMap.setCenter(coordinates[coordinates.length - 1], 12); // Масштаб карты на уровне 12
+            myMap.setCenter(coordinates[coordinates.length - 1], 12); // Масштаб карты
         }
 
-        // Создаем линию и добавляем ее на карту
         if (coordinates.length > 1) {
             const line = new ymaps.GeoObject({
                 geometry: {
@@ -115,5 +116,3 @@
         }
     }
 </script>
-
-

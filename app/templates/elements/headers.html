@@ -29,9 +29,6 @@
                 <li class="nav-item">
                     <a class="nav-link {% if request.endpoint == 'main.reports' %}active{% endif %}" href="/rep">Отчеты</a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/architect">Архитектор</a>
-                </li>
             </ul>
 
             {% if session.username %}
@@ -64,7 +61,6 @@
                         <span>{{ session.username }}</span>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userDropdown">
-                        <li><a class="dropdown-item" href="/map">Все объекты на карте</a></li>
                         <li><a class="dropdown-item" href="/admin">Админ панель</a></li>
                         <li><a class="dropdown-item" href="{{ url_for('user_profile.index') }}">Аккаунт</a></li>
                         <li><hr class="dropdown-divider"></li>

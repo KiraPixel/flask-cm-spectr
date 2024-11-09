@@ -86,12 +86,42 @@ def get_cars():
     # Фильтруем транспорт по доступам пользователя
     user = User.query.filter_by(username=session['username']).first_or_404()
     if user.role <= -1:
-        user_access = json.loads(user.access)
-        data_db = [item for item in data_db if item[0].manager in user_access]
+        # Получаем данные по транспорту, складу и модели
+        data_db_transport = db.session.query(Transport, Storage, TransportModel).join(Storage,
+                                                                                      Transport.storage_id == Storage.ID).join(
+            TransportModel, Transport.model_id == TransportModel.id).all()
+
+        user_access_managers = json.loads(user.access_managers)
+        user_access_regions = json.loads(user.access_regions)
+
+        # Фильтруем по доступным регионам
+        region_filtered_data = [item for item in data_db_transport if item[1].region in user_access_regions]
+
+        # Фильтруем по доступным менеджерам
+        region_users_data = [item for item in data_db_transport if item[0].manager in user_access_managers]
+
+        # Объединяем оба списка и удаляем дубли
+        combined_data = region_filtered_data + region_users_data
+
+        # Убираем дубли по (uNumber, storage.name, storage.region)
+        unique_combined_data = list({
+                                        (transport.uNumber, storage.name, storage.region): (
+                                        transport, storage, transport_model)
+                                        for transport, storage, transport_model in combined_data
+                                    }.values())
+
+        # Теперь в unique_combined_data только уникальные транспортные средства, которые прошли фильтрацию
+        data_db_transport = unique_combined_data
+
+        # Создаем множество номеров ТС из отфильтрованных данных
+        valid_transport_numbers = {transport.uNumber for transport, storage, transport_model in data_db_transport}
+
+        # Фильтруем data_db, оставляя только те записи, у которых nm (номер ТС) есть в valid_transport_numbers
+        data_db = [item for item in data_db if item.nm in valid_transport_numbers]
 
     # Преобразуем данные в JSON
     cars_json = [{
-        "nm": car.nm,
+        "nm": car.nm,  # Номер транспортного средства
         "pos_x": car.pos_x,
         "pos_y": car.pos_y,
         "last_time": car.last_time
