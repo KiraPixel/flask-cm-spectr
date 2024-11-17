@@ -58,7 +58,7 @@
 
         <div class="col-lg-6 mb-4">
             <div class="card shadow-sm">
-                <div class="card-header bg-danger text-white">
+                <div class="card-header bg-primary text-white">
                     <h4 class="mb-0">HealthReport</h4>
                 </div>
                 <div class="card-body">
@@ -79,6 +79,31 @@
                 </div>
             </div>
         </div>
+
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Виртуальный диспетчер</h4>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        <a href="{{ url_for('main.send_report', report='vopereator_theft_risk') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center send-report">
+                            Опасность угона
+                            <span class="badge bg-success rounded-pill">Скачать</span>
+                        </a>
+                        <a href="{{ url_for('main.send_report', report='vopereator_nonworking_equipment') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center send-report">
+                            Нерабочее оборудование
+                            <span class="badge bg-success rounded-pill">Скачать</span>
+                        </a>
+                        <a href="{{ url_for('main.send_report', report='vopereator_no_equipment') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center send-report">
+                            Отсутствие оборудования
+                            <span class="badge bg-success rounded-pill">Скачать</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
 

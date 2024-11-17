@@ -3,7 +3,7 @@ import tempfile
 
 from sqlalchemy import func
 
-from app.models import Transport, CashCesar, CashWialon, Reports
+from app.models import Transport, CashCesar, CashWialon, Reports, Alert
 from . import my_time, location_module, coord_math
 from app import db
 from modules import mail_sender
@@ -135,6 +135,22 @@ def filegen(args):
                     output.write(final_str + '\n')
         else:
             return None
+    elif "vopereator" in args:
+        output.write('Date,uNumber,type,data' + '\n')
+        alerts = Alert.query
+        if args == "vopereator_theft_risk":
+            alerts = alerts.filter(Alert.status == 0, Alert.type == 'distance').all()
+        elif args == "vopereator_nonworking_equipment":
+            alerts = alerts.filter(Alert.status == 0, Alert.type == 'not_work').all()
+        elif args == "vopereator_no_equipment":
+            alerts = alerts.filter(Alert.status == 0, Alert.type == 'no_equipment').all()
+        if alerts is None:
+            return None
+        for one_alerts in alerts:
+            convert_date = my_time.unix_to_moscow_time(one_alerts.date)
+            final_str = f'{convert_date},{one_alerts.uNumber},{one_alerts.type},{one_alerts.data}'
+            output.write(final_str + '\n')
+
     else:
         return None
 

@@ -24,11 +24,16 @@ def home():
     # Получаем параметры фильтра из запроса
     filters = {
         'nm': request.args.get('nm'),
+        'model': request.args.get('model'),
+        'vin': request.args.get('vin'),
+        'customer': request.args.get('customer'),
+        'manager': request.args.get('manager'),
+        'storage': request.args.get('storage'),
+        'region': request.args.get('region'),
+        'organization': request.args.get('organization'),
         'last_time_start': request.args.get('last_time_start'),
         'last_time_end': request.args.get('last_time_end'),
-        'model': request.args.get('model'),
-        'storage': request.args.get('storage'),
-        'region': request.args.get('region')
+        'voperator': request.args.get('voperator')
     }
 
     # Создаем базовый запрос с объединением трех таблиц
@@ -40,10 +45,23 @@ def home():
         query = query.filter(Transport.uNumber.like(f'%{filters["nm"]}%'))
     if filters['model']:
         query = query.filter(TransportModel.name.like(f'%{filters["model"]}%'))
+    if filters['vin']:
+        query = query.filter(Transport.vin.like(f'%{filters["vin"]}%'))
     if filters['storage']:
         query = query.filter(Storage.name.like(f'%{filters["storage"]}%'))
     if filters['region']:
         query = query.filter(Storage.region.like(f'%{filters["region"]}%'))
+    if filters['organization']:
+        query = query.filter(Storage.organization.like(f'%{filters["organization"]}%'))
+    if filters['customer']:
+        query = query.filter(Transport.customer.like(f'%{filters["customer"]}%'))
+    if filters['manager']:
+        query = query.filter(Transport.manager.like(f'%{filters["manager"]}%'))
+    if filters['voperator']:
+        if filters['voperator'] == 'yes':
+            query = query.filter(Transport.disable_virtual_operator == 0)
+        elif filters['voperator'] == 'no':
+            query = query.filter(Transport.disable_virtual_operator == 1)
 
     # Выполняем запрос и получаем данные
     data_db = query.all()

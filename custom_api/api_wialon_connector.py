@@ -89,7 +89,7 @@ def get_sensors(unit_id):
         'sensors': '',
     }
     response = requests.get(api_url, params={
-        'svc': 'unit/calc_last_message',
+        'svc': 'unit/calc_sensors',
         'params': json.dumps(params),
         'sid': get_wialon_sid()
     }, verify=False)
@@ -102,3 +102,6 @@ def get_sensors(unit_id):
         return None
 
 
+
+x = get_sensors(16969674)
+print(x)
