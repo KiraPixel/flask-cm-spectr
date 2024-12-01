@@ -10,7 +10,7 @@ us_bp = Blueprint('user_profile', __name__)
 @need_access(-2)
 def index():
     user = User.query.filter_by(username=session['username']).first_or_404()
-    reports = Reports.query.filter_by(username=session['username']).all()
+    reports = Reports.query.filter_by(username=session['username']).order_by(Reports.id.desc()).all()
     return(render_template('pages/user_profile/page.html', user=user, reports=reports))
 
 

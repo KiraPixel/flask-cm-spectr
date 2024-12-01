@@ -134,6 +134,8 @@ class Alert(db.Model):
     type = db.Column(db.Text, nullable=False)
     data = db.Column(db.Text, nullable=False)
     status = db.Column(db.Integer, nullable=True, default=0)
+    comment = db.Column(db.String(100), nullable=True)
+    comment_editor = db.Column(db.String(100), nullable=True)
 
 
 class Comments(db.Model):

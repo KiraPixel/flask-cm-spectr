@@ -38,89 +38,95 @@
         <div class="col-md-9">
             <div class="card p-4 shadow-lg rounded">
                 <!-- Разделы и поиск -->
-                <div class="d-flex justify-content-between mb-4">
+                <div class="d-flex justify-content-between mb-4 align-items-center">
                     <ul class="nav nav-pills" id="pills-tab" role="tablist">
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link active" id="pills-theft-tab" data-bs-toggle="pill" data-bs-target="#pills-theft" type="button" role="tab" aria-controls="pills-theft" aria-selected="true">Опасность угона ({{ distance|length }})</button>
+                            <button class="nav-link active" id="pills-theft-tab" data-bs-toggle="pill" data-bs-target="#pills-theft" type="button" role="tab" aria-controls="pills-theft" aria-selected="true">
+                                <i class="bi bi-lock"></i> Опасность угона ({{ distance|length }})
+                            </button>
                         </li>
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="pills-loss-tab" data-bs-toggle="pill" data-bs-target="#pills-loss" type="button" role="tab" aria-controls="pills-loss" aria-selected="false">Нерабочее оборудование ({{ not_work|length }})</button>
+                            <button class="nav-link" id="pills-loss-tab" data-bs-toggle="pill" data-bs-target="#pills-loss" type="button" role="tab" aria-controls="pills-loss" aria-selected="false">
+                                <i class="bi bi-tools"></i> Нерабочее оборудование ({{ not_work|length }})
+                            </button>
                         </li>
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="pills-missing-equip-tab" data-bs-toggle="pill" data-bs-target="#pills-missing-equip" type="button" role="tab" aria-controls="pills-missing-equip" aria-selected="false">Отсутствие оборудования ({{ no_equipment|length }})</button>
+                            <button class="nav-link" id="pills-missing-equip-tab" data-bs-toggle="pill" data-bs-target="#pills-missing-equip" type="button" role="tab" aria-controls="pills-missing-equip" aria-selected="false">
+                                <i class="bi bi-gear"></i> Отсутствие оборудования ({{ no_equipment|length }})
+                            </button>
                         </li>
                     </ul>
 
                     <!-- Поле поиска -->
-                    <input type="text" class="form-control w-25" id="search-input" placeholder="Поиск по машинам">
+                    <div class="d-flex align-items-center">
+                        <input type="text" class="form-control w-100 me-2" id="search-input" placeholder="Поиск по машинам">
+                    </div>
+                </div>
+
+                <!-- Даты -->
+                <div class="d-flex mb-4">
+                    <input type="date" id="start-date" class="form-control me-2" placeholder="Дата от">
+                    <input type="date" id="end-date" class="form-control" placeholder="Дата до">
                 </div>
 
                 <!-- Карточки -->
+                {% macro alert_card(alert, card_class, text_color) %}
+                    <div class="col-md-6 mb-4 card-wrapper">
+                        <div class="card {{ card_class }}">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <h5 class="card-title">
+                                        <a href="{{ url_for('main.get_car', car_id=alert.uNumber) }}" class="{{ text_color }} text-decoration-none">
+                                            {{ alert.uNumber }}
+                                        </a>
+                                    </h5>
+                                    <small class="text-muted">{{ alert.date | unix_to_datetime }}</small>
+                                </div>
+                                <p class="card-text">
+                                    {% if alert.type == 'gps' %} Нет координат от блока {{ alert.data }}
+                                    {% elif alert.type == 'distance' %} ТС находится в {{ alert.data }} км от своего места работы
+                                    {% else %} {{ alert.data }} {% endif %}
+                                </p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">{{ alert.comment or 'Нет комментариев' }}</small>
+                                    <button class="btn btn-sm p-0" data-bs-toggle="modal" data-bs-target="#commentModal"
+                                        data-comment="{{ alert.comment }}" data-author="{{ alert.comment_editor }}"
+                                        data-comment-id="{{ alert.id }}" title="Редактировать комментарий">
+                                        <i class="bi {{ 'bi-chat-right-dots' if alert.comment else 'bi-chat-right' }}"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endmacro %}
+
                 <div class="tab-content" id="pills-tabContent" style="min-height: 1000px;">
+                    <!-- Theft Alerts -->
                     <div class="tab-pane fade show active" id="pills-theft" role="tabpanel" aria-labelledby="pills-theft-tab">
                         <div class="row" id="theft-items">
                             {% for alert in distance %}
-                            <div class="col-md-6 mb-4 card-wrapper">
-                                <div class="card border-danger">
-                                    <div class="card-body">
-                                        <div class="d-flex justify-content-between">
-                                            <h5 class="card-title"><a href="{{ url_for('main.get_car', car_id=alert.uNumber) }}" class="text-danger text-decoration-none">{{ alert.uNumber }}</a></h5>
-                                            <small class="text-muted">{{ alert.date | unix_to_datetime }}</small>
-                                        </div>
-                                        <p class="card-text">
-                                            {% if alert.type == 'gps' %} Нет координат от блока {{ alert.data }}
-                                            {% elif alert.type == 'distance' %} ТС находится в {{ alert.data }} км от своего места работы
-                                            {% else %} {{ alert.data }} {% endif %}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
+                                {{ alert_card(alert, 'border-danger', 'text-danger') }}
                             {% endfor %}
                         </div>
                     </div>
 
-                    <!-- Нерабочее оборудование -->
+                    <!-- Not Working Equipment -->
                     <div class="tab-pane fade" id="pills-loss" role="tabpanel" aria-labelledby="pills-loss-tab">
                         <div class="row" id="not-work-items">
                             {% for alert in not_work %}
-                            <div class="col-md-6 mb-4 card-wrapper">
-                                <div class="card border-primary">
-                                    <div class="card-body">
-                                        <div class="d-flex justify-content-between">
-                                            <h5 class="card-title"><a href="{{ url_for('main.get_car', car_id=alert.uNumber) }}" class="text-primary text-decoration-none">{{ alert.uNumber }}</a></h5>
-                                            <small class="text-muted">{{ alert.date | unix_to_datetime }}</small>
-                                        </div>
-                                        <p class="card-text">
-                                            {% if alert.data == 'Wialon' %} Оборудование не выходило на связь больше 48 часов
-                                            {% elif alert.data == 'Cesar' %} Оборудование не выходило на связь больше 3 дней
-                                            {% else %} {{ alert.data }} {% endif %}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
+                                {{ alert_card(alert, 'border-primary', 'text-primary') }}
                             {% endfor %}
                         </div>
                     </div>
 
-                    <!-- Отсутствие оборудования -->
+                    <!-- Missing Equipment -->
                     <div class="tab-pane fade" id="pills-missing-equip" role="tabpanel" aria-labelledby="pills-missing-equip-tab">
                         <div class="row" id="missing-equip-items">
                             {% for alert in no_equipment %}
-                            <div class="col-md-6 mb-4 card-wrapper">
-                                <div class="card border-primary">
-                                    <div class="card-body">
-                                        <div class="d-flex justify-content-between">
-                                            <h5 class="card-title"><a href="{{ url_for('main.get_car', car_id=alert.uNumber) }}" class="text-primary text-decoration-none">{{ alert.uNumber }}</a></h5>
-                                            <small class="text-muted">{{ alert.date | unix_to_datetime }}</small>
-                                        </div>
-                                        <p class="card-text">Нет оборудования {{ alert.data }}</p>
-                                    </div>
-                                </div>
-                            </div>
+                                {{ alert_card(alert, 'border-primary', 'text-primary') }}
                             {% endfor %}
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>
@@ -128,19 +134,55 @@
     </div>
 </div>
 
+<div class="modal fade" id="commentModal" tabindex="-1" aria-labelledby="commentModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="commentModalLabel">Редактирование комментария</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Автор:</strong> <span id="modalAuthor"></span></p>
+                <input type="hidden" id="modalCommentId">
+                <p><strong>Комментарий:</strong></p>
+                <textarea id="modalComment" class="form-control" rows="4"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                <button type="button" id="saveCommentButton" class="btn btn-primary">Сохранить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 document.addEventListener("DOMContentLoaded", function() {
     const searchInput = document.getElementById('search-input');
+    const startDateInput = document.getElementById('start-date');
+    const endDateInput = document.getElementById('end-date');
 
     function filterItems() {
         const searchTerm = searchInput.value.toUpperCase();
+        const startDate = startDateInput.value ? new Date(startDateInput.value + "T00:00:00").getTime() / 1000 : null; // Начало дня (00:00:00)
+        const endDate = endDateInput.value ? new Date(endDateInput.value + "T23:59:59").getTime() / 1000 : null; // Конец дня (23:59:59)
         const activeTab = document.querySelector('.tab-pane.active');
         const items = Array.from(activeTab.querySelectorAll('.card-wrapper'));
 
         // Фильтруем элементы на основе ввода пользователя
         const filteredItems = items.filter(item => {
             const title = item.querySelector('.card-title').textContent.toUpperCase();
-            return title.includes(searchTerm);
+            const itemDate = item.querySelector('small').textContent.trim();
+
+            // Преобразуем дату в формат, который можно сравнивать (например, '12-11-2024 19:47:21' -> UNIX timestamp)
+            const itemDateUnix = parseDateToUnix(itemDate);
+
+            // Проверка поиска по тексту
+            const matchesSearch = title.includes(searchTerm);
+
+            // Проверка фильтра по дате
+            const matchesDateRange = (!startDate || itemDateUnix >= startDate) && (!endDate || itemDateUnix <= endDate);
+
+            return matchesSearch && matchesDateRange;
         });
 
         // Скрываем все элементы
@@ -148,8 +190,8 @@ document.addEventListener("DOMContentLoaded", function() {
             item.style.display = 'none';
         });
 
-        if (searchTerm) {
-            // Если есть текст в поиске, показываем все подходящие элементы
+        if (searchTerm || startDate || endDate) {
+            // Если есть фильтры, показываем подходящие элементы
             filteredItems.forEach(item => {
                 item.style.display = 'block';
             });
@@ -169,14 +211,91 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }
 
+    // Функция для преобразования даты в UNIX timestamp
+    function parseDateToUnix(dateStr) {
+        const parts = dateStr.split(' '); // Разделяем дату и время
+        const dateParts = parts[0].split('-'); // День-месяц-год
+        const timeParts = parts[1].split(':'); // Часы:минуты:секунды
+
+        // Получаем корректную дату и время
+        const date = new Date(
+            dateParts[2], // Год
+            dateParts[1] - 1, // Месяц (0-11)
+            dateParts[0], // День
+            timeParts[0], // Часы
+            timeParts[1], // Минуты
+            timeParts[2] // Секунды
+        );
+
+        return date.getTime() / 1000; // Возвращаем UNIX timestamp
+    }
+
+    // Обработчик для поиска
     searchInput.addEventListener('input', filterItems);
+
+    // Обработчик для изменения дат
+    startDateInput.addEventListener('change', filterItems);
+    endDateInput.addEventListener('change', filterItems);
 
     // Обновление при переключении вкладок
     const tabs = document.querySelectorAll('.nav-link');
     tabs.forEach(tab => {
         tab.addEventListener('click', function() {
             searchInput.value = ''; // Очищаем поле поиска
+            startDateInput.value = ''; // Очищаем поле даты
+            endDateInput.value = ''; // Очищаем поле даты
             filterItems(); // Обновляем результаты поиска
+        });
+    });
+});
+
+
+document.addEventListener('DOMContentLoaded', function () {
+    const commentModal = document.getElementById('commentModal');
+    const saveCommentButton = document.getElementById('saveCommentButton');
+
+    commentModal.addEventListener('show.bs.modal', function (event) {
+        const button = event.relatedTarget; // Кнопка, вызвавшая модальное окно
+        const comment = button.getAttribute('data-comment');
+        const author = button.getAttribute('data-author');
+        const commentId = button.getAttribute('data-comment-id');
+
+        // Устанавливаем данные в модальное окно
+        document.getElementById('modalAuthor').textContent = (author && author !== 'None') ? author : 'Неизвестен';
+        document.getElementById('modalComment').textContent = (comment && comment !== 'None') ? comment : '';
+        document.getElementById('modalCommentId').value = commentId;
+    });
+
+    saveCommentButton.addEventListener('click', function () {
+        const commentId = document.getElementById('modalCommentId').value;
+        const newComment = document.getElementById('modalComment').value.trim();
+
+        if (!commentId || newComment.length === 0 || newComment.length > 500) {
+            alert('Комментарий не может быть пустым или длиннее 500 символов.');
+            return;
+        }
+
+        fetch("{{ url_for('api.edit_report_comment') }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                comment_id: commentId,
+                comment: newComment,
+            }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'edit_ok') {
+                location.reload(); // Обновляем страницу
+            } else {
+                alert('Ошибка сохранения комментария.');
+            }
+        })
+        .catch(error => {
+            console.error('Ошибка:', error);
+            alert('Ошибка при отправке данных.');
         });
     });
 });

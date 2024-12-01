@@ -3,7 +3,7 @@ import tempfile
 
 from sqlalchemy import func
 
-from app.models import Transport, CashCesar, CashWialon, Reports, Alert
+from app.models import Transport, CashCesar, CashWialon, Reports, Alert, TransportModel, Storage
 from . import my_time, location_module, coord_math
 from app import db
 from modules import mail_sender
@@ -150,7 +150,100 @@ def filegen(args):
             convert_date = my_time.unix_to_moscow_time(one_alerts.date)
             final_str = f'{convert_date},{one_alerts.uNumber},{one_alerts.type},{one_alerts.data}'
             output.write(final_str + '\n')
+    elif "main" in args:
+        if args == "main_summary":
+            output.write('Тип;Регион;Склад;№ Лота;Модель;Тип подъемника;Тип двигателя;Cesar Position;Wialon' + '\n')
+            query = (
+                db.session.query(
+                    TransportModel.type.label("transport_model_type"),
+                    Storage.region.label("storage_region"),
+                    Storage.name.label("storage_name"),
+                    Transport.uNumber.label("transport_uNumber"),
+                    TransportModel.name.label("transport_model_name"),
+                    TransportModel.lift_type.label("transport_model_lift_type"),
+                    TransportModel.engine.label("transport_model_engine"),
+                    # Подзапрос для подсчета количества записей в CashCesar
+                    db.session.query(func.count()).filter(
+                        CashCesar.object_name.like(func.concat('%', Transport.uNumber, '%'))
+                    ).label("cesar_count"),
+                    # Подзапрос для подсчета количества записей в CashWialon
+                    db.session.query(func.count()).filter(
+                        CashWialon.nm.like(func.concat('%', Transport.uNumber, '%'))
+                    ).label("wialon_count"),
+                )
+                # LEFT JOIN с транспортной моделью
+                .join(TransportModel, Transport.model_id == TransportModel.id, isouter=True)
+                # LEFT JOIN со складом
+                .join(Storage, Transport.storage_id == Storage.ID, isouter=True)
+            )
+            results = query.all()
+            for item in results:
+                final_str = f"{item.transport_model_type};{item.storage_region};{item.storage_name};" \
+                            f"{item.transport_uNumber};{item.transport_model_name};" \
+                            f"{item.transport_model_lift_type};{item.transport_model_engine};" \
+                            f"{item.cesar_count};{item.wialon_count}"
+                output.write(final_str + '\n')
+        elif args == "main_transport":
+                output.write(
+                    'ID;Storage ID;Model ID;№ Лота;Год выпуска;VIN;X;Y;Клиент;Контакт клиента;Менеджер;Отключить виртуального оператора\n')
 
+                query = db.session.query(
+                    Transport.id,
+                    Transport.storage_id,
+                    Transport.model_id,
+                    Transport.uNumber,
+                    Transport.manufacture_year,
+                    Transport.vin,
+                    Transport.x,
+                    Transport.y,
+                    Transport.customer,
+                    Transport.customer_contact,
+                    Transport.manager,
+                    Transport.disable_virtual_operator
+                )
+
+                results = query.all()
+                for item in results:
+                    final_str = f"{item.id};{item.storage_id};{item.model_id};{item.uNumber or ''};" \
+                                f"{item.manufacture_year or ''};{item.vin or ''};" \
+                                f"{item.x or ''};{item.y or ''};" \
+                                f"{item.customer or ''};{item.customer_contact or ''};" \
+                                f"{item.manager or ''};{item.disable_virtual_operator or ''}"
+                    output.write(final_str + '\n')
+        elif args == "main_transport_model":
+            output.write('ID;Тип;Название;Тип подъемника;Двигатель;Страна\n')
+
+            query = db.session.query(
+                TransportModel.id,
+                TransportModel.type,
+                TransportModel.name,
+                TransportModel.lift_type,
+                TransportModel.engine,
+                TransportModel.country
+            )
+
+            results = query.all()
+            for item in results:
+                final_str = f"{item.id};{item.type or ''};{item.name or ''};" \
+                            f"{item.lift_type or ''};{item.engine or ''};{item.country or ''}"
+                output.write(final_str + '\n')
+        elif args == "main_storage":
+            output.write('ID;Название;Тип;Регион;Адрес;Организация\n')
+
+            query = db.session.query(
+                Storage.ID,
+                Storage.name,
+                Storage.type,
+                Storage.region,
+                Storage.address,
+                Storage.organization
+            )
+
+            results = query.all()
+            for item in results:
+                final_str = f"{item.ID};{item.name or ''};{item.type or ''};" \
+                            f"{item.region or ''};{item.address or ''};{item.organization or ''}"
+                output.write(final_str + '\n')
     else:
         return None
 

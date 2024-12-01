@@ -176,7 +176,55 @@ def dashboard():
 @bp.route('/rep')
 @need_access(0)
 def reports():
-    return render_template('pages/reports/page.html')
+    categories = [
+        {
+            "id": "main",
+            "title": "Общий отчет",
+            "reports": [
+                {"id": "main_transport", "name": "Все транспортные средства"},
+                {"id": "main_storage", "name": "Все склады"},
+                {"id": "main_transport_model", "name": "Все модели ТС"},
+                {"id": "main_summary", "name": "Сводный отчет с оборудованием"}
+            ]
+        },
+        {
+            "id": "health",
+            "title": "Отчеты об обрудовании",
+            "reports": [
+                {"id": "health_coordinates", "name": "Сверка координат"},
+                {"id": "health_no_equip", "name": "Лоты без оборудования"},
+                {"id": "health_no_lot", "name": "Оборудование без лота"}
+            ]
+        },
+        {
+            "id": "dispatcher",
+            "title": "Виртуальный диспетчер",
+            "reports": [
+                {"id": "vopereator_theft_risk", "name": "Опасность угона"},
+                {"id": "vopereator_nonworking_equipment", "name": "Нерабочее оборудование"},
+                {"id": "vopereator_no_equipment", "name": "Отсутствие оборудования"}
+            ]
+        },
+        {
+            "id": "wialon",
+            "title": "Wialon",
+            "reports": [
+                {"id": "wialon", "name": "Весь транспорт"},
+                {"id": "wialon_offline", "name": "Давно offline (от 3 дней)"},
+                {"id": "wialon_with_address", "name": "Весь транспорт с адресом"}
+            ]
+        },
+        {
+            "id": "cesar",
+            "title": "Cesar Position",
+            "reports": [
+                {"id": "cesar", "name": "Весь транспорт"},
+                {"id": "cesar_offline", "name": "Давно offline (от 3 дней)"}
+            ]
+        },
+    ]
+
+    return render_template('pages/reports/page.html', categories=categories)
 
 
 # Страница входа
@@ -221,7 +269,7 @@ def get_car(car_id):
     wialon = db.session.query(CashWialon).filter(CashWialon.nm.like(search_pattern)).all()
     cesar = db.session.query(CashCesar).filter(CashCesar.object_name.like(search_pattern)).all()
     car = db.session.query(Transport).filter(Transport.uNumber == car_id).first()
-    alerts = db.session.query(Alert).filter(Alert.uNumber == car_id).all()
+    alerts = db.session.query(Alert).filter(Alert.uNumber == car_id).order_by(Alert.date.desc()).all()
     comments = db.session.query(Comments).filter(Comments.uNumber == car_id).all()
 
     if not car:

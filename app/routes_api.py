@@ -11,7 +11,7 @@ from flask import Blueprint, request, jsonify, session, send_from_directory, abo
 
 from . import db
 from .utils import need_access, need_access
-from .models import Transport, TransportModel, Storage, User, CashWialon, Comments, Alert, CashHistoryWialon
+from .models import Transport, TransportModel, Storage, User, CashWialon, Comments, Alert, CashHistoryWialon, Reports
 from .config import UPLOAD_FOLDER
 import modules.my_time as mytime
 
@@ -220,7 +220,7 @@ def add_comment():
 @need_access(-1)
 def edit_comment():
     comment_id = request.form.get('comment_id')
-    action = request.form.get('action')  # Новый параметр для определения действия
+    action = request.form.get('action')
 
     if not comment_id:
         return jsonify({'status': 'edit_deny'})
@@ -250,6 +250,30 @@ def edit_comment():
 
     return jsonify({'status': 'edit_ok'})
 
+
+@api_bp.route('/edit_report_comment', methods=['POST'])
+@need_access(0)
+def edit_report_comment():
+    data = request.json
+    report_id = data.get('comment_id')
+    new_comment = data.get('comment')
+    author = session.get('username')
+
+    if not report_id or not author:
+        return jsonify({'status': 'edit_deny'})
+
+    report = Alert.query.get(report_id)
+
+    # Для редактирования текста
+    text = new_comment.strip()
+    if not text or len(text) > 500:
+        return jsonify({'status': 'edit_deny'})
+
+    report.comment = text
+    report.comment_editor = author
+    db.session.commit()
+
+    return jsonify({'status': 'edit_ok'})
 
 
 def get_wialon_sid():
