@@ -20,7 +20,7 @@ def get_address_decorator(coords=None):
     if location is None:
         return 'Ошибка определения'
     address = location.raw.get('address', {})
-    print(address)
+    
     # Попробуем получить нужные части адреса
     city = address.get('city') or address.get('town') or address.get('state', '') or address.get('county')
     road = address.get('road') or address.get('city_district', '') or address.get('county') or address.get('municipality') or address.get('suburb') or address.get('house') or address.get('industrial') or address.get('hamlet') or address.get('neighbourhood')
