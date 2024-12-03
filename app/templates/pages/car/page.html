@@ -70,7 +70,7 @@
                         <td>{{ item.pin }}</td>
                         <td>{{ item.last_time | unix_to_datetime }}</td>
                         <td>{{ item.pos_x }}, {{ item.pos_y }}</td>
-                        <td>{{ (item.pos_x, item.pos_y) | get_address }}</td>
+                        <td>{{ (item.pos_x, item.pos_y) | get_address}}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -83,12 +83,16 @@
         <div class="btn-group d-flex" role="group">
             <a href="#info" class="btn btn-outline-primary" id="info-tab">Инфо</a>
             {% if wialon %}
-            <a href="#sensors" class="btn btn-outline-primary" id="sensors-tab">Датчики</a>
+                <a href="#car_history" class="btn btn-outline-primary" id="car_history">Трек</a>
             {% endif %}
-            <a href="#transitions" class="btn btn-outline-primary" id="transitions-tab">Переходы</a>
-            <a href="#alerts" class="btn btn-outline-primary" id="alerts-tab">Опасности</a>
+            {% if g.user.role > -1 %}
+                {% if wialon %}
+                    <a href="#sensors" class="btn btn-outline-primary" id="sensors-tab">Датчики</a>
+                {% endif %}
+                <a href="#transitions" class="btn btn-outline-primary" id="transitions-tab">Переходы</a>
+                <a href="#alerts" class="btn btn-outline-primary" id="alerts-tab">Опасности</a>
+            {% endif %}
             <a href="#comments" class="btn btn-outline-primary" id="comments-tab">Комментарии</a>
-            <a href="#car_history" class="btn btn-outline-primary" id="car_history">История передвижения</a>
         </div>
     </div>
     <div class="row mt-3">

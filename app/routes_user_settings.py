@@ -1,9 +1,14 @@
-from flask import Blueprint, request, render_template, redirect, url_for, session, flash
+from flask import Blueprint, request, render_template, redirect, url_for, session, flash, g
 from .utils import need_access
 from .models import db, User, Reports
 from modules import hash_password
 
 us_bp = Blueprint('user_profile', __name__)
+
+
+@us_bp.before_request
+def set_user():
+    g.user = User.query.filter_by(username=session['username']).first()
 
 
 @us_bp.route('/')

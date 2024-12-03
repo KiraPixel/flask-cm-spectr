@@ -1,10 +1,15 @@
-from flask import Blueprint, request, render_template, redirect, url_for, flash
+from flask import Blueprint, request, render_template, redirect, url_for, flash, g, session
 from .utils import need_access, need_access
 from .models import db, User, Transport, IgnoredStorage, Storage
 from modules import mail_sender, hash_password
 
 
 admin_bp = Blueprint('admin', __name__)
+
+
+@admin_bp.before_request
+def set_user():
+    g.user = User.query.filter_by(username=session['username']).first()
 
 
 @admin_bp.route('/admin/', methods=['GET', 'POST'])

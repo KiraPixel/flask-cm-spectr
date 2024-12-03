@@ -340,7 +340,7 @@ def fetch_sensor_data(unit_id):
 
 
 @api_bp.route('/wialon_get_sensor/<int:unit_id>/', methods=['GET'])
-@need_access(-1)
+@need_access(0)
 def wialon_get_sensor(unit_id):
     max_retries = 4
     delay = 10

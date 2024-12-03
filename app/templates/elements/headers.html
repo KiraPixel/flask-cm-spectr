@@ -20,15 +20,17 @@
                 <li class="nav-item">
                     <a class="nav-link {% if request.endpoint == 'main.maps' %}active{% endif %}" href="/maps">Объекты на карте</a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link {% if request.endpoint == 'main.virtual_operator' %}active{% endif %}" href="/virtual_operator">Виртуальный диспетчер</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {% if request.endpoint == 'main.dashboard' %}active{% endif %}" href="/dashboard">Дашборд</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {% if request.endpoint == 'main.reports' %}active{% endif %}" href="/rep">Отчеты</a>
-                </li>
+                {% if g.user.role > -1 %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'main.virtual_operator' %}active{% endif %}" href="/virtual_operator">Виртуальный диспетчер</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'main.dashboard' %}active{% endif %}" href="/dashboard">Дашборд</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'main.reports' %}active{% endif %}" href="/rep">Отчеты</a>
+                    </li>
+                {% endif %}
             </ul>
 
             {% if session.username %}
@@ -61,7 +63,9 @@
                         <span>{{ session.username }}</span>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userDropdown">
-                        <li><a class="dropdown-item" href="/admin">Админ панель</a></li>
+                        {% if g.user.role == 1 %}
+                            <li><a class="dropdown-item" href="/admin">Админ панель</a></li>
+                        {% endif %}
                         <li><a class="dropdown-item" href="{{ url_for('user_profile.index') }}">Аккаунт</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="{{ url_for('main.logout') }}">Выйти</a></li>
