@@ -16,7 +16,7 @@ bp = Blueprint('main', __name__)
 
 @bp.before_request
 def set_user():
-    g.user = User.query.filter_by(username=session['username']).first()
+    g.user = User.query.filter_by(username=session.get('username')).first() or None
 
 
 # Главная страница
