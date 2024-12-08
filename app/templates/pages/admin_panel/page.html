@@ -29,6 +29,7 @@
                         <th>Роль</th>
                         <th>Последняя активность</th>
                         <th>Email</th>
+                        <th>Cesar</th>
                         <th>Действия</th>
                     </tr>
                 </thead>
@@ -38,16 +39,36 @@
                         <td>{{ user.id }}</td>
                         <td>{{ user.username }}</td>
                         <td>{{ 'Администратор' if user.role == 1 else 'Пользователь' if user.role == 0 else 'Ограниченный доступ' }}</td>
-                        <td>{{ user.last_activity }}</td>
+                        <td>{{ user.last_activity.strftime('%d-%m-%Y %H:%M:%S') }}</td>
                         <td>{{ user.email }}</td>
                         <td>
+                            <a href="{{ url_for('admin.set_cesar_access', user_id=user.id, access=1 if user.cesar_access == 0 else 0) }}"
+                               class="btn btn-sm {{ 'btn-success' if user.cesar_access == 1 else 'btn-danger' }}">
+                                <i class="{{ 'bi bi-check-circle' if user.cesar_access == 1 else 'bi bi-x-circle' }}"></i>
+                            </a>
+                        </td>
+                        <td>
                             {% if user.role <= -1 %}
-                                <a href="{{ url_for('admin.set_access', user_id=user.id) }}" class="btn btn-success btn-sm">Назначить доступы</a>
+                                <a href="{{ url_for('admin.set_access', user_id=user.id) }}" class="btn btn-success btn-sm">
+                                    <i class="bi bi-person-check"></i>
+                                </a>
                             {% endif %}
-                            <a href="{{ url_for('admin.reset_pass', user_id=user.id) }}" class="btn btn-warning btn-sm">Сбросить пароль</a>
-                            <a href="#" class="btn btn-secondary btn-sm edit-user-btn" data-bs-toggle="modal" data-bs-target="#editUserModal" data-id="{{ user.id }}" data-username="{{ user.username }}" data-email="{{ user.email }}" data-role="{{ user.role }}">Редактировать</a>
-                            <a href="{{ url_for('admin.delete_user', user_id=user.id) }}" class="btn btn-danger btn-sm">Удалить</a>
-                            </td>
+                            <a href="#" class="btn btn-warning btn-sm reset-pass-btn" data-bs-toggle="modal" data-bs-target="#confirmResetPassModal" data-id="{{ user.id }}">
+                                <i class="bi bi-key"></i>
+                            </a>
+                            <a href="#" class="btn btn-secondary btn-sm edit-user-btn"
+                               data-bs-toggle="modal"
+                               data-bs-target="#editUserModal"
+                               data-id="{{ user.id }}"
+                               data-username="{{ user.username }}"
+                               data-email="{{ user.email }}"
+                               data-role="{{ user.role }}">
+                                <i class="bi bi-pencil-square"></i>
+                            </a>
+                            <a href="{{ url_for('admin.delete_user', user_id=user.id) }}" class="btn btn-danger btn-sm">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -177,6 +198,40 @@
     </div>
 </div>
 
+<div class="modal fade" id="confirmResetPassModal" tabindex="-1" aria-labelledby="confirmResetPassLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmResetPassLabel">Подтверждение</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Вы уверены, что хотите сбросить пароль для этого пользователя?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <a href="#" id="confirmResetPassLink" class="btn btn-warning">Сбросить пароль</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Скрипт для управления модальным окном -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const resetPassModal = document.getElementById('confirmResetPassModal');
+    const confirmResetPassLink = document.getElementById('confirmResetPassLink');
+
+    document.querySelectorAll('.reset-pass-btn').forEach(button => {
+        button.addEventListener('click', (event) => {
+            const userId = button.getAttribute('data-id');
+            confirmResetPassLink.href = `/admin/reset_pass/${userId}`; // Динамически обновляем ссылку
+        });
+    });
+});
+</script>
+
+
 <script>
 document.addEventListener('DOMContentLoaded', (event) => {
     const editUserModal = new bootstrap.Modal(document.getElementById('editUserModal'));
@@ -198,7 +253,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
             editEmail.value = email;
             editRole.value = role;
 
-            editUserForm.action = `/edit_user/${userId}`;
+            editUserForm.action = `/admin/edit_user/${userId}`;
             editUserModal.show();
         });
     });

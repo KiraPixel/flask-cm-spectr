@@ -12,6 +12,7 @@ class User(db.Model):
     email = db.Column(db.String, nullable=False)
     access_managers = db.Column(db.JSON)
     access_regions = db.Column(db.JSON)
+    cesar_access = db.Column(db.Integer, nullable=True, default=0)
 
     def __repr__(self):
         return '<User %r>' % self.username

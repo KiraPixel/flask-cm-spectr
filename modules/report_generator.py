@@ -136,7 +136,7 @@ def filegen(args):
         else:
             return None
     elif "vopereator" in args:
-        output.write('Date,uNumber,type,data' + '\n')
+        output.write('Date;uNumber;type;data;comment;comment_editor' + '\n')
         alerts = Alert.query
         if args == "vopereator_theft_risk":
             alerts = alerts.filter(Alert.status == 0, Alert.type == 'distance').all()
@@ -148,7 +148,7 @@ def filegen(args):
             return None
         for one_alerts in alerts:
             convert_date = my_time.unix_to_moscow_time(one_alerts.date)
-            final_str = f'{convert_date},{one_alerts.uNumber},{one_alerts.type},{one_alerts.data}'
+            final_str = f'{convert_date};{one_alerts.uNumber};{one_alerts.type};{one_alerts.data};{one_alerts.comment};{one_alerts.comment_editor}'
             output.write(final_str + '\n')
     elif "main" in args:
         if args == "main_summary":

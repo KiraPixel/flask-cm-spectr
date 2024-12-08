@@ -12,7 +12,7 @@ def set_user():
     g.user = User.query.filter_by(username=session['username']).first()
 
 
-@admin_bp.route('/admin/', methods=['GET', 'POST'])
+@admin_bp.route('/', methods=['GET', 'POST'])
 @need_access(1)
 def admin_panel():
     if request.method == 'POST':
@@ -61,6 +61,28 @@ def delete_storage(storage_id):
     db.session.commit()
     return redirect(url_for('admin.admin_panel'))
 
+
+@admin_bp.route('/set_cesar_access/<int:user_id>', methods=['GET'])
+@need_access(1)
+def set_cesar_access(user_id):
+    user = User.query.get_or_404(user_id)
+
+    # Получаем значение параметра 'access'
+    access = request.args.get('access', type=int)
+
+    # Проверяем корректность значения access
+    if access not in [0, 1]:
+        flash('Недопустимое значение для доступа.', 'error')
+        return redirect(url_for('admin.admin_panel'))
+
+    # Устанавливаем доступ
+    user.cesar_access = access
+
+    # Сохраняем изменения в базе данных
+    db.session.commit()
+
+    flash(f'Доступ для {user.username} к системе Цезарь был изменен.', 'success')
+    return redirect(url_for('admin.admin_panel'))
 
 
 # Редактирование пользователя
@@ -141,11 +163,14 @@ def change_pass(user_id, password):
 @need_access(1)
 def reset_pass(user_id):
     user = User.query.get_or_404(user_id)
+
     new_password = hash_password.generator_password()
     update_user_password(user_id, new_password)
+
     body = render_template('standalone/mail_info.html', password=new_password)
     mail_sender.send_email(user.email, "Новый временный пароль для вашего аккаунта в ЛК-СПЕКТР", body)
-    flash('Пароль сброшен.', 'success')
+
+    flash(f'Пароль пользователя {user.username} успешно сброшен.', 'success')
     return redirect(url_for('admin.admin_panel'))
 
 
