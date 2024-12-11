@@ -23,6 +23,7 @@ def set_user():
         g.user = None
 
 
+
 # Главная страница
 @bp.route('/', endpoint='home')
 @need_access(-2)
@@ -185,6 +186,7 @@ def dashboard():
 @bp.route('/rep')
 @need_access(0)
 def reports():
+    user = User.query.filter_by(username=session['username']).first_or_404()
     categories = [
         {
             "id": "main",
@@ -233,6 +235,9 @@ def reports():
         },
     ]
 
+    if user.cesar_access == 0:
+        categories = [category for category in categories if category['id'] != 'cesar']
+
     return render_template('pages/reports/page.html', categories=categories)
 
 
@@ -269,6 +274,7 @@ def logout():
 @bp.route('/cars/<string:car_id>')
 @need_access(-1)
 def get_car(car_id):
+    user = User.query.filter_by(username=session['username']).first_or_404()
     text = car_id.replace(' ', '')
     if re.match(r'^[A-Z]+\d{5}$', text):
         if text[1] != ' ':
@@ -276,7 +282,9 @@ def get_car(car_id):
     search_pattern = f'%{car_id}%'
 
     wialon = db.session.query(CashWialon).filter(CashWialon.nm.like(search_pattern)).all()
-    cesar = db.session.query(CashCesar).filter(CashCesar.object_name.like(search_pattern)).all()
+    cesar = []
+    if user.cesar_access == 1:
+        cesar = db.session.query(CashCesar).filter(CashCesar.object_name.like(search_pattern)).all()
     car = db.session.query(Transport).filter(Transport.uNumber == car_id).first()
     alerts = db.session.query(Alert).filter(Alert.uNumber == car_id).order_by(Alert.date.desc()).all()
     comments = db.session.query(Comments).filter(Comments.uNumber == car_id).all()
@@ -284,7 +292,6 @@ def get_car(car_id):
     if not car:
         return "Car not found", 404
 
-    user = User.query.filter_by(username=session['username']).first_or_404()
     if user.role <= -1:
         storage = db.session.query(Storage).filter(Storage.ID == car.storage_id).first()
         user_access_managers = json.loads(user.access_managers)
@@ -365,6 +372,5 @@ def map_page():
 @need_access(-1)
 def maps():
     return render_template('pages/maps/page.html')
-
 
 
