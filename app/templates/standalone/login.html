@@ -6,7 +6,8 @@
     <title>{% block title %}Логин{% endblock %}</title>
     <!-- Подключаем Bootstrap CSS -->
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="icon" href="https://i.imgur.com/QTYrkTB.png">
+    <link rel="preload" href="{{ url_for('static', filename='img/logo.png') }}" as="image">
+    <link rel="icon" href="{{ url_for('static', filename='img/logo.png') }}">
     <style>
         body {
             background-color: {% if dark_mode %}#212529{% else %}#dedad6{% endif %};
