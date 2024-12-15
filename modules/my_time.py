@@ -60,6 +60,8 @@ def tz_to_moscow_time(z_time):
 
 def unix_to_moscow_time(timestamp):
     try:
+        if timestamp == 0:
+            return ''
         dt_utc = datetime.datetime.fromtimestamp(timestamp, datetime.timezone.utc)
 
         moscow_timezone = datetime.timezone(datetime.timedelta(hours=3))

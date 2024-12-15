@@ -1,0 +1,32 @@
+<style>
+#mapContainer {
+    display: flex;
+    flex-grow: 1;
+    height: 100%;
+}
+
+#map {
+    width: 100%;
+    height: 100%;
+}
+
+@media (max-width: 768px) {
+    #mapContainer {
+        display: block;
+        width: 100%;
+    }
+
+    #carBlock {
+        width: 100%;
+    }
+
+    /* Убедитесь, что кнопка раскрытия видна только на мобильных */
+    #toggleCarsList {
+        display: none;
+    }
+
+    #showCarsList {
+        display: flex;
+    }
+}
+</style>

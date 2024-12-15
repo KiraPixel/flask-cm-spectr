@@ -136,7 +136,7 @@ def filegen(args):
         else:
             return None
     elif "vopereator" in args:
-        output.write('Date;uNumber;type;data;comment;comment_editor' + '\n')
+        output.write('Date;uNumber;type;data;comment;comment_editor;region;storage;model;manager;customer' + '\n')
         alerts = Alert.query
         if args == "vopereator_theft_risk":
             alerts = alerts.filter(Alert.status == 0, Alert.type == 'distance').all()
@@ -148,7 +148,11 @@ def filegen(args):
             return None
         for one_alerts in alerts:
             convert_date = my_time.unix_to_moscow_time(one_alerts.date)
-            final_str = f'{convert_date};{one_alerts.uNumber};{one_alerts.type};{one_alerts.data};{one_alerts.comment};{one_alerts.comment_editor}'
+            query = db.session.query(Transport, Storage, TransportModel).join(Storage,
+                                                                              Transport.storage_id == Storage.ID).join(
+                TransportModel, Transport.model_id == TransportModel.id)
+            query = query.filter(Transport.uNumber==one_alerts.uNumber).first()
+            final_str = f'{convert_date};{one_alerts.uNumber};{one_alerts.type};{one_alerts.data};{one_alerts.comment};{one_alerts.comment_editor};{query.Storage.region};{query.Storage.name};{query.TransportModel.name};{query.Transport.manager};{query.Transport.customer}'
             output.write(final_str + '\n')
     elif "main" in args:
         if args == "main_summary":

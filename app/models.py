@@ -137,6 +137,7 @@ class Alert(db.Model):
     status = db.Column(db.Integer, nullable=True, default=0)
     comment = db.Column(db.String(100), nullable=True)
     comment_editor = db.Column(db.String(100), nullable=True)
+    date_time_edit = db.Column(db.Integer, nullable=False, default=0)
 
 
 class Comments(db.Model):
@@ -155,3 +156,27 @@ class IgnoredStorage(db.Model):
     pos_x = db.Column(db.Float, nullable=False)
     pos_y = db.Column(db.Float, nullable=False)
     radius = db.Column(db.Integer, nullable=False)
+
+
+class ParserTasks(db.Model):
+    __tablename__ = 'tasks_parser'
+
+    id = db.Column(db.Integer, primary_key=True)
+    task_name = db.Column(db.String(100))
+    info = db.Column(db.String(100))
+    variable = db.Column(db.String(100))
+    task_completed = db.Column(db.Integer, default=0)
+
+
+class TransferTasks(db.Model):
+    __tablename__ = 'tasks_transport_transfer'
+
+    id = db.Column(db.Integer, primary_key=True)
+    uNumber = db.Column(db.String(100))
+    old_storage = db.Column(db.Integer())
+    new_storage = db.Column(db.Integer())
+    old_manager = db.Column(db.String(100))
+    new_manager = db.Column(db.String(100))
+    old_client = db.Column(db.String(100))
+    new_client = db.Column(db.String(100))
+    date = db.Column(db.Integer())

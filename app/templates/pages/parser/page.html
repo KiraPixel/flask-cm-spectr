@@ -1,0 +1,258 @@
+{% extends 'main.html' %}
+
+{% block title %}
+Парсер
+{% endblock %}
+
+{% block body %}
+<div class="container mt-5">
+    <h1 class="text-center mb-4 text-primary">Ошибки задач</h1>
+
+    <!-- Блок добавления ТС -->
+    <section class="mb-5">
+        <div class="p-4 shadow-sm bg-body rounded">
+            <h2 class="h4 text-body mb-3">Блок добавления ТС</h2>
+            {% if parsed_tasks %}
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Номер лота</th>
+                                <th>Действие</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for task in parsed_tasks %}
+                                <tr>
+                                    <td>{{ task.лот }}</td>
+                                    <td>
+                                        <button class="btn btn-outline-primary"
+                                                data-warehouse-id="{{ task.код_склада }}"
+                                                data-task-id="{{ task.id }}"
+                                                data-lot="{{ task.лот }}"
+                                                data-vin="{{ task.серия }}"
+                                                data-series_year="{{ task.серия_год_выпуска }}"
+                                                data-x="{{ task.широта }}"
+                                                data-y="{{ task.долгота }}"
+                                                data-client="{{ task.контрагент }}"
+                                                data-manager="{{ task.менеджер }}"
+                                                onclick="openManualAddModal(this)">Добавить вручную</button>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted">Нет обработанных задач для добавления ТС.</p>
+            {% endif %}
+        </div>
+    </section>
+
+    <!-- Блок остальных ошибок -->
+    <section>
+        <div class="p-4 shadow-sm bg-body rounded">
+            <h2 class="h4 text-secondary mb-3">Все остальные ошибки</h2>
+            {% if tasks_with_error %}
+                <div class="row">
+                    {% for task in tasks_with_error %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card border-secondary">
+                                <div class="card-body">
+                                    <p class="mb-2"><strong class="text-secondary">ID:</strong> {{ task.id }}</p>
+                                    <p class="mb-2"><strong class="text-secondary">Имя задачи:</strong> {{ task.task_name }}</p>
+                                    <p class="mb-2"><strong class="text-secondary">Информация:</strong> {{ task.info }}</p>
+                                    <p class="mb-0 text-muted"><strong>Переменная:</strong> {{ task.variable }}</p>
+                                    <button class="btn btn-danger mt-3"
+                                            onclick="closeTask({{ task.id }})">Закрыть задачу</button>
+                                                    <div id="loadingSpinner" class="spinner-border text-primary" role="status" style="display: none;">
+                                    <span class="visually-hidden">Загрузка...</span>
+                                </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-muted">Нет других задач с ошибками.</p>
+            {% endif %}
+        </div>
+    </section>
+</div>
+
+<!-- Модальное окно -->
+<div class="modal fade" id="manualAddModal" tabindex="-1" aria-labelledby="manualAddModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="manualAddModalLabel">Добавление вручную</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="manualAddForm" novalidate>
+                    <div class="mb-3">
+                        <label for="lotNumber" class="form-label">Номер лота</label>
+                        <input type="text" class="form-control" id="lotNumber" placeholder="Введите номер лота" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="Model" class="form-label">Модель</label>
+                        <input type="text" class="form-control" id="Model" placeholder="Введите код модели" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="warehouseID" class="form-label">Код склада</label>
+                        <input type="number" class="form-control" id="warehouseID" placeholder="Введите код склада" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="vin" class="form-label">VIN (Серия)</label>
+                        <input type="text" class="form-control" id="vin" placeholder="Введите VIN" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="seriesYear" class="form-label">Год (Серия и год выпуска)</label>
+                        <input type="number" class="form-control" id="seriesYear" placeholder="Введите год" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="client" class="form-label">Контрагент</label>
+                        <input type="text" class="form-control" id="client" placeholder="Введите контрагента" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="manager" class="form-label">Менеджер</label>
+                        <input type="text" class="form-control" id="manager" placeholder="Введите менеджера" required>
+                    </div>
+                    <div class="mb-3 row">
+                        <div class="col-md-6">
+                            <label for="latitude" class="form-label">Широта (x)</label>
+                            <input type="number" class="form-control" id="latitude" placeholder="Введите широту" step="any" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="longitude" class="form-label">Долгота (y)</label>
+                            <input type="number" class="form-control" id="longitude" placeholder="Введите долготу" step="any" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="disableVirtualOperator" class="form-label">Виртуальный оператор</label>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="disableVirtualOperator" value="0" onchange="updateVirtualOperatorValue()" required>
+                            <label class="form-check-label" for="disableVirtualOperator">Включить</label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="addManual" onclick="submitAddCar()">
+                    <span id="addBtnText">Добавить</span>
+                    <span id="loadingSpinners" class="spinner-border spinner-border-sm text-light" role="status" style="display: none;">
+                        <span class="visually-hidden">Загрузка...</span>
+                    </span>
+                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отменить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    function openManualAddModal(button) {
+        var warehouseID = button.getAttribute('data-warehouse-id');
+        var taskID = button.getAttribute('data-task-id');
+        var lot = button.getAttribute('data-lot');
+        var vin = button.getAttribute('data-vin');
+        var seriesYear = button.getAttribute('data-series_year');
+        var latitude = button.getAttribute('data-x');
+        var longitude = button.getAttribute('data-y');
+        var client = button.getAttribute('data-client');
+        var manager = button.getAttribute('data-manager');
+
+        var modal = new bootstrap.Modal(document.getElementById('manualAddModal'));
+        modal.show();
+
+        document.getElementById('lotNumber').value = lot;
+        document.getElementById('warehouseID').value = warehouseID;
+        document.getElementById('vin').value = vin;
+        document.getElementById('seriesYear').value = seriesYear;
+        document.getElementById('client').value = client;
+        document.getElementById('manager').value = manager;
+        document.getElementById('latitude').value = latitude;
+        document.getElementById('longitude').value = longitude;
+    }
+
+    function submitAddCar() {
+        // Получаем данные из формы
+        const carData = {
+            uNumber: document.getElementById('lotNumber').value,
+            model_id: document.getElementById('Model').value,
+            storage_id: document.getElementById('warehouseID').value,
+            VIN: document.getElementById('vin').value,
+            customer: document.getElementById('client').value,
+            manager: document.getElementById('manager').value,
+            x: parseFloat(document.getElementById('latitude').value),
+            y: parseFloat(document.getElementById('longitude').value),
+            // Добавляем состояние виртуального оператора
+            disable_virtual_operator: document.getElementById('disableVirtualOperator').checked ? 0 : 1
+        };
+
+        // Показать индикатор загрузки
+        document.getElementById('loadingSpinners').style.display = 'inline-block';
+
+        // Отправляем данные на сервер
+        fetch('/api/parser/add_new_car', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(carData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);
+
+            // Проверяем статус из ответа сервера
+            if (data.status === 'success') {
+                alert('Машина добавлена!');
+                // Перезагружаем страницу после успешного добавления машины
+                window.location.reload();
+            } else {
+                alert(`Ошибка: ${data.message}`);
+            }
+
+            const modal = bootstrap.Modal.getInstance(document.getElementById('manualAddModal'));
+            modal.hide();
+        })
+        .catch(error => {
+            console.error('Ошибка:', error);
+            alert('Ошибка при добавлении машины');
+        })
+        .finally(() => {
+            // Скрыть индикатор загрузки после завершения запроса
+            document.getElementById('loadingSpinners').style.display = 'none';
+        });
+    }
+
+    function closeTask(taskId) {
+        if (!confirm("Вы уверены, что хотите закрыть задачу?")) {
+            return;
+        }
+
+        fetch('/api/parser/close_task', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ task_id: taskId })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Ошибка при закрытии задачи');
+            }
+            return response.json();
+        })
+        .then(data => {
+            alert('Задача успешно закрыта');
+            location.reload(); // Обновляем страницу, чтобы отобразить изменения
+        })
+        .catch(error => {
+            console.error('Ошибка:', error);
+            alert('Не удалось закрыть задачу');
+        });
+    }
+</script>
+
+{% endblock %}

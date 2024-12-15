@@ -5,217 +5,56 @@
 {% endblock %}
 
 {% block body %}
-<div class="container-fluid" style="height: calc(100vh - 200px);"> <!-- Отнимаем 200px для хедера и футера -->
-    <div class="row" style="height: 100%;">
-        <!-- Сообщение о поддержке мобильных устройств -->
-        <div id="mobileWarning" class="alert alert-warning" style="display: none;">
-            Эта страница не поддерживает маленькие дисплеи.
-        </div>
+{% include 'pages/maps/css.html' %}
 
-        <!-- Список машин слева (20%) с поиском -->
-        <div class="col-3" style="height: 100%; overflow-y: auto;">
-            <h5>Объекты на карте</h5>
+<div class="container-fluid" style="height: calc(100vh - 200px);">
+    <div class="d-flex" style="height: 100%; position: relative;">
 
-            <!-- Кнопки для включения/выключения всех -->
+        <!-- Список машин слева -->
+        <div id="carBlock" class="flex-shrink-0" style="width: 300px; height: 100%; overflow-y: auto; padding: 10px; border: 1px solid #ddd; border-radius: 8px; background-color: #f9f9f9;">
+            <button id="toggleCarsList" class="btn btn-sm btn-outline-primary mb-3" onclick="hideCarsBlock()">
+                <i class="bi bi-caret-left-fill"></i> Скрыть
+            </button>
             <div class="mb-3">
-                <button class="btn btn-sm btn-outline-primary" onclick="toggleAllMarkers(true)">Выбрать все</button>
-                <button class="btn btn-sm btn-outline-secondary ms-2" onclick="toggleAllMarkers(false)">Отменить все</button>
-                <button class="btn btn-sm btn-outline-secondary float-end" onclick="updateCarList();">Обновить</button> <!-- Запуск скрипта на обновление -->
+                <button class="btn btn-sm btn-outline-primary" onclick="toggleAllMarkers(true)">
+                    <i class="bi bi-check-square"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-secondary ms-2" onclick="toggleAllMarkers(false)">
+                    <i class="bi bi-x-circle"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-info ms-2" data-bs-toggle="modal" data-bs-target="#filterModal">
+                    <i class="bi bi-funnel"></i> <!-- Кнопка фильтра -->
+                </button>
+                <button class="btn btn-sm btn-outline-secondary float-end" onclick="updateCarList();">
+                    <i class="bi bi-arrow-clockwise"></i>
+                </button>
             </div>
-
-            <!-- Поле поиска -->
             <input type="text" id="carSearch" class="form-control" placeholder="Поиск по машинам" onkeyup="filterCars()">
-
-            <!-- Загрузочный индикатор -->
             <div id="loadingIndicator" class="alert alert-light" style="display: none;">
                 <strong>Обновление данных...</strong>
             </div>
-
-            <ul id="carList" class="list-group mt-3">
-                {% for car in cars %}
-                <li class="list-group-item" data-pos-x="{{ car.pos_x }}" data-pos-y="{{ car.pos_y }}">
-                    <!-- Полоска статуса online/offline -->
-                    <span class="status-indicator me-2" style="display: inline-block; width: 5px; height: 20px; background-color: {% if car.last_time | online_check == 'online' %}green{% else %}red{% endif %};"></span>
-
-                    <!-- Чекбокс для выбора машины -->
-                    <input type="checkbox" class="form-check-input me-1" id="car{{ car.nm }}" onclick="toggleCarMarker('{{ car.nm }}', {{ car.pos_y }}, {{ car.pos_x }}, this)">
-
-                    <!-- Название машины и последний онлайн -->
-                    <label class="form-check-label" for="car{{ car.nm }}">
-                        {{ car.nm }}
-                        <span style="font-size: 0.8em; color: gray;"> - {{ car.last_time | unix_to_datetime }}</span>
-                    </label>
-
-                    <!-- Ссылка на страницу карточки ТС -->
-                    <a href="{{ url_for('main.get_car', car_id=car.nm) }}" class="btn btn-sm btn-outline-secondary float-end">Карточка ТС</a>
-                </li>
-                {% endfor %}
-            </ul>
+            <ul id="carList" class="list-group mt-2"></ul>
         </div>
 
-        <!-- Карта справа (80%) на всю высоту страницы -->
-        <div class="col-9" style="height: 100%;">
+        <!-- Кнопка для раскрытия блока -->
+        <div id="showCarsList" style="display: none; width: 40px; height: 100%; background-color: #007bff; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center;" onclick="showCarsBlock()">
+            <i class="bi bi-caret-right-fill"></i>
+        </div>
+
+        <!-- Карта -->
+        <div id="mapContainer" class="flex-grow-1" style="height: 100%;">
             <div id="map" style="width: 100%; height: 100%;"></div>
         </div>
     </div>
 </div>
 
-<!-- Подключение Yandex Map без API ключа -->
+
+
+
 <script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU" type="text/javascript"></script>
-<script type="text/javascript">
-    var markers = {};  // Для хранения добавленных меток
-
-    ymaps.ready(init);
-    function init() {
-        var myMap = new ymaps.Map("map", {
-            center: [60, 80], // Центр карты
-            zoom: 3
-        });
-
-        // Функция для добавления/удаления метки при выборе чекбокса
-        window.toggleCarMarker = function(carName, posX, posY, checkbox) {
-            if (checkbox.checked) {
-                if (!markers[carName]) {  // Проверка, добавлена ли метка
-                    var carMark = new ymaps.Placemark([posX, posY], {
-                        hintContent: 'Машина ' + carName,
-                        balloonContent: carName
-                    });
-                    markers[carName] = carMark;
-                    myMap.geoObjects.add(carMark);
-                }
-            } else {
-                if (markers[carName]) {
-                    myMap.geoObjects.remove(markers[carName]);
-                    delete markers[carName];  // Удаляем метку из объекта markers
-                }
-            }
-        };
-
-        // Функция для выбора всех чекбоксов и добавления всех меток
-        window.toggleAllMarkers = function(selectAll) {
-            var checkboxes = document.querySelectorAll('#carList input[type="checkbox"]');
-            checkboxes.forEach(function(checkbox) {
-                var carName = checkbox.id.replace('car', '');
-                var carItem = checkbox.parentElement;
-                var posX = parseFloat(carItem.getAttribute('data-pos-x'));
-                var posY = parseFloat(carItem.getAttribute('data-pos-y'));
-
-                // Проверяем состояние чекбокса и обновляем его только если нужно
-                if (checkbox.checked !== selectAll) {
-                    checkbox.checked = selectAll;
-                    toggleCarMarker(carName, posY, posX, checkbox);  // Обновляем метку на карте
-                }
-            });
-        };
-    }
-
-    // Функция для фильтрации списка машин по поиску
-    function filterCars() {
-        var input = document.getElementById("carSearch");
-        var filter = input.value.toLowerCase();
-        var ul = document.getElementById("carList");
-        var li = ul.getElementsByTagName("li");
-
-        for (var i = 0; i < li.length; i++) {
-            var label = li[i].getElementsByTagName("label")[0];
-            if (label.innerHTML.toLowerCase().indexOf(filter) > -1) {
-                li[i].style.display = "";
-            } else {
-                li[i].style.display = "none";
-            }
-        }
-    }
-
-    // Функция для обновления списка машин
-    function updateCarList() {
-        // Показываем индикатор загрузки
-        document.getElementById('loadingIndicator').style.display = 'block';
-
-        // Сохраняем состояние выбранных чекбоксов
-        var checkedCars = {};
-        document.querySelectorAll('#carList input[type="checkbox"]').forEach(function(checkbox) {
-            if (checkbox.checked) {
-                var carName = checkbox.id.replace('car', '');
-                checkedCars[carName] = true;
-            }
-        });
-
-        // Сохраняем значение поля поиска
-        var searchQuery = document.getElementById('carSearch').value.toLowerCase();
-
-        fetch('/api/cars')
-            .then(response => response.json())
-            .then(data => {
-                // Очищаем список машин
-                var carList = document.getElementById('carList');
-                carList.innerHTML = '';
-
-                if (data.length > 0) {
-                    // Добавляем новые данные
-                    data.forEach(car => {
-                        var li = document.createElement('li');
-                        li.className = 'list-group-item';
-                        li.setAttribute('data-pos-x', car.pos_x);
-                        li.setAttribute('data-pos-y', car.pos_y);
-
-                        // Преобразуем last_time в timestamp (учитывая, что last_time может быть в секундах)
-                        var lastTime = new Date(car.last_time * 1000).getTime();
-                        var statusColor = (lastTime > Date.now() - 300000) ? 'green' : 'red';  // online/offline условие
-
-                        var checked = checkedCars[car.nm] ? 'checked' : '';  // Проверяем, был ли чекбокс нажат
-
-                        li.innerHTML = `
-                            <span class="status-indicator me-2" style="display: inline-block; width: 5px; height: 20px; background-color: ${statusColor};"></span>
-                            <input type="checkbox" class="form-check-input me-1" id="car${car.nm}" onclick="toggleCarMarker('${car.nm}', ${car.pos_y}, ${car.pos_x}, this)" ${checked}>
-                            <label class="form-check-label" for="car${car.nm}">
-                                ${car.nm} <span style="font-size: 0.8em; color: gray;"> - ${new Date(car.last_time * 1000).toLocaleString()}</span>
-                            </label>
-                            <a href="/cars/${car.nm}" class="btn btn-sm btn-outline-secondary float-end">Карточка ТС</a>
-                        `;
-                        carList.appendChild(li);
-
-                        // Если машина была выбрана, восстанавливаем метку на карте
-                        if (checked) {
-                            toggleCarMarker(car.nm, car.pos_y, car.pos_x, li.querySelector('input[type="checkbox"]'));
-                        }
-                    });
-                }else {
-                    carList.innerHTML = '<li class="list-group-item">Данные отсутствуют</li>';
-                }
-
-                // Применяем сохраненный фильтр поиска
-                document.getElementById('carSearch').value = searchQuery;
-                filterCars(); // Применяем фильтр заново
-
-                // Скрываем индикатор загрузки
-                document.getElementById('loadingIndicator').style.display = 'none';
-            })
-            .catch(error => {
-                console.error('Ошибка при загрузке данных:', error);
-                // Скрываем индикатор загрузки в случае ошибки
-                document.getElementById('loadingIndicator').style.display = 'none';
-            });
-    }
-
-
-    // Автоматическое обновление списка каждые 10 секунд
-    setInterval(updateCarList, 10000);
-
-    // Проверяем размер экрана при загрузке страницы и при изменении размера окна
-    window.addEventListener('load', updateCarList);  // Первоначальный вызов при загрузке страницы
-
-    // Функция для отображения предупреждения на мобильных устройствах
-    function checkMobileScreen() {
-        var mobileWarning = document.getElementById("mobileWarning");
-        if (window.innerWidth < 1450) {
-            mobileWarning.style.display = "block";
-        } else {
-            mobileWarning.style.display = "none";
-        }
-    }
-
-    // Проверяем размер экрана при загрузке страницы и при изменении размера окна
-    window.addEventListener('load', checkMobileScreen);
-    window.addEventListener('resize', checkMobileScreen);
-</script>
+{% include 'pages/maps/modal_window.html' %}
+{% include 'pages/maps/script_block.html' %}
+{% include 'pages/maps/script_map.html' %}
 {% endblock %}
+
+

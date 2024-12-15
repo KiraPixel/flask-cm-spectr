@@ -1,0 +1,228 @@
+<script>
+    let map, markers = {};
+
+    // Инициализация карты
+    ymaps.ready(initMap);
+    function initMap() {
+        map = new ymaps.Map('map', {
+            center: [55.751574, 37.573856],
+            zoom: 10,
+            controls: ['zoomControl', 'fullscreenControl']
+        });
+        updateCarList();
+    }
+
+    // Удаление всех маркеров с карты
+    function clearAllMarkers() {
+        Object.values(markers).forEach(marker => map.geoObjects.remove(marker));
+        markers = {}; // Полностью очищаем объект маркеров
+
+        // Сброс состояния чекбоксов
+        document.querySelectorAll('#carList input[type="checkbox"]').forEach(checkbox => {
+            checkbox.checked = false;
+        });
+    }
+
+    // Добавление одной метки
+    function addMarker(posX, posY, type, uNumber, last_date) {
+        const coords = [posY, posX].toString();
+        if (!markers[coords]) {
+            const color = type === 'Cesar' ? 'orange' : 'blue';
+            const marker = new ymaps.Placemark(
+                [posY, posX],
+                {
+                    hintContent: `${uNumber} - ${unixToDatetime(last_date)}`,
+                    balloonContent: `<b>${uNumber}</b>`, // Текст в балуне
+                },
+                {
+                    preset: `islands#${color}DotIcon`,
+                    iconCaptionMaxWidth: '150', // Ограничиваем ширину подписи
+                }
+            );
+
+            // Добавляем обработчик клика для перехода по URL
+            marker.events.add('click', () => {
+                window.open(`/cars/${uNumber}`, '_blank'); // Переход на страницу в новом окне
+            });
+
+            // Сохраняем метку в markers и добавляем её на карту
+            markers[coords] = marker;
+            map.geoObjects.add(marker);
+        }
+    }
+
+    // Обработка чекбоксов
+    function toggleMarker(checkbox, posX, posY, type, uNumber, last_date) {
+        const coords = [posY, posX].toString();
+        if (checkbox.checked) {
+            addMarker(posX, posY, type, uNumber, last_date); // Передаём uNumber
+        } else {
+            if (markers[coords]) {
+                map.geoObjects.remove(markers[coords]);
+                delete markers[coords];
+            }
+        }
+    }
+
+    // Обновление состояния всех меток
+    function toggleAllMarkers(state) {
+        clearAllMarkers(); // Удаляем все, прежде чем обновлять
+
+        document.querySelectorAll('#carList input[type="checkbox"]').forEach(checkbox => {
+            checkbox.checked = state;
+            checkbox.dispatchEvent(new Event('change'));
+        });
+    }
+
+
+    // Загрузка данных с API
+    async function updateCarList() {
+        document.getElementById('loadingIndicator').style.display = 'block';
+
+        // Сохраняем состояния чекбоксов и открытых списков
+        saveCheckboxStates();
+        const expandedStates = saveExpandedStates();
+
+        try {
+            // Формируем URL с параметрами фильтров
+            const params = new URLSearchParams({
+                type: filters.type || '', // Если фильтр пуст, передаём пустую строку
+                region: filters.region || ''
+            });
+            const url = `/api/cars?${params.toString()}`;
+
+            // Выполняем запрос к API с фильтрами
+            const response = await fetch(url);
+            const data = await response.json();
+            buildCarList(data);
+
+            // Восстанавливаем состояния чекбоксов и открытых списков
+            restoreCheckboxStates();
+            restoreExpandedStates(expandedStates);
+        } catch (error) {
+            console.error('Ошибка загрузки данных:', error);
+        } finally {
+            document.getElementById('loadingIndicator').style.display = 'none';
+        }
+    }
+
+    // Сохранение состояний развёрнутых списков устройств
+    function saveExpandedStates() {
+        const expandedStates = {};
+        document.querySelectorAll('#carList > li > ul').forEach(deviceList => {
+            const carId = deviceList.parentElement.querySelector('strong').textContent;
+            expandedStates[carId] = deviceList.style.display !== 'none';
+        });
+        return expandedStates;
+    }
+
+    // Восстановление состояний развёрнутых списков устройств
+    function restoreExpandedStates(expandedStates) {
+        document.querySelectorAll('#carList > li').forEach(carItem => {
+            const carId = carItem.querySelector('strong').textContent;
+            const deviceList = carItem.querySelector('ul');
+            if (expandedStates[carId]) {
+                deviceList.style.display = 'block';
+            }
+        });
+    }
+
+    // Функция для преобразования Unix времени в читаемую дату
+    function unixToDatetime(unixTimestamp) {
+        const date = new Date(unixTimestamp * 1000); // Переводим Unix timestamp (в секундах) в миллисекунды
+        return date.toLocaleString(); // Возвращаем строку в формате локализованной даты и времени
+    }
+
+    // Построение списка машин
+    function buildCarList(cars) {
+        const carList = document.getElementById('carList');
+        carList.innerHTML = '';
+
+        cars.forEach(car => {
+            const carItem = document.createElement('li');
+            carItem.className = 'list-group-item';
+            carItem.setAttribute('data-car-id', car.uNumber);  // Добавляем уникальный идентификатор
+
+            carItem.innerHTML = `
+                <strong>${car.uNumber}</strong>
+                <button class="btn btn-link" onclick="window.open('/cars/${encodeURIComponent(car.uNumber)}', '_blank');">
+                    <i class="bi bi-card-heading"></i> <!-- Иконка "Карточка ТС" -->
+                </button>
+                <button class="btn btn-link" onclick="toggleDeviceList('${car.uNumber}')">
+                    <i class="bi bi-chevron-down"></i> <!-- Иконка "Устройства" -->
+                </button>
+            `;
+
+            const deviceList = document.createElement('ul');
+            deviceList.className = 'list-group mt-2';
+            deviceList.style.display = 'none';
+
+            car.devices.forEach(device => {
+                const deviceItem = document.createElement('li');
+                deviceItem.className = 'list-group-item';
+                const formattedTime = unixToDatetime(device.last_time); // Преобразуем Unix-время
+
+                deviceItem.innerHTML = `
+                    <label>
+                        <input type="checkbox" id="device-${car.uNumber}-${device.type}"
+                            onchange="toggleMarker(this, ${device.pos_x}, ${device.pos_y}, '${device.type}', '${car.uNumber}', '${device.last_time}')">
+                        ${device.type} (${formattedTime})
+                    </label>
+                `;
+                deviceList.appendChild(deviceItem);
+            });
+
+            carItem.appendChild(deviceList);
+            carList.appendChild(carItem);
+        });
+    }
+
+
+    // Переключение видимости списка устройств для конкретного автомобиля
+    function toggleDeviceList(carId) {
+        const carItem = document.querySelector(`#carList li[data-car-id="${carId}"]`);
+        const deviceList = carItem.querySelector('ul');
+
+        if (deviceList) {
+            // Переключаем отображение списка
+            deviceList.style.display = (deviceList.style.display === 'none' || deviceList.style.display === '') ? 'block' : 'none';
+
+            // Переключаем иконку
+            const toggleButton = carItem.querySelector('button[onclick*="toggleDeviceList"] i');
+            if (toggleButton) {
+                toggleButton.classList.toggle('bi-chevron-down');
+                toggleButton.classList.toggle('bi-chevron-up');
+            }
+        }
+    }
+
+
+    // Фильтрация списка машин
+    function filterCars() {
+        const query = document.getElementById('carSearch').value.toLowerCase();
+        document.querySelectorAll('#carList > li').forEach(carItem => {
+            const carText = carItem.textContent.toLowerCase();
+            carItem.style.display = carText.includes(query) ? '' : 'none';
+        });
+    }
+
+    // Сохранение состояний чекбоксов
+    function saveCheckboxStates() {
+        const states = {};
+        document.querySelectorAll('#carList input[type="checkbox"]').forEach(checkbox => {
+            states[checkbox.id] = checkbox.checked;
+        });
+        localStorage.setItem('deviceCheckboxStates', JSON.stringify(states));
+    }
+
+    // Восстановление состояний чекбоксов
+    function restoreCheckboxStates() {
+        const states = JSON.parse(localStorage.getItem('deviceCheckboxStates') || '{}');
+        document.querySelectorAll('#carList input[type="checkbox"]').forEach(checkbox => {
+            if (states[checkbox.id] !== undefined) {
+                checkbox.checked = states[checkbox.id];
+                checkbox.dispatchEvent(new Event('change')); // Обновление карты
+            }
+        });
+    }
+</script>

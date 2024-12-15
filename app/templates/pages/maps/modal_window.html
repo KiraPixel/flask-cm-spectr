@@ -1,0 +1,56 @@
+<div class="modal fade" id="filterModal" tabindex="-1" aria-labelledby="filterModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="filterModalLabel">Фильтры</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+            </div>
+            <div class="modal-body">
+                <form id="filterForm">
+                    <!-- Тип техники -->
+                    <div class="mb-3">
+                        <label for="typeFilter" class="form-label">Тип техники</label>
+                        <select id="typeFilter" class="form-select">
+                            <option value="">Все</option>
+                            <option value="ПО">ПО</option>
+                            <option value="ПТО">ПТО</option>
+                        </select>
+                    </div>
+                    <!-- Регион -->
+                    <div class="mb-3">
+                        <label for="regionFilter" class="form-label">Регион</label>
+                        <input type="text" id="regionFilter" class="form-control" placeholder="Введите регион">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                <button type="button" class="btn btn-primary" onclick="applyFilters()" data-bs-dismiss="modal">Применить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+  let filters = {
+      type: '',
+      region: ''
+  };
+
+  // Применение фильтров
+  function applyFilters() {
+      const type = document.getElementById('typeFilter').value;
+      const region = document.getElementById('regionFilter').value;
+
+      // Сохраняем значения в глобальную переменную
+      filters.type = type;
+      filters.region = region;
+
+      // Скрываем маркеры
+      toggleAllMarkers(false);
+
+      // Вызываем обновление списка машин
+      updateCarList();
+  }
+</script>

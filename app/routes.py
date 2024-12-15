@@ -7,7 +7,7 @@ import re
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash, make_response, send_file, g
 
 from .models import db, User, Transport, TransportModel, Storage, CashWialon, CashCesar, Alert, Comments
-from .utils import need_access, need_access
+from .utils import need_access
 from modules import report_generator, my_time, hash_password
 
 # Создаем Blueprint для основных маршрутов приложения

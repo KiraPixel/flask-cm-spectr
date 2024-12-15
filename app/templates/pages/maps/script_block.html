@@ -1,0 +1,59 @@
+<script>
+    function adjustLayoutForMobile() {
+        const carBlock = document.getElementById('carBlock');
+        const showButton = document.getElementById('showCarsList');
+        const toggleButton = document.getElementById('toggleCarsList');
+        const mapContainer = document.getElementById('mapContainer');
+
+        if (window.innerWidth <= 768) {
+            carBlock.style.display = 'none';  // Скрыть блок машин на мобильных
+            showButton.style.display = 'flex'; // Показать кнопку раскрытия
+            toggleButton.style.display = 'none';  // Скрыть кнопку "Скрыть" на мобильных
+            mapContainer.style.display = 'block'; // Убедиться, что карта отображается
+        } else {
+            carBlock.style.display = 'block'; // Показывать блок машин на ПК
+            showButton.style.display = 'none'; // Скрыть кнопку раскрытия на ПК
+            toggleButton.style.display = 'inline-block'; // Показать кнопку "Скрыть" на ПК
+            mapContainer.style.display = 'flex'; // Убедиться, что карта отображается
+        }
+    }
+
+    function hideCarsBlock() {
+        const carBlock = document.getElementById('carBlock');
+        const showButton = document.getElementById('showCarsList');
+        const mapContainer = document.getElementById('mapContainer');
+        const toggleButton = document.getElementById('toggleCarsList');
+
+        carBlock.style.display = 'none'; // Скрыть блок с машинами
+        showButton.style.display = 'flex'; // Показать кнопку раскрытия
+        toggleButton.style.display = 'none';  // Скрыть кнопку "Скрыть" на мобильных
+
+        if (window.innerWidth > 768) {
+            mapContainer.style.flexGrow = '1';
+        } else {
+            mapContainer.style.display = 'block'; // Карта остается на фоне
+        }
+    }
+
+    function showCarsBlock() {
+        const carBlock = document.getElementById('carBlock');
+        const showButton = document.getElementById('showCarsList');
+        const mapContainer = document.getElementById('mapContainer');
+        const toggleButton = document.getElementById('toggleCarsList');
+
+        carBlock.style.display = 'block'; // Показываем блок с машинами
+        showButton.style.display = 'none'; // Скрыть кнопку раскрытия
+        toggleButton.style.display = 'inline-block'; // Показываем кнопку "Скрыть" на мобильных
+
+        if (window.innerWidth > 768) {
+            mapContainer.style.flexGrow = '1';
+        } else {
+            mapContainer.style.display = 'none'; // Прячем карту на мобильных
+        }
+    }
+
+    // Вызовем функцию для инициализации при загрузке страницы
+    window.addEventListener('load', adjustLayoutForMobile);
+    // Добавим слушатель на изменение размера окна
+    window.addEventListener('resize', adjustLayoutForMobile)
+</script>

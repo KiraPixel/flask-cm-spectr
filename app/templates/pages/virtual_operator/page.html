@@ -88,9 +88,15 @@
                                     {% else %} {{ alert.data }} {% endif %}
                                 </p>
                                 <div class="d-flex justify-content-between align-items-center">
-                                    <small class="text-muted">{{ alert.comment or 'Нет комментариев' }}</small>
+                                    <small class="text-muted">
+                                        {% if alert.comment %}
+                                            {{ alert.date_time_edit | unix_to_datetime }}: {{ alert.comment }}
+                                        {% else %}
+                                            Нет комментариев
+                                        {% endif %}
+                                    </small>
                                     <button class="btn btn-sm p-0" data-bs-toggle="modal" data-bs-target="#commentModal"
-                                        data-comment="{{ alert.comment }}" data-author="{{ alert.comment_editor }}"
+                                        data-comment="{{ alert.comment }}" data-author="{{ alert.comment_editor }}" data-edit-time="{{ alert.date_time_edit | unix_to_datetime }}"
                                         data-comment-id="{{ alert.id }}" title="Редактировать комментарий">
                                         <i class="bi {{ 'bi-chat-right-dots' if alert.comment else 'bi-chat-right' }}"></i>
                                     </button>
@@ -142,7 +148,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
             </div>
             <div class="modal-body">
-                <p><strong>Автор:</strong> <span id="modalAuthor"></span></p>
+                <p><strong>Автор:</strong> <span id="modalAuthor"></span> (<span id="modalEditTime"></span>)</p>
                 <input type="hidden" id="modalCommentId">
                 <p><strong>Комментарий:</strong></p>
                 <textarea id="modalComment" class="form-control" rows="4"></textarea>
@@ -258,10 +264,12 @@ document.addEventListener('DOMContentLoaded', function () {
         const button = event.relatedTarget; // Кнопка, вызвавшая модальное окно
         const comment = button.getAttribute('data-comment');
         const author = button.getAttribute('data-author');
+        const edit_time = button.getAttribute('data-edit-time');
         const commentId = button.getAttribute('data-comment-id');
 
         // Устанавливаем данные в модальное окно
         document.getElementById('modalAuthor').textContent = (author && author !== 'None') ? author : 'Неизвестен';
+        document.getElementById('modalEditTime').textContent = edit_time || '';
         document.getElementById('modalComment').textContent = (comment && comment !== 'None') ? comment : '';
         document.getElementById('modalCommentId').value = commentId;
     });

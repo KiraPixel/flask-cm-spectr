@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import time
 import uuid
 
@@ -11,7 +12,8 @@ from flask import Blueprint, request, jsonify, session, send_from_directory, abo
 
 from . import db
 from .utils import need_access, need_access
-from .models import Transport, TransportModel, Storage, User, CashWialon, Comments, Alert, CashHistoryWialon, Reports
+from .models import Transport, TransportModel, Storage, User, CashWialon, Comments, Alert, CashHistoryWialon, Reports, \
+    CashCesar, ParserTasks
 from .config import UPLOAD_FOLDER
 import modules.my_time as mytime
 
@@ -80,6 +82,87 @@ def health_check():
 @api_bp.route('/cars', methods=['GET'])
 @need_access(-1)
 def get_cars():
+    filters = {
+        'type': request.args.get('type', ''),
+        'region': request.args.get('region', '')
+    }
+
+    # Получаем пользователя и его доступы
+    user = User.query.filter_by(username=session['username']).first_or_404()
+
+    # Выводим доступы для отладки
+    user_access_managers = json.loads(user.access_managers)
+    user_access_regions = json.loads(user.access_regions)
+
+    query = db.session.query(Transport, Storage, TransportModel).join(
+        Storage, Transport.storage_id == Storage.ID).join(
+        TransportModel, Transport.model_id == TransportModel.id)
+
+    if filters['type']:
+        query = query.filter(TransportModel.type.like(f'%{filters["type"]}%'))
+    if filters['region']:
+        query = query.filter(Storage.region.like(f'%{filters["region"]}%'))
+
+    # Применяем фильтрацию по доступам пользователя в запрос
+    if user.role <= -1:
+        if user_access_managers:
+            query = query.filter(Transport.manager.in_(user_access_managers))
+        if user_access_regions:
+            query = query.filter(Storage.region.in_(user_access_regions))
+
+    # Выполняем запрос и получаем данные
+    data_db = query.all()
+
+    if not data_db:
+        return jsonify({"message": "No data found."})
+
+    # Дальнейшая обработка
+    wialon_cars = db.session.query(CashWialon).all()
+    cesar_cars = db.session.query(CashCesar).all()
+
+    result_dict = {}
+    for transport in data_db:
+        u_number = transport.Transport.uNumber or "Без ТС"
+        result_dict[u_number] = {"uNumber": u_number, "devices": []}
+
+    # Добавляем данные из Wialon и Cesar
+    for wialon in wialon_cars:
+        u_number = wialon.nm or "Без ТС"
+        if u_number in result_dict:
+            result_dict[u_number]["devices"].append({
+                "type": "Wialon",
+                "uNumber": wialon.nm,
+                "pos_x": wialon.pos_x,
+                "pos_y": wialon.pos_y,
+                "last_time": wialon.last_time
+            })
+    if user.cesar_access == 1:
+        for cesar in cesar_cars:
+            u_number = cesar.object_name or "Без ТС"
+            if u_number in result_dict:
+                result_dict[u_number]["devices"].append({
+                    "type": "Cesar",
+                    "uNumber": cesar.object_name,
+                    "pos_x": cesar.pos_y,
+                    "pos_y": cesar.pos_x,
+                    "last_time": cesar.last_time
+                })
+
+    # Убираем транспорты, у которых нет устройств
+    result_dict = {u_number: data for u_number, data in result_dict.items() if data["devices"]}
+
+    # Конвертируем результат в список
+    result = list(result_dict.values())
+    return jsonify(result)
+
+
+
+
+
+
+@api_bp.route('/cars_old', methods=['GET'])
+@need_access(-1)
+def get_cars_old():
     # Получаем данные из базы
     data_db = db.session.query(CashWialon).all()
 
@@ -271,6 +354,7 @@ def edit_report_comment():
 
     report.comment = text
     report.comment_editor = author
+    report.date_time_edit = mytime.now_unix_time()
     db.session.commit()
 
     return jsonify({'status': 'edit_ok'})
@@ -359,3 +443,109 @@ def wialon_get_sensor(unit_id):
 
     # После 6 неудачных попыток возвращаем ошибку
     return jsonify({'error': 'Failed to fetch valid sensor data after multiple attempts'}), 500
+
+
+@api_bp.route('/parser/add_new_car', methods=['POST'])
+@need_access(1)
+def add_new_car():
+    data = request.json
+    uNumber = data.get('uNumber')
+    model_id = data.get('model_id')
+    storage_id = data.get('storage_id')
+    VIN = data.get('VIN')
+    customer = data.get('customer')
+    manager = data.get('manager')
+    x = data.get('x')
+    y = data.get('y')
+    disable_virtual_operator = data.get('disable_virtual_operator')
+
+    # Проверка, что disable_virtual_operator равен 0 или 1
+    if disable_virtual_operator not in [0, 1]:
+        return jsonify({'status': 'error', 'message': 'disable_virtual_operator должен быть 0 или 1'}), 400
+
+    # Проверка уникальности uNumber
+    if db.session.query(Transport).filter_by(uNumber=uNumber).first():
+        return jsonify({'status': 'error', 'message': f'uNumber {uNumber} уже существует'}), 400
+
+    # Проверка, что model_id существует в таблице transport_model
+    if not db.session.query(TransportModel).filter_by(id=model_id).first():
+        return jsonify({'status': 'error', 'message': f'Не найден transport_model с id {model_id}'}), 400
+
+    # Проверка, что storage_id существует в таблице storage
+    if not db.session.query(Storage).filter_by(ID=storage_id).first():
+        return jsonify({'status': 'error', 'message': f'Не найден storage с ID {storage_id}'}), 400
+
+    # Проверка длины VIN
+    if not (4 <= len(VIN) <= 20):
+        return jsonify({'status': 'error', 'message': 'VIN должен быть длиной от 4 до 20 символов'}), 400
+
+    # Проверка типов для x и y (должны быть числа с плавающей точкой)
+    try:
+        x = float(x)
+        y = float(y)
+    except ValueError:
+        return jsonify({'status': 'error', 'message': 'x и y должны быть числами с плавающей точкой'}), 400
+
+    # Теперь можно добавить запись в базу данных
+    new_car = Transport(
+        uNumber=uNumber,
+        model_id=model_id,
+        storage_id=storage_id,
+        vin=VIN,
+        customer=customer,
+        manager=manager,
+        x=x,
+        y=y,
+        disable_virtual_operator=disable_virtual_operator
+    )
+
+    try:
+        db.session.add(new_car)
+        db.session.commit()
+
+        # Теперь ищем соответствующую задачу и обновляем ее статус
+        tasks = db.session.query(ParserTasks).filter(
+            ParserTasks.task_name.in_(['new_car', 'new_car_error']),
+            ParserTasks.variable == uNumber,
+            ParserTasks.task_completed == 0
+        ).all()
+
+        for task in tasks:
+            task.task_completed = 1
+
+        if tasks:
+            db.session.commit()
+
+        return jsonify({'status': 'success', 'message': 'Машина добавлена и задача обновлена'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'status': 'error', 'message': f'Ошибка добавления машины: {str(e)}'}), 500
+
+
+
+@api_bp.route('/parser/close_task', methods=['POST'])
+@need_access(1)
+def close_task():
+    data = request.json
+    print(data)
+    task_id = data.get('task_id')
+    print(task_id)
+
+    if not task_id:
+        return jsonify({'error': 'task_id is required'}), 400
+
+    # Ищем задачу по task_id с task_completed = 0
+    task = db.session.query(ParserTasks).filter_by(id=task_id, task_completed=0).first()
+
+    if not task:
+        return jsonify({'error': f'Задача с id {task_id} не найдена или уже закрыта'}), 400
+
+    # Обновляем статус задачи на 1 (закрыта)
+    task.task_completed = 1
+
+    try:
+        db.session.commit()
+        return jsonify({'status': 'task closed'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': f'Ошибка при закрытии задачи: {str(e)}'}), 500

@@ -1,6 +1,7 @@
+import xml.etree.ElementTree as ET
 from flask import Blueprint, request, render_template, redirect, url_for, flash, g, session
 from .utils import need_access, need_access
-from .models import db, User, Transport, IgnoredStorage, Storage
+from .models import db, User, Transport, IgnoredStorage, Storage, ParserTasks
 from modules import mail_sender, hash_password
 
 
@@ -23,7 +24,7 @@ def admin_panel():
             password = hash_password.generator_password()
             h_password = hash_password.hash_password(password)
             new_user = User(username=username, email=email, password=h_password, role=-1,
-                            last_activity="1999-12-02 00:00:00")
+                            last_activity="1999-12-02 00:00:00", access_managers="[]", access_regions="[]")
             db.session.add(new_user)
             db.session.commit()
             body = render_template('standalone/mail_new_user.html', user=new_user, password=password)
@@ -51,6 +52,52 @@ def admin_panel():
     users = User.query.all()
     ignored_storages = IgnoredStorage.query.all()
     return render_template('pages/admin_panel/page.html', users=users, ignored_storages=ignored_storages)
+
+
+@admin_bp.route('/parser')
+@need_access(1)
+def parser_page():
+    tasks_with_error_all = ParserTasks.query.filter(
+        ParserTasks.task_completed == 0,
+        ~ParserTasks.task_name.in_(['new_car', 'new_car_error'])
+    ).all()
+    tasks_with_error_new_car = ParserTasks.query.filter(
+        ParserTasks.task_completed == 0,
+        ParserTasks.task_name.in_(['new_car', 'new_car_error'])
+    ).all()
+
+    parsed_tasks = []  # Массив для хранения обработанных данных
+
+    for task in tasks_with_error_new_car:
+        if not task.info:
+            print(f"Пустое содержимое task.info для задачи ID {task.id}")
+            parsed_tasks.append({"id": task.id, "error": "Пустое содержимое XML"})
+            continue
+
+        try:
+            root = ET.fromstring(task.info)  # assuming 'info' содержит XML
+
+            task_data = {
+                "id": task.id,  # Добавляем ID задачи для привязки
+                "код_склада": root.attrib.get("КодСклада", "").strip(),
+                "склад": root.attrib.get("Склад", "").strip(),
+                "лот": root.attrib.get("Лот", "").strip(),
+                "серия": root.attrib.get("Серия", "").strip(),
+                "серия_год_выпуска": root.attrib.get("СерияГодВыпуска", "").strip(),
+                "широта": root.attrib.get("Широта", "").strip(),
+                "долгота": root.attrib.get("Долгота", "").strip(),
+                "контрагент": root.attrib.get("Контрагент", "").strip(),
+                "менеджер": root.attrib.get("ОтветственныйМенеджер", "").strip()
+            }
+
+            parsed_tasks.append(task_data)
+
+        except Exception as e:
+            print(f"Ошибка при обработке XML для задачи ID {task.id}: {e}")
+            parsed_tasks.append({"id": task.id, "error": f"Ошибка при обработке XML: {e}"})
+
+    # Возвращаем шаблон с задачами с ошибками и обработанными данными
+    return render_template('pages/parser/page.html', tasks_with_error=tasks_with_error_all, parsed_tasks=parsed_tasks)
 
 
 @admin_bp.route('/delete_storage/<int:storage_id>', methods=['POST'])
