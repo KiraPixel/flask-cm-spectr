@@ -43,7 +43,8 @@
     function init() {
         myMap = new ymaps.Map("my_map", {
             center: [55.751574, 37.573856], // Координаты центра карты (Москва)
-            zoom: 10
+            zoom: 10,
+            controls: ['zoomControl', 'fullscreenControl']
         });
     }
 

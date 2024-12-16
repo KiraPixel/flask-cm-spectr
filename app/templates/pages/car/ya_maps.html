@@ -4,8 +4,9 @@
 
     function initMap() {
         var myMap = new ymaps.Map("map", {
-            center: [60, 80],
-            zoom: 3
+            center: [55.751574, 37.573856],
+            zoom: 3,
+            controls: ['zoomControl', 'fullscreenControl']
         });
 
         addWorkPlaceMark(myMap);
@@ -18,9 +19,12 @@
         var workPlaceMark = new ymaps.Placemark([{{ car.x }}, {{ car.y }}], {
             hintContent: 'Место работы',
             balloonContent: 'Здесь работает автомобиль'
-        }, {
-            preset: 'islands#yellowIcon'
-        });
+        },
+            {
+                preset: `islands#redDotIcon`,
+                iconCaptionMaxWidth: '150', // Ограничиваем ширину подписи
+            }
+        );
         map.geoObjects.add(workPlaceMark);
         {% endif %}
     }
@@ -30,20 +34,28 @@
         var cesarMark = new ymaps.Placemark([{{ item.pos_x }}, {{ item.pos_y }}], {
             hintContent: 'Метка Cesar',
             balloonContent: 'UID блока: {{ item.object_name }}'
-        }, {
-            preset: 'islands#redIcon'
-        });
+        },
+            {
+                preset: `islands#orangeDotIcon`,
+                iconCaptionMaxWidth: '150', // Ограничиваем ширину подписи
+            }
+        );
         map.geoObjects.add(cesarMark);
         {% endfor %}
     }
 
     function addWialonMarks(map) {
         {% for item in wialon %}
-        var wialonMark = new ymaps.Placemark([{{ item.pos_y }}, {{ item.pos_x }}], {
+        var cesarMark = new ymaps.Placemark([{{ item.pos_y }}, {{ item.pos_x }}], {
             hintContent: 'Метка Wialon',
-            balloonContent: 'UUID блока: {{ item.nm }}'
-        });
-        map.geoObjects.add(wialonMark);
+            balloonContent: 'UID блока: {{ item.nm }}'
+        },
+            {
+                preset: `islands#blueDotIcon`,
+                iconCaptionMaxWidth: '150', // Ограничиваем ширину подписи
+            }
+        );
+        map.geoObjects.add(cesarMark);
         {% endfor %}
     }
 </script>
