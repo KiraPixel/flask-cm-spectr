@@ -1,12 +1,12 @@
 from datetime import timedelta
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
 import os
+from .utils import storage_id_to_name
+from .models import db
 
 from modules import my_time, location_module
 
 
-db = SQLAlchemy()
 
 
 def create_app():
@@ -35,4 +35,6 @@ def create_app():
     app.jinja_env.filters['unix_to_datetime'] = my_time.unix_to_moscow_time
     app.jinja_env.filters['online_check'] = my_time.online_check
     app.jinja_env.filters['get_address'] = location_module.get_address_decorator
+    app.jinja_env.filters['storage_id_to_name'] = storage_id_to_name
+
     return app

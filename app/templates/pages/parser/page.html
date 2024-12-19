@@ -30,6 +30,7 @@
                                                 data-warehouse-id="{{ task.код_склада }}"
                                                 data-task-id="{{ task.id }}"
                                                 data-lot="{{ task.лот }}"
+                                                data-model_id="{{ task.ИДМодели }}"
                                                 data-vin="{{ task.серия }}"
                                                 data-series_year="{{ task.серия_год_выпуска }}"
                                                 data-x="{{ task.широта }}"
@@ -95,8 +96,8 @@
                         <input type="text" class="form-control" id="lotNumber" placeholder="Введите номер лота" required>
                     </div>
                     <div class="mb-3">
-                        <label for="Model" class="form-label">Модель</label>
-                        <input type="text" class="form-control" id="Model" placeholder="Введите код модели" required>
+                        <label for="modelId" class="form-label">Модель</label>
+                        <input type="text" class="form-control" id="modelId" placeholder="Введите код модели" required>
                     </div>
                     <div class="mb-3">
                         <label for="warehouseID" class="form-label">Код склада</label>
@@ -156,6 +157,7 @@
         var warehouseID = button.getAttribute('data-warehouse-id');
         var taskID = button.getAttribute('data-task-id');
         var lot = button.getAttribute('data-lot');
+        var modelId = button.getAttribute('data-model_id')
         var vin = button.getAttribute('data-vin');
         var seriesYear = button.getAttribute('data-series_year');
         var latitude = button.getAttribute('data-x');
@@ -167,6 +169,7 @@
         modal.show();
 
         document.getElementById('lotNumber').value = lot;
+        document.getElementById('modelId').value = modelId;
         document.getElementById('warehouseID').value = warehouseID;
         document.getElementById('vin').value = vin;
         document.getElementById('seriesYear').value = seriesYear;
@@ -180,7 +183,7 @@
         // Получаем данные из формы
         const carData = {
             uNumber: document.getElementById('lotNumber').value,
-            model_id: document.getElementById('Model').value,
+            modelId: document.getElementById('modelId').value,
             storage_id: document.getElementById('warehouseID').value,
             VIN: document.getElementById('vin').value,
             customer: document.getElementById('client').value,

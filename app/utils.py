@@ -1,6 +1,6 @@
 from functools import wraps
 from flask import session, flash, redirect, url_for, render_template
-from .models import db, User
+from .models import db, User, Storage
 from modules import my_time
 import datetime
 
@@ -23,3 +23,9 @@ def need_access(required_role=0):
             return f(*args, **kwargs)
         return decorated_function
     return decorator
+
+
+
+def storage_id_to_name(storage_id):
+    storage = db.session.query(Storage).filter(Storage.ID == storage_id).first()
+    return storage.name

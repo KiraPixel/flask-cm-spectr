@@ -450,7 +450,9 @@ def wialon_get_sensor(unit_id):
 def add_new_car():
     data = request.json
     uNumber = data.get('uNumber')
-    model_id = data.get('model_id')
+    print(uNumber)
+    model_id = data.get('modelId')
+    print(model_id)
     storage_id = data.get('storage_id')
     VIN = data.get('VIN')
     customer = data.get('customer')

@@ -79,16 +79,18 @@ def parser_page():
 
             task_data = {
                 "id": task.id,  # Добавляем ID задачи для привязки
-                "код_склада": root.attrib.get("КодСклада", "").strip(),
-                "склад": root.attrib.get("Склад", "").strip(),
-                "лот": root.attrib.get("Лот", "").strip(),
-                "серия": root.attrib.get("Серия", "").strip(),
-                "серия_год_выпуска": root.attrib.get("СерияГодВыпуска", "").strip(),
-                "широта": root.attrib.get("Широта", "").strip(),
-                "долгота": root.attrib.get("Долгота", "").strip(),
-                "контрагент": root.attrib.get("Контрагент", "").strip(),
-                "менеджер": root.attrib.get("ОтветственныйМенеджер", "").strip()
+                "код_склада": root.attrib.get("КодСклада", "").strip() or "None",
+                "склад": root.attrib.get("Склад", "").strip() or "None",
+                "лот": root.attrib.get("Лот", "").strip() or "None",
+                "ИДМодели": root.attrib.get("ИДМодели", "").strip() or "None",
+                "серия": root.attrib.get("Серия", "").strip() or "None",
+                "серия_год_выпуска": root.attrib.get("СерияГодВыпуска", "").strip() or "None",
+                "широта": root.attrib.get("Широта", "").strip() or "None",
+                "долгота": root.attrib.get("Долгота", "").strip() or "None",
+                "контрагент": root.attrib.get("Контрагент", "").strip() or "None",
+                "менеджер": root.attrib.get("ОтветственныйМенеджер", "").strip() or "None"
             }
+            print(task_data)
 
             parsed_tasks.append(task_data)
 

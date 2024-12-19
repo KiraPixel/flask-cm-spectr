@@ -6,7 +6,7 @@ import re
 
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash, make_response, send_file, g
 
-from .models import db, User, Transport, TransportModel, Storage, CashWialon, CashCesar, Alert, Comments
+from .models import db, User, Transport, TransportModel, Storage, CashWialon, CashCesar, Alert, Comments, TransferTasks
 from .utils import need_access
 from modules import report_generator, my_time, hash_password
 
@@ -280,17 +280,17 @@ def get_car(car_id):
         if text[1] != ' ':
             car_id = text[:1] + ' ' + text[1:]
     search_pattern = f'%{car_id}%'
+    car = db.session.query(Transport).filter(Transport.uNumber == car_id).first()
+    if not car:
+        return "Car not found", 404
 
     wialon = db.session.query(CashWialon).filter(CashWialon.nm.like(search_pattern)).all()
     cesar = []
     if user.cesar_access == 1:
         cesar = db.session.query(CashCesar).filter(CashCesar.object_name.like(search_pattern)).all()
-    car = db.session.query(Transport).filter(Transport.uNumber == car_id).first()
     alerts = db.session.query(Alert).filter(Alert.uNumber == car_id).order_by(Alert.date.desc()).all()
     comments = db.session.query(Comments).filter(Comments.uNumber == car_id).all()
-
-    if not car:
-        return "Car not found", 404
+    transfers = db.session.query(TransferTasks).filter(TransferTasks.uNumber == car.uNumber).order_by(TransferTasks.date.desc()).all()
 
     if user.role <= -1:
         storage = db.session.query(Storage).filter(Storage.ID == car.storage_id).first()
@@ -330,6 +330,7 @@ def get_car(car_id):
         wialon_sens=wialon_sens,
         alerts=alerts,
         comments=comments,
+        transfers=transfers
     )
 
 

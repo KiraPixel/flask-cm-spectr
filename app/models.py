@@ -1,5 +1,5 @@
-from . import db
-
+from flask_sqlalchemy import SQLAlchemy
+db = SQLAlchemy()
 
 class User(db.Model):
     __tablename__ = 'users'
@@ -32,7 +32,7 @@ class Transport(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     storage_id = db.Column(db.Integer, db.ForeignKey('storage.ID'), nullable=False)
-    model_id = db.Column(db.Integer, db.ForeignKey('transport_model.id'), nullable=False)  # Указание внешнего ключа
+    model_id = db.Column(db.Text, db.ForeignKey('transport_model.id'), nullable=False)  # Указание внешнего ключа
     storage = db.relationship('Storage', back_populates='transports', primaryjoin="Storage.ID == Transport.storage_id")
 
     uNumber = db.Column(db.Text)
@@ -75,7 +75,7 @@ class Storage(db.Model):
 class TransportModel(db.Model):
     __tablename__ = 'transport_model'
 
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Text, primary_key=True)
     type = db.Column(db.String(100))
     name = db.Column(db.String(100))
     lift_type = db.Column(db.String(100))
