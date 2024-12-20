@@ -156,7 +156,7 @@ def filegen(args):
             output.write(final_str + '\n')
     elif "main" in args:
         if args == "main_summary":
-            output.write('Тип;Регион;Склад;№ Лота;Модель;Тип подъемника;Тип двигателя;Cesar Position;Wialon' + '\n')
+            output.write('Тип;Регион;Склад;№ Лота;Модель;Тип подъемника;Тип двигателя;parser_1c;Cesar Position;Wialon' + '\n')
             query = (
                 db.session.query(
                     TransportModel.type.label("transport_model_type"),
@@ -166,6 +166,7 @@ def filegen(args):
                     TransportModel.name.label("transport_model_name"),
                     TransportModel.lift_type.label("transport_model_lift_type"),
                     TransportModel.engine.label("transport_model_engine"),
+                    Transport.parser_1c.label('transport_parser_1c'),
                     # Подзапрос для подсчета количества записей в CashCesar
                     db.session.query(func.count()).filter(
                         CashCesar.object_name.like(func.concat('%', Transport.uNumber, '%'))
@@ -185,11 +186,11 @@ def filegen(args):
                 final_str = f"{item.transport_model_type};{item.storage_region};{item.storage_name};" \
                             f"{item.transport_uNumber};{item.transport_model_name};" \
                             f"{item.transport_model_lift_type};{item.transport_model_engine};" \
-                            f"{item.cesar_count};{item.wialon_count}"
+                            f"{item.transport_parser_1c};{item.cesar_count};{item.wialon_count}"
                 output.write(final_str + '\n')
         elif args == "main_transport":
                 output.write(
-                    'ID;Storage ID;Model ID;№ Лота;Год выпуска;VIN;X;Y;Клиент;Контакт клиента;Менеджер;Отключить виртуального оператора\n')
+                    'ID;Storage ID;Model ID;№ Лота;Год выпуска;VIN;X;Y;Клиент;Контакт клиента;Менеджер;Отключить виртуального оператора;parser_1c\n')
 
                 query = db.session.query(
                     Transport.id,
@@ -203,7 +204,8 @@ def filegen(args):
                     Transport.customer,
                     Transport.customer_contact,
                     Transport.manager,
-                    Transport.disable_virtual_operator
+                    Transport.disable_virtual_operator,
+                    Transport.parser_1c
                 )
 
                 results = query.all()
@@ -212,7 +214,7 @@ def filegen(args):
                                 f"{item.manufacture_year or ''};{item.vin or ''};" \
                                 f"{item.x or ''};{item.y or ''};" \
                                 f"{item.customer or ''};{item.customer_contact or ''};" \
-                                f"{item.manager or ''};{item.disable_virtual_operator or ''}"
+                                f"{item.manager or ''};{item.disable_virtual_operator};{item.parser_1c}"
                     output.write(final_str + '\n')
         elif args == "main_transport_model":
             output.write('ID;Тип;Название;Тип подъемника;Двигатель;Страна\n')
