@@ -28,14 +28,12 @@ def set_user():
 @bp.route('/', endpoint='home')
 @need_access(-2)
 def home():
-    columns = ['№ Лота', 'Модель', 'Склад', 'Регион']
-    columns_data = []
-
     # Получаем параметры фильтра из запроса
     filters = {
         'nm': request.args.get('nm'),
         'model': request.args.get('model'),
         'vin': request.args.get('vin'),
+        'model_type': request.args.get('model_type'),
         'customer': request.args.get('customer'),
         'manager': request.args.get('manager'),
         'storage': request.args.get('storage'),
@@ -43,7 +41,8 @@ def home():
         'organization': request.args.get('organization'),
         'last_time_start': request.args.get('last_time_start'),
         'last_time_end': request.args.get('last_time_end'),
-        'voperator': request.args.get('voperator')
+        'voperator': request.args.get('voperator'),
+        '1cparser': request.args.get('1cparser')
     }
 
     # Создаем базовый запрос с объединением трех таблиц
@@ -57,6 +56,8 @@ def home():
         query = query.filter(TransportModel.name.like(f'%{filters["model"]}%'))
     if filters['vin']:
         query = query.filter(Transport.vin.like(f'%{filters["vin"]}%'))
+    if filters['model_type'] and filters['model_type'] != 'all':
+        query = query.filter(TransportModel.type == filters["model_type"])
     if filters['storage']:
         query = query.filter(Storage.name.like(f'%{filters["storage"]}%'))
     if filters['region']:
@@ -72,6 +73,13 @@ def home():
             query = query.filter(Transport.disable_virtual_operator == 0)
         elif filters['voperator'] == 'no':
             query = query.filter(Transport.disable_virtual_operator == 1)
+    if filters['1cparser']:
+        if filters['1cparser'] == 'no':
+            query = query.filter(Transport.parser_1c == 0)
+        elif filters['1cparser'] == 'yes':
+            query = query.filter(Transport.parser_1c == 1)
+    else:
+        query = query.filter(Transport.parser_1c == 1)
 
     # Выполняем запрос и получаем данные
     data_db = query.all()
@@ -112,6 +120,8 @@ def home():
                 filtered_data.append((transport, storage, transport_model))
         data_db = filtered_data
 
+    columns = ['№ Лота', 'Модель', 'Склад', 'Регион']
+    columns_data = []
     # Формируем данные для отображения
     for transport, storage, transport_model in data_db:
         columns_data.append([transport.uNumber, transport_model.name, storage.name, storage.region])

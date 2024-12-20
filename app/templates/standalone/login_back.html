@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Логин{% endblock %}</title>
+    <!-- Подключаем Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="preload" href="{{ url_for('static', filename='img/logo.png') }}" as="image">
+    <link rel="icon" href="{{ url_for('static', filename='img/logo.png') }}">
+    <style>
+        body {
+            background-color: {% if dark_mode %}#212529{% else %}#dedad6{% endif %};
+            color: {% if dark_mode %}#e9ecef{% else %}#212529{% endif %};
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .card {
+            border: none;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        .flash-message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="text-center">Вход в ЦМ</h3>
+                    </div>
+                    <div class="card-body">
+                        <!-- Добавляем блок для сообщений flash -->
+                        <div class="flash-message">
+                            {% with messages = get_flashed_messages(with_categories=true) %}
+                                {% if messages %}
+                                    {% for category, message in messages %}
+                                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                            {{ message }}
+                                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                                <span aria-hidden="true">&times;</span>
+                                            </button>
+                                        </div>
+                                    {% endfor %}
+                                {% endif %}
+                            {% endwith %}
+                        </div>
+                        <form method="POST" action="{{ url_for('main.login') }}">
+                            <div class="form-group">
+                                <label for="username">Логин</label>
+                                <input type="text" class="form-control" id="username" name="username" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="password">Пароль</label>
+                                <input type="password" class="form-control" id="password" name="password" required>
+                            </div>
+                            {% if error %}
+                            <div class="alert alert-danger mt-3">{{ error }}</div>
+                            {% endif %}
+                            <button type="submit" class="btn btn-secondary btn-block mt-3">Войти</button>
+                        </form>
+                    </div>
+                </div>
+                <p class="mt-5 mb-3 text-body-secondary">© 2024 Центр мониторинга ЛК-СПЕКТР</p>
+            </div>
+        </div>
+    </div>
+    <!-- Подключаем Bootstrap JS и jQuery -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

@@ -1,107 +1,149 @@
 {% extends 'main.html' %}
 
 {% block title %}
-Поиск
+  Поиск
 {% endblock %}
 
 {% block body %}
 <div class="container">
   <h2>Фильтры</h2>
-  <form id="filter-form" class="mb-4" method="get" action="">
-    <div class="row">
+
+  <!-- Форма фильтров с аккордеонами -->
+  <form id="filter-form" method="get" action="">
+    <div class="accordion" id="filterAccordion">
+
       <!-- Основные параметры -->
-      <div class="col-md-4 mb-3">
-        <div class="card">
-          <div class="card-body">
-            <h5 class="card-title">Основные параметры</h5>
-            <br>
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingOne">
+          <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+            Основные параметры
+            {% if (request.args.get('model_type') and request.args.get('model_type') != 'all') or request.args.get('nm') or request.args.get('model') or request.args.get('vin') %}
+              &#8226; <!-- Добавляем кружок, если хотя бы одно поле не пустое -->
+            {% endif %}
+          </button>
+        </h2>
+        <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#filterAccordion">
+          <div class="accordion-body">
             <div class="mb-3">
               <label for="filter-nm" class="form-label">№ Лота</label>
-              <input type="text" id="filter-nm" name="nm" class="form-control" value="{% if request.args.get('nm') %}{{ request.args.get('nm') }}{% else %}{% endif %}">
+              <input type="text" id="filter-nm" name="nm" class="form-control" value="{{ request.args.get('nm') or '' }}">
             </div>
             <div class="mb-3">
               <label for="filter-model" class="form-label">Модель</label>
-              <input type="text" id="filter-model" name="model" class="form-control" value="{% if request.args.get('model') %}{{ request.args.get('model') }}{% else %}{% endif %}">
+              <input type="text" id="filter-model" name="model" class="form-control" value="{{ request.args.get('model') or '' }}">
             </div>
             <div class="mb-3">
               <label for="filter-vin" class="form-label">VIN</label>
-              <input type="text" id="filter-vin" name="vin" class="form-control" value="{% if request.args.get('vin') %}{{ request.args.get('vin') }}{% else %}{% endif %}">
+              <input type="text" id="filter-vin" name="vin" class="form-control" value="{{ request.args.get('vin') or '' }}">
+            </div>
+            <div class="mb-3">
+              <label for="filter-model_type" class="form-label">Тип техники</label>
+              <select id="filter-model_type" name="model_type" class="form-control">
+                <option value="all" {% if request.args.get('model_type') == 'all' %}selected{% endif %}>Все</option>
+                <option value="ПО" {% if request.args.get('model_type') == 'ПО' %}selected{% endif %}>ПО</option>
+                <option value="ПТО" {% if request.args.get('model_type') == 'ПТО' %}selected{% endif %}>ПТО</option>
+              </select>
             </div>
           </div>
         </div>
       </div>
 
       <!-- Локация -->
-      <div class="col-md-4 mb-3">
-        <div class="card">
-          <div class="card-body">
-            <h5 class="card-title">Локация</h5>
-            <br>
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingTwo">
+          <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+            Локация
+            {% if request.args.get('storage') or request.args.get('region') or request.args.get('organization') %}
+              &#8226; <!-- Добавляем кружок, если хотя бы одно поле не пустое -->
+            {% endif %}
+          </button>
+        </h2>
+        <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#filterAccordion">
+          <div class="accordion-body">
             <div class="mb-3">
               <label for="filter-storage" class="form-label">Склад</label>
-              <input type="text" id="filter-storage" name="storage" class="form-control" value="{% if request.args.get('storage') %}{{ request.args.get('storage') }}{% else %}{% endif %}">
+              <input type="text" id="filter-storage" name="storage" class="form-control" value="{{ request.args.get('storage') or '' }}">
             </div>
             <div class="mb-3">
               <label for="filter-region" class="form-label">Регион</label>
-              <input type="text" id="filter-region" name="region" class="form-control" value="{% if request.args.get('region') %}{{ request.args.get('region') }}{% else %}{% endif %}">
+              <input type="text" id="filter-region" name="region" class="form-control" value="{{ request.args.get('region') or '' }}">
             </div>
             <div class="mb-3">
               <label for="filter-organization" class="form-label">Организация склада</label>
-              <input type="text" id="filter-organization" name="organization" class="form-control" value="{% if request.args.get('organization') %}{{ request.args.get('organization') }}{% else %}{% endif %}">
+              <input type="text" id="filter-organization" name="organization" class="form-control" value="{{ request.args.get('organization') or '' }}">
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Мониторинг виртуальным оператором + Время онлайн + Аренда -->
-      <div class="col-md-4 mb-3">
-        <div class="mb-3">
-          <div class="card">
-            <div class="card-body">
-              <h6 class="card-title">Мониторинг виртуальным оператором</h6>
-              <div class="mb-3">
-                <select id="filter-voperator" name="voperator" class="form-control">
-                  <option value="all" {% if request.args.get ('voperator') == 'all' or not request.args.get('voperator') %}selected{% endif %}>Все</option>
-                  <option value="yes" {% if request.args.get ('voperator') == 'yes' %}selected{% endif %}>Включен</option>
-                  <option value="no" {% if request.args.get ('voperator') == 'no' %}selected{% endif %}>Отключен</option>
-                </select>
+      <!-- Новый аккордеон для Аренды -->
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingClientManager">
+          <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseClientManager" aria-expanded="false" aria-controls="collapseClientManager">
+            Аренда
+            {% if request.args.get('customer') or request.args.get('manager') %}
+              &#8226; <!-- Добавляем кружок, если хотя бы одно поле не пустое -->
+            {% endif %}
+          </button>
+        </h2>
+        <div id="collapseClientManager" class="accordion-collapse collapse" aria-labelledby="headingClientManager" data-bs-parent="#filterAccordion">
+          <div class="accordion-body">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="filter-customer" class="form-label">Клиент</label>
+                <input type="text" id="filter-customer" name="customer" class="form-control" value="{{ request.args.get('customer') or '' }}">
               </div>
-            </div>
-          </div>
-        </div>
-        <div class="row">
-          <div class="col-md-6 mb-3">
-            <div class="card">
-              <div class="card-body">
-                <h6 class="card-title">Аренда</h6>
-                <div class="mb-2">
-                  <label for="filter-customer" class="form-label">Клиент</label>
-                  <input type="text" id="filter-customer" name="customer" class="form-control" value="{% if request.args.get('customer') %}{{ request.args.get('customer') }}{% else %}{% endif %}">
-                </div>
-                <div class="mb-2">
-                  <label for="filter-manager" class="form-label">Менеджер</label>
-                  <input type="text" id="filter-manager" name="manager" class="form-control" value="{% if request.args.get('manager') %}{{ request.args.get('manager') }}{% else %}{% endif %}">
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-6 mb-3">
-            <div class="card">
-              <div class="card-body">
-                <h6 class="card-title">Время онлайн</h6>
-                <div class="mb-2">
-                  <label for="filter-last-time-start" class="form-label">Онлайн (от)</label>
-                  <input type="datetime-local" id="filter-last-time-start" name="last_time_start" class="form-control" value="{% if request.args.get('last_time_start') %}{{ request.args.get('last_time_start') }}{% else %}{% endif %}">
-                </div>
-                <div class="mb-2">
-                  <label for="filter-last-time-end" class="form-label">Онлайн (до)</label>
-                  <input type="datetime-local" id="filter-last-time-end" name="last_time_end" class="form-control" value="{% if request.args.get('last_time_end') %}{{ request.args.get('last_time_end') }}{% else %}{% endif %}">
-                </div>
+              <div class="col-md-6 mb-3">
+                <label for="filter-manager" class="form-label">Менеджер</label>
+                <input type="text" id="filter-manager" name="manager" class="form-control" value="{{ request.args.get('manager') or '' }}">
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      <!-- Мониторинг -->
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingMonitoring">
+          <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMonitoring" aria-expanded="false" aria-controls="collapseMonitoring">
+            Мониторинг
+            {% if (request.args.get('voperator') and request.args.get('voperator') != 'all') or (request.args.get('1cparser') and request.args.get('1cparser') != 'yes') or request.args.get('last_time_start') or request.args.get('last_time_end') %}
+              &#8226; <!-- Добавляем кружок, если хотя бы одно поле не пустое -->
+            {% endif %}
+          </button>
+        </h2>
+        <div id="collapseMonitoring" class="accordion-collapse collapse" aria-labelledby="headingMonitoring" data-bs-parent="#filterAccordion">
+          <div class="accordion-body">
+            <div class="mb-3">
+              <label for="filter-1cparser" class="form-label">Есть в списке аренды 1С</label>
+              <select id="filter-1cparser" name="1cparser" class="form-control">
+                <option value="yes" {% if request.args.get('1cparser') == 'yes' %}selected{% endif %}>Да</option>
+                <option value="all" {% if request.args.get('1cparser') == 'all' %}selected{% endif %}>Без разницы</option>
+                <option value="no" {% if request.args.get('1cparser') == 'no' %}selected{% endif %}>Нет</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="filter-voperator" class="form-label">Мониторинг виртуальным оператором</label>
+              <select id="filter-voperator" name="voperator" class="form-control">
+                <option value="all" {% if request.args.get('voperator') == 'all' %}selected{% endif %}>Все</option>
+                <option value="yes" {% if request.args.get('voperator') == 'yes' %}selected{% endif %}>Включен</option>
+                <option value="no" {% if request.args.get('voperator') == 'no' %}selected{% endif %}>Отключен</option>
+              </select>
+            </div>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="filter-last-time-start" class="form-label">Онлайн (от)</label>
+                <input type="datetime-local" id="filter-last-time-start" name="last_time_start" class="form-control" value="{{ request.args.get('last_time_start') or '' }}">
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="filter-last-time-end" class="form-label">Онлайн (до)</label>
+                <input type="datetime-local" id="filter-last-time-end" name="last_time_end" class="form-control" value="{{ request.args.get('last_time_end') or '' }}">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
 
     <div class="row mt-3">
@@ -113,9 +155,28 @@
   </form>
 </div>
 
+<style>
+  /* Базовый стиль для аккордеона */
+  .accordion-button {
+      background-color: transparent !important; /* Прозрачный фон */
+      border: none; /* Убираем границу */
+  }
 
+  /* Для светлой темы */
+  body.bg-light .accordion-button {
+      color: #000 !important; /* Черный текст для светлой темы */
+  }
+
+  /* Для темной темы */
+  body.bg-dark .accordion-button {
+      color: #fff !important; /* Белый текст для темной темы */
+  }
+
+  /* Убираем синий обводку при фокусе на кнопках аккордеона */
+  .accordion-button:focus {
+    box-shadow: none !important;
+  }
+</style>
 
 {% include 'pages/search/table_template.html' %}
-
-
 {% endblock %}
