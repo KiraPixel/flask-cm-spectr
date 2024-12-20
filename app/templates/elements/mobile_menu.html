@@ -1,0 +1,71 @@
+<!-- Нижний Navbar -->
+<nav class="navbar-bottom">
+    <a href="/" class="nav-link {% if request.endpoint == 'main.home' %}active{% endif %}">
+        <i class="bi bi-house-door-fill"></i>
+        <span>Главная</span> <!-- Подпись для главной страницы -->
+    </a>
+    <a href="/maps" class="nav-link {% if request.endpoint == 'main.maps' %}active{% endif %}">
+        <i class="bi bi-map"></i>
+        <span>Карта</span> <!-- Подпись для карты -->
+    </a>
+
+    {% if g.user.role > -1 %}
+    <a href="javascript:void(0)" class="nav-link" data-bs-toggle="modal" data-bs-target="#utilitiesMenu">
+        <i class="bi bi-tools"></i>
+        <span>Утилиты</span> <!-- Подпись для утилит -->
+    </a>
+    {% endif %}
+
+    {% if session.username %}
+    <!-- Меню пользователя -->
+    <a href="javascript:void(0)" class="nav-link" data-bs-toggle="modal" data-bs-target="#userMenuMobile">
+        <i class="bi bi-person-circle"></i>
+        <span>Профиль</span> <!-- Подпись для профиля -->
+    </a>
+    {% endif %}
+</nav>
+
+<!-- Модальное окно для меню пользователя -->
+<div class="modal fade" id="userMenuMobile" tabindex="-1" aria-labelledby="userMenuMobileLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="userMenuMobileLabel">Меню пользователя</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+      </div>
+      <div class="modal-body">
+        {% if g.user.role == 1 %}
+            <a class="dropdown-item" href="/admin">Админ панель</a>
+            <a class="dropdown-item" href="/admin/parser">Парсер</a>
+        {% endif %}
+        <a class="dropdown-item" href="{{ url_for('user_profile.index') }}">Аккаунт</a>
+        <hr>
+        <!-- Переносим выбор темы сюда -->
+        <button type="button" class="dropdown-item" data-bs-theme-value="light">
+            <i class="bi bi-sun-fill me-2 opacity-50"></i> Light
+        </button>
+        <button type="button" class="dropdown-item" data-bs-theme-value="dark">
+            <i class="bi bi-moon-stars-fill me-2 opacity-50"></i> Dark
+        </button>
+        <a class="dropdown-item" href="{{ url_for('main.logout') }}">Выйти</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Модальное окно для утилит -->
+<div class="modal fade" id="utilitiesMenu" tabindex="-1" aria-labelledby="utilitiesMenuLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="utilitiesMenuLabel">Утилиты</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+      </div>
+      <div class="modal-body">
+        <a class="dropdown-item" href="/virtual_operator">Виртуальный диспетчер</a>
+        <a class="dropdown-item" href="/dashboard">Дашборд</a>
+        <a class="dropdown-item" href="/rep">Отчёты</a>
+      </div>
+    </div>
+  </div>
+</div>

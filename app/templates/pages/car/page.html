@@ -7,12 +7,13 @@
 {% block body %}
 <script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU" type="text/javascript"></script>
 <div class="row mt-4">
-{% if car.parser_1c == 0 %}
-<div class="alert alert-danger alert-banner m-0">
-    <strong>Внимание:</strong> ТС не попало в выгрузку 1С. Информация по аренде не актуальна!
+    {% if car.parser_1c == 0 %}
+    <div class="alert alert-danger alert-banner m-0">
+        <strong>Внимание:</strong> ТС не попало в выгрузку 1С. Информация по аренде не актуальна!
+    </div>
+    {% endif %}
 </div>
-{% endif %}
-</div>
+
 <div class="container-xl mt-4">
     <div class="row">
         <div class="col">
@@ -26,65 +27,76 @@
     </div>
     <div id="map" style="width: 100%; height: 400px;"></div>
     <br><br>
+
     <div class="row mt-4">
         <div class="col-12">
             {% if wialon %}
             <h4>Wialon</h4>
-            <table class="table table-sm table-bordered">
-                <thead class="thead-light">
-                    <tr>
-                        <th>Название объекта</th>
-                        <th>IMEI</th>
-                        <th>Последний онлайн</th>
-                        <th>Координаты (GPS/GNSS)</th>
-                        <th>Адрес</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in wialon %}
-                    <tr>
-                        <td>{{ item.nm }}</td>
-                        <td>{{ item.uid }}</td>
-                        <td>{{ item.last_time | unix_to_datetime }}</td>
-                        <td>{{ item.pos_y }}, {{ item.pos_x }} ({{ item.gps }})</td>
-                        <td>{{ (item.pos_y, item.pos_x) | get_address }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            {% endif %}
-        </div>
-        <div class="col-12">
-            {% if cesar %}
-            <h4>Цезарь</h4>
-            <table class="table table-sm table-bordered">
-                <thead class="thead-light">
-                    <tr>
-                        <th>Название объекта</th>
-                        <th>PIN</th>
-                        <th>Последний онлайн</th>
-                        <th>Координаты</th>
-                        <th>Адрес</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in cesar %}
-                    <tr>
-                        <td>{{ item.object_name }}</td>
-                        <td>{{ item.pin }}</td>
-                        <td>{{ item.last_time | unix_to_datetime }}</td>
-                        <td>{{ item.pos_x }}, {{ item.pos_y }}</td>
-                        <td>{{ (item.pos_x, item.pos_y) | get_address}}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+            <div class="table-responsive">
+                <table class="table table-sm table-bordered">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>Название объекта</th>
+                            <th>IMEI</th>
+                            <th>Последний онлайн</th>
+                            <th>Координаты (GPS/GNSS)</th>
+                            <th>Адрес</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in wialon %}
+                        <tr>
+                            <td>{{ item.nm }}</td>
+                            <td>{{ item.uid }}</td>
+                            <td>{{ item.last_time | unix_to_datetime }}</td>
+                            <td>{{ item.pos_y }}, {{ item.pos_x }} ({{ item.gps }})</td>
+                            <td>{{ (item.pos_y, item.pos_x) | get_address }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
             {% endif %}
         </div>
     </div>
-    <br><br>
+
     <div class="row mt-4">
-        <div class="btn-group d-flex" role="group">
+        <div class="col-12">
+            {% if cesar %}
+            <h4>Цезарь</h4>
+            <div class="table-responsive">
+                <table class="table table-sm table-bordered">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>Название объекта</th>
+                            <th>PIN</th>
+                            <th>Последний онлайн</th>
+                            <th>Координаты</th>
+                            <th>Адрес</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in cesar %}
+                        <tr>
+                            <td>{{ item.object_name }}</td>
+                            <td>{{ item.pin }}</td>
+                            <td>{{ item.last_time | unix_to_datetime }}</td>
+                            <td>{{ item.pos_x }}, {{ item.pos_y }}</td>
+                            <td>{{ (item.pos_x, item.pos_y) | get_address }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <br><br>
+
+    <!-- Кнопки переключения вкладок -->
+    <div class="row mt-4">
+        <div class="btn-group d-flex flex-column flex-sm-row" role="group">
             <a href="#info" class="btn btn-outline-primary" id="info-tab">Инфо</a>
             {% if wialon %}
                 <a href="#car_history" class="btn btn-outline-primary" id="car_history">Трек</a>
@@ -99,6 +111,8 @@
             <a href="#comments" class="btn btn-outline-primary" id="comments-tab">Комментарии</a>
         </div>
     </div>
+
+    <!-- Контент вкладок -->
     <div class="row mt-3">
         <div class="tab-content" id="tab-content">
             <div class="tab-pane" id="info-content">
@@ -123,7 +137,7 @@
     </div>
 </div>
 
-<!-- Основной скрипт для переключения вкладок -->
+<!-- Скрипт для переключения вкладок -->
 <script type="text/javascript">
     document.addEventListener('DOMContentLoaded', function () {
         handleTabSwitching();
@@ -169,6 +183,7 @@
         });
     }
 </script>
+
 
 
 {% include 'pages/car/ya_maps.html' %}
