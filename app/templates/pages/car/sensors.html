@@ -1,31 +1,24 @@
 <div class="container mt-4">
+
     <button type="button" class="btn btn-secondary mb-3" id="refreshSensorsBtn">Обновить</button>
+
     <div class="alert alert-info" id="loadingIndicator" style="display: none;">
         Обновление данных, пожалуйста, подождите...
     </div>
+
     <div class="row" id="sensorsContainer">
         {% if wialon_sens %}
             {% for id, sensor in wialon_sens.items() %}
-            <div class="col-md-4 mb-3 sensor-card" data-sensor-id="{{ id }}">
+            <div class="col-md-4 mb-3 sensor-card" data-sensor-id="{{ id }}" data-sensor-status="{{ sensor[1] if '/' in sensor[1] else sensor[1] }}">
                 <div class="card">
                     <div class="card-body">
-                        <h5 class="card-title">Датчик {{ id }} - {{ sensor }}</h5>
+                        <h5 class="card-title">[{{id}}] {{ sensor[0] }}</h5>
                         <p class="card-value">Значение: <span class="value-placeholder">Нажмите кнопку "Обновить"</span></p>
                         <div class="modal fade" id="sensorInfoModal{{ id }}" tabindex="-1" role="dialog" aria-labelledby="sensorInfoModalLabel{{ id }}" aria-hidden="true">
                             <div class="modal-dialog" role="document">
                                 <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title" id="sensorInfoModalLabel{{ id }}">Детали датчика {{ id }}</h5>
-                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                            <span aria-hidden="true">&times;</span>
-                                        </button>
-                                    </div>
                                     <div class="modal-body">
-                                        <p>Информация о датчике: {{ sensor }}</p>
-                                        <!-- Дополнительные данные о датчике -->
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+                                        <p>Информация о датчике: {{ sensor[0] }} - {{ sensor[1] }}</p>
                                     </div>
                                 </div>
                             </div>
@@ -42,6 +35,7 @@
             </div>
         {% endif %}
     </div>
+
 
     <h3 class="mt-5 mb-4">Команды</h3>
     <div class="row">
@@ -70,9 +64,9 @@
 <script type="text/javascript">
     document.addEventListener('DOMContentLoaded', function () {
         handleCommandButtons();
-        handleRefreshSensors();
     });
 
+    // Работа с командами
     function handleCommandButtons() {
         const commandButtons = document.querySelectorAll('.command-btn');
 
@@ -80,7 +74,7 @@
             button.addEventListener('click', function () {
                 const commandName = button.getAttribute('data-command');
                 const unitId = button.getAttribute('data-unit-id');
-                const spinner = button.querySelector('.loading-spinner'); // Находим индикатор загрузки внутри кнопки
+                const spinner = button.querySelector('.loading-spinner'); // Индикатор загрузки внутри кнопки
 
                 // Показываем индикатор загрузки на кнопке
                 spinner.style.display = 'inline-block';
@@ -107,8 +101,15 @@
             });
         });
     }
+</script>
 
-    // Вызываем обновление датчиков напрямую, без кнопки
+<script type="text/javascript">
+    document.addEventListener('DOMContentLoaded', function () {
+        handleRefreshSensors();
+        refreshSensors(); // Автоматически вызываем обновление датчиков при загрузке страницы
+    });
+
+    // Работа с датчиками
     function refreshSensors() {
         const unitId = "{{ wialon[0].id if wialon|length > 0 else 'undefined' }}"; // Проверяем, существует ли элемент
         const loadingIndicator = document.getElementById('loadingIndicator');
@@ -132,7 +133,6 @@
             });
     }
 
-    // Изначально оставляем логику обработки клика на кнопку обновления
     function handleRefreshSensors() {
         const refreshBtn = document.getElementById('refreshSensorsBtn');
         refreshBtn.addEventListener('click', function () {
@@ -146,18 +146,35 @@
 
         sensorCards.forEach(card => {
             const sensorId = card.getAttribute('data-sensor-id');
+            const statusText = card.getAttribute('data-sensor-status'); // Получаем статус (например, "Вкл/Выкл" или "V")
             const newValue = data[sensorId];
 
             const valuePlaceholder = card.querySelector('.value-placeholder');
+
             if (newValue === undefined) {
                 valuePlaceholder.innerText = 'Неизвестное значение';
             } else if (newValue < -1) {
                 valuePlaceholder.innerText = 'Ошибка сервера Wialon';
             } else {
-                valuePlaceholder.innerText = newValue;
+                if (statusText) {
+                    // Если есть "/", разделяем на две части
+                    if (statusText.includes('/')) {
+                        const [onStatus, offStatus] = statusText.split('/');
+                        valuePlaceholder.innerText = `${newValue === 1 ? onStatus : offStatus} (${newValue})`;
+                    }
+                    // Если "/" нет, просто добавляем статус после значения
+                    else {
+                        valuePlaceholder.innerText = `${newValue} ${statusText}`;
+                    }
+                } else {
+                    // Если статус отсутствует
+                    valuePlaceholder.innerText = `${newValue}`;
+                }
             }
         });
     }
 
+
 </script>
+
 
