@@ -46,8 +46,11 @@ def home():
     }
 
     # Создаем базовый запрос с объединением трех таблиц
-    query = db.session.query(Transport, Storage, TransportModel).join(Storage, Transport.storage_id == Storage.ID).join(
-        TransportModel, Transport.model_id == TransportModel.id)
+    query = db.session.query(Transport, Storage, TransportModel).outerjoin(
+        Storage, Transport.storage_id == Storage.ID
+    ).outerjoin(
+        TransportModel, Transport.model_id == TransportModel.id
+    )
 
     # Применяем фильтры к запросу
     if filters['nm']:
@@ -102,7 +105,6 @@ def home():
                                      for transport, storage, transport_model in combined_data}.values())
 
         data_db = unique_combined_data
-
     # Обрабатываем фильтрацию по дате
     if filters['last_time_start'] or filters['last_time_end']:
         last_time_start_unix = my_time.to_unix_time(filters['last_time_start']) if filters['last_time_start'] else 0
@@ -124,7 +126,12 @@ def home():
     columns_data = []
     # Формируем данные для отображения
     for transport, storage, transport_model in data_db:
-        columns_data.append([transport.uNumber, transport_model.name, storage.name, storage.region])
+        transport_number = transport.uNumber
+        transport_model_name = transport_model.name if transport_model else 'None'
+        storage_name = storage.name if storage else 'None'
+        storage_region = storage.region if storage else 'None'
+
+        columns_data.append([transport_number, transport_model_name, storage_name, storage_region])
 
     # Отображаем шаблон с результатами фильтрации
     return render_template('pages/search/page.html', columns=columns, table_rows=columns_data, redi='/cars/', request=request)

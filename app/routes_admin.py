@@ -90,7 +90,6 @@ def parser_page():
                 "контрагент": root.attrib.get("Контрагент", "").strip() or "None",
                 "менеджер": root.attrib.get("ОтветственныйМенеджер", "").strip() or "None"
             }
-            print(task_data)
 
             parsed_tasks.append(task_data)
 
