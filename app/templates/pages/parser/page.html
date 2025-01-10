@@ -12,6 +12,9 @@
     <section class="mb-5">
         <div class="p-4 shadow-sm bg-body rounded">
             <h2 class="h4 text-body mb-3">Блок добавления ТС</h2>
+            <div class="mb-3">
+                <button class="btn btn-primary" type="button" onclick="openManualAddModal(this)">Добавить свое ТС</button>
+            </div>
             {% if parsed_tasks %}
                 <div class="table-responsive">
                     <table class="table table-bordered">
