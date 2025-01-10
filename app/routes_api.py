@@ -13,7 +13,7 @@ from flask import Blueprint, request, jsonify, session, send_from_directory, abo
 from . import db
 from .utils import need_access, need_access
 from .models import Transport, TransportModel, Storage, User, CashWialon, Comments, Alert, CashHistoryWialon, Reports, \
-    CashCesar, ParserTasks
+    CashCesar, ParserTasks, TransferTasks
 from .config import UPLOAD_FOLDER
 import modules.my_time as mytime
 
@@ -63,6 +63,18 @@ def health_check():
         voperator = 0
         last_alert_time = "No data"
 
+    try:
+        last_pars_entry = TransferTasks.query.order_by(TransferTasks.date.desc()).first()
+        if last_pars_entry and int(last_pars_entry.date) >= mytime.forty_eight_hours_ago_unix():
+            xml_parser = 1
+            last_parser_time = last_pars_entry.date
+        else:
+            xml_parser = 0
+            last_parser_time = "No data"
+    except Exception as e:
+        xml_parser = 0
+        last_parser_time = "No data"
+
     return jsonify({
         'status_db': {
             'status': status_db,
@@ -75,6 +87,10 @@ def health_check():
         'voperator_module': {
             'status': voperator,
             'last_time': last_alert_time
+        },
+        'xml_parser_module': {
+            'status': xml_parser,
+            'last_time': last_parser_time
         }
     }), 200
 
