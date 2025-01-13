@@ -35,7 +35,6 @@ warnings.simplefilter('ignore', InsecureRequestWarning)
 class HealthCheck(Resource):
     @need_access(-1)
     def get(self):
-        print('lol')
         """Проверка состояния системы"""
         try:
             db.session.query(User).first()
@@ -108,6 +107,7 @@ class CarsResource(Resource):
     @api.param('region', 'Регион', type=str)
     @api.response(200, 'Успешно')
     @api.response(404, 'Данные не найдены')
+    @need_access(-1)
     def get(self):
         """Получение списка автомобилей с фильтрами"""
         filters = {
@@ -545,9 +545,7 @@ class AddNewCar(Resource):
 @need_access(1)
 def close_task():
     data = request.json
-    print(data)
     task_id = data.get('task_id')
-    print(task_id)
 
     if not task_id:
         return jsonify({'error': 'task_id is required'}), 400
