@@ -79,7 +79,7 @@
                 // Показываем индикатор загрузки на кнопке
                 spinner.style.display = 'inline-block';
 
-                fetch(`/api/wialon_exec_cmd/${unitId}/${commandName}`)
+                fetch(`/api/wialon/wialon_exec_cmd/${unitId}/${commandName}`)
                     .then(response => response.json())
                     .then(data => {
                         // Скрываем индикатор загрузки после завершения команды
@@ -120,7 +120,7 @@
 
         loadingIndicator.style.display = 'block'; // Показываем индикатор загрузки
 
-        fetch(`/api/wialon_get_sensor/${unitId}/`)
+        fetch(`/api/wialon/wialon_get_sensor/${unitId}/`)
             .then(response => response.json())
             .then(data => {
                 updateSensors(data);
