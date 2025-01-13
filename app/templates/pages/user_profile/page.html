@@ -17,6 +17,12 @@
             <p><strong>Имя пользователя:</strong> {{ user.username }}</p>
             <p><strong>Электронная почта:</strong> {{ user.email }}</p>
             <p><strong>Роль:</strong> {{ 'Администратор' if user.role == 1 else 'Пользователь' }}</p>
+
+            <p><strong>API TOKEN:</strong>
+                <span id="api-token-container">
+                    <button id="generate-api-token-btn" class="btn btn-secondary btn-sm">Сгенерировать</button>
+                </span>
+            </p>
             <p><strong>Последняя активность:</strong> {{ user.last_activity.strftime('%d-%m-%Y %H:%M:%S') }}</p>
             <a href="#" id="change-email-btn" class="btn btn-secondary mt-3">Изменить почту</a>
             <a href="#" id="change-password-btn" class="btn btn-secondary mt-3">Изменить пароль</a>
@@ -137,6 +143,33 @@
 
 </script>
 
+<script>
+    document.getElementById('generate-api-token-btn').addEventListener('click', function() {
+        // Выполняем запрос для получения нового API Token
+        fetch('/api/key/generate-api-key')  // Замените на свой endpoint
+            .then(response => response.json())
+            .then(data => {
+                // Меняем кнопку на текст токена с возможностью копирования
+                const tokenContainer = document.getElementById('api-token-container');
+                tokenContainer.innerHTML = `
+                    <span class="badge bg-success" id="api-token-text" style="cursor: pointer;">${data.api_token}</span>
+                    <button id="copy-api-token-btn" class="btn btn-outline-secondary btn-sm ms-2">Копировать</button>
+                `;
+
+                // Добавляем обработчик для кнопки копирования
+                document.getElementById('copy-api-token-btn').addEventListener('click', function() {
+                    navigator.clipboard.writeText(data.api_token).then(() => {
+                        alert('API Token скопирован в буфер обмена');
+                    }).catch(err => {
+                        console.error('Ошибка копирования: ', err);
+                    });
+                });
+            })
+            .catch(error => {
+                console.error('Ошибка при обновлении токена:', error);
+            });
+    });
+</script>
 
 
 {% endblock %}

@@ -118,9 +118,11 @@
             <div class="tab-pane" id="info-content">
                 {% include 'pages/car/info.html' %}
             </div>
+            {% if g.user.role != -1 %}
             <div class="tab-pane" id="sensors-content">
                 {% include 'pages/car/sensors.html' %}
             </div>
+            {% endif %}
             <div class="tab-pane" id="transitions-content">
                 {% include 'pages/car/transitions.html' %}
             </div>

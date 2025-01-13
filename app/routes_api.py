@@ -11,29 +11,42 @@ import warnings
 from flask import Blueprint, request, jsonify, session, send_from_directory, abort
 from flask_restx import Api, Resource, fields, Namespace
 from . import db
-from .utils import need_access, need_access
+from .utils import need_access, need_access, get_api_key_by_username, is_valid_api_key
 from .models import Transport, TransportModel, Storage, User, CashWialon, Comments, Alert, CashHistoryWialon, Reports, \
     CashCesar, ParserTasks, TransferTasks
-from .config import UPLOAD_FOLDER
 import modules.my_time as mytime
 
 # Создаем Blueprint для API маршрутов приложения
 api_bp = Blueprint('api', __name__)
-api = Api(api_bp, version='1.0', title='API Documentation',
-          description='Описание и документация для API')
+api = Api(api_bp,
+          version='1.0',
+          title='API Documentation',
+          description='Описание и документация для API',
+          authorizations={
+              'api_key': {
+                  'type': 'apiKey',
+                  'in': 'header',
+                  'name': 'X-API-KEY'
+              }
+          },
+          security='api_key'  # Эта строка указывает, что API ключ нужен для всех маршрутов
+         )
 wialon_api_namespace = Namespace('wialon', description='Wialon commands API')
 api.add_namespace(wialon_api_namespace)
 parser_api_namespace = Namespace('parser', description='Parser commands API')
 api.add_namespace(parser_api_namespace)
+api_key_namespace = Namespace('key', description='API key')
+api.add_namespace(api_key_namespace)
 wialon_token = os.getenv('WIALON_TOKEN', 'default_token')
 wialon_api_url = os.getenv('WIALON_HOST', 'default_host')
 warnings.simplefilter('ignore', InsecureRequestWarning)
 
 
+
+
 @need_access(-1)
 @api.route('/health')
 class HealthCheck(Resource):
-    @need_access(-1)
     def get(self):
         """Проверка состояния системы"""
         try:
@@ -253,6 +266,70 @@ class ChangeDisableVirtualOperator(Resource):
         db.session.commit()
 
         return {'message': 'Successfully updated', 'new_state': transport.disable_virtual_operator}, 200
+
+
+
+@api_key_namespace.route('/generate-api-key')
+class GenerateApiKey(Resource):
+    @need_access(-1)  # Проверка доступа
+    def get(self):
+        # Получаем данные пользователя из сессии
+        user = session.get('username')  # Или используйте любой другой способ идентификации пользователя
+        if not user:
+            abort(401, message="User not authenticated")
+
+        def generate_unique_api_key():
+            return str(uuid.uuid4())
+
+        new_api_key = generate_unique_api_key()
+
+        # Проверяем, существует ли уже такой API ключ
+        while User.query.filter_by(api_token=new_api_key).first():
+            new_api_key = generate_unique_api_key()  # Генерируем новый ключ, если такой уже существует
+
+        user = User.query.filter_by(username=session['username']).first_or_404()
+
+        user.api_token = new_api_key
+        db.session.commit()
+
+        return jsonify({'api_token': new_api_key})
+
+
+
+@api_key_namespace.route('/authorize-api-key')
+class AuthorizeApiKey(Resource):
+    @need_access(-1)
+    def post(self):
+        # Получаем API ключ из запроса
+        api_key = request.headers.get('X-API-KEY')
+
+        if not api_key:
+            abort(400, message="API key is required")
+
+        # Проверка корректности ключа
+        if is_valid_api_key(api_key):
+            return jsonify({'message': 'OK'})
+        else:
+            abort(401, message="Invalid API key")
+
+
+@api_key_namespace.route('/get-api-key')
+class GetApiKey(Resource):
+    @need_access(0)
+    def get(self):
+        # Получаем username из сессии
+        username = session.get('username')
+
+        if not username:
+            abort(401, message="User not authenticated")
+
+        # Получаем API ключ пользователя
+        api_key = get_api_key_by_username(username)
+
+        if api_key:
+            return jsonify({'api_token': api_key})
+        else:
+            abort(404, message="API key not found for user")
 
 
 @api_bp.route('/add_comment', methods=['POST'])

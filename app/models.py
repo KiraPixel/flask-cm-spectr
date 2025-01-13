@@ -13,6 +13,7 @@ class User(db.Model):
     access_managers = db.Column(db.JSON)
     access_regions = db.Column(db.JSON)
     cesar_access = db.Column(db.Integer, nullable=True, default=0)
+    api_token = db.Column(db.String, nullable=True)
 
     def __repr__(self):
         return '<User %r>' % self.username
