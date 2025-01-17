@@ -3,7 +3,6 @@ import os
 import re
 import time
 import uuid
-from dis import print_instructions
 
 import bleach
 import requests
