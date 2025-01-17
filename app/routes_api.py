@@ -521,9 +521,10 @@ class WialonGetSensor(Resource):
 
 add_new_car_model = parser_api_namespace.model('AddNewCarModel', {
     'uNumber': fields.String(required=True, description='Номер транспортного средства'),
-    'modelId': fields.Integer(required=True, description='ID модели транспортного средства'),
+    'modelId': fields.String(required=True, description='ID модели транспортного средства'),
     'storage_id': fields.Integer(required=True, description='ID склада'),
     'VIN': fields.String(required=True, description='VIN номер транспортного средства'),
+    'year': fields.String(required=True, description='Код выпуска'),
     'customer': fields.String(description='Имя клиента'),
     'manager': fields.String(description='Менеджер, ответственный за транспорт'),
     'x': fields.Float(description='Координата x'),
@@ -548,6 +549,7 @@ class AddNewCar(Resource):
         model_id = data.get('modelId')
         storage_id = data.get('storage_id')
         VIN = data.get('VIN')
+        year = data.get('year')
         customer = data.get('customer')
         manager = data.get('manager')
         x = data.get('x')
@@ -589,6 +591,7 @@ class AddNewCar(Resource):
             vin=VIN,
             customer=customer,
             manager=manager,
+            year=year,
             x=x,
             y=y,
             disable_virtual_operator=disable_virtual_operator
