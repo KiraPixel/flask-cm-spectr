@@ -591,7 +591,7 @@ class AddNewCar(Resource):
             vin=VIN,
             customer=customer,
             manager=manager,
-            year=year,
+            manufacture_year=year,
             x=x,
             y=y,
             disable_virtual_operator=disable_virtual_operator
