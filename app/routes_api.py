@@ -3,6 +3,7 @@ import os
 import re
 import time
 import uuid
+from dis import print_instructions
 
 import bleach
 import requests
@@ -521,7 +522,7 @@ class WialonGetSensor(Resource):
 
 add_new_car_model = parser_api_namespace.model('AddNewCarModel', {
     'uNumber': fields.String(required=True, description='Номер транспортного средства'),
-    'modelId': fields.String(required=True, description='ID модели транспортного средства'),
+    'model_id': fields.String(required=True, description='ID модели транспортного средства'),
     'storage_id': fields.Integer(required=True, description='ID склада'),
     'VIN': fields.String(required=True, description='VIN номер транспортного средства'),
     'year': fields.String(required=True, description='Код выпуска'),
@@ -543,10 +544,9 @@ class AddNewCar(Resource):
     @parser_api_namespace.response(500, 'Ошибка при выполнении запроса к базе данных')
     def post(self):
         """Добавление нового автомобиля"""
-        # Получаем данные из тела запроса
         data = request.json
         uNumber = data.get('uNumber')
-        model_id = data.get('modelId')
+        model_id = data.get('model_id')
         storage_id = data.get('storage_id')
         VIN = data.get('VIN')
         year = data.get('year')
@@ -558,32 +558,32 @@ class AddNewCar(Resource):
 
         # Проверка, что disable_virtual_operator равен 0 или 1
         if disable_virtual_operator not in [0, 1]:
-            return jsonify({'status': 'error', 'message': 'disable_virtual_operator должен быть 0 или 1'}), 400
+            return {'status': 'error', 'message': 'disable_virtual_operator должен быть 0 или 1'}, 400
 
         # Проверка уникальности uNumber
         if db.session.query(Transport).filter_by(uNumber=uNumber).first():
-            return jsonify({'status': 'error', 'message': f'uNumber {uNumber} уже существует'}), 400
+            return {'status': 'error', 'message': f'uNumber {uNumber} уже существует'}, 400
 
         # Проверка, что model_id существует в таблице transport_model
         if not db.session.query(TransportModel).filter_by(id=model_id).first():
-            return jsonify({'status': 'error', 'message': f'Не найден transport_model с id {model_id}'}), 400
+            return {'status': 'error', 'message': f'Не найден transport_model с id {model_id}'}, 400
 
         # Проверка, что storage_id существует в таблице storage
         if not db.session.query(Storage).filter_by(ID=storage_id).first():
-            return jsonify({'status': 'error', 'message': f'Не найден storage с ID {storage_id}'}), 400
+            return {'status': 'error', 'message': f'Не найден storage с ID {storage_id}'}, 400
 
         # Проверка длины VIN
         if not (4 <= len(VIN) <= 20):
-            return jsonify({'status': 'error', 'message': 'VIN должен быть длиной от 4 до 20 символов'}), 400
+            return {'status': 'error', 'message': 'VIN должен быть длиной от 4 до 20 символов'}, 400
 
         # Проверка типов для x и y (должны быть числа с плавающей точкой)
         try:
             x = float(x)
             y = float(y)
         except ValueError:
-            return jsonify({'status': 'error', 'message': 'x и y должны быть числами с плавающей точкой'}), 400
+            return {'status': 'error', 'message': 'x и y должны быть числами с плавающей точкой'}, 400
 
-        # Теперь можно добавить запись в базу данных
+        # Добавление записи в базу данных
         new_car = Transport(
             uNumber=uNumber,
             model_id=model_id,
@@ -601,7 +601,7 @@ class AddNewCar(Resource):
             db.session.add(new_car)
             db.session.commit()
 
-            # Теперь ищем соответствующую задачу и обновляем ее статус
+            # Обновление статуса задач
             tasks = db.session.query(ParserTasks).filter(
                 ParserTasks.task_name.in_(['new_car', 'new_car_error']),
                 ParserTasks.variable == uNumber,
@@ -614,11 +614,10 @@ class AddNewCar(Resource):
             if tasks:
                 db.session.commit()
 
-            return jsonify({'status': 'success', 'message': 'Машина добавлена и задача обновлена'}), 200
+            return {'status': 'success', 'message': 'Машина добавлена'}, 200
         except Exception as e:
             db.session.rollback()
-            return jsonify({'status': 'error', 'message': f'Ошибка добавления машины: {str(e)}'}), 500
-
+            return {'status': 'error', 'message': f'Ошибка добавления машины: {str(e)}'}, 500
 
 
 @api_bp.route('/parser/close_task', methods=['POST'])

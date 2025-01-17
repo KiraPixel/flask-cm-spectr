@@ -162,7 +162,6 @@
         var lot = button.getAttribute('data-lot');
         var modelId = button.getAttribute('data-model_id')
         var vin = button.getAttribute('data-vin');
-        var seriesYear = button.getAttribute('data-series_year');
         var latitude = button.getAttribute('data-x');
         var longitude = button.getAttribute('data-y');
         var client = button.getAttribute('data-client');
@@ -175,7 +174,6 @@
         document.getElementById('modelId').value = modelId;
         document.getElementById('warehouseID').value = warehouseID;
         document.getElementById('vin').value = vin;
-        document.getElementById('seriesYear').value = seriesYear;
         document.getElementById('client').value = client;
         document.getElementById('manager').value = manager;
         document.getElementById('latitude').value = latitude;
@@ -186,15 +184,14 @@
         // Получаем данные из формы
         const carData = {
             uNumber: document.getElementById('lotNumber').value,
-            modelId: document.getElementById('modelId').value,
+            model_id: document.getElementById('modelId').value,  // Используем правильное имя поля
             storage_id: document.getElementById('warehouseID').value,
             VIN: document.getElementById('vin').value,
             customer: document.getElementById('client').value,
             manager: document.getElementById('manager').value,
-            year: document.getElementById('seriesYear').value,
             x: parseFloat(document.getElementById('latitude').value),
             y: parseFloat(document.getElementById('longitude').value),
-            // Добавляем состояние виртуального оператора
+            year: document.getElementById('seriesYear').value,
             disable_virtual_operator: document.getElementById('disableVirtualOperator').checked ? 0 : 1
         };
 
@@ -261,5 +258,6 @@
         });
     }
 </script>
+
 
 {% endblock %}
