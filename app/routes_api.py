@@ -10,6 +10,10 @@ from requests.packages.urllib3.exceptions import InsecureRequestWarning
 import warnings
 from flask import Blueprint, request, jsonify, session, send_from_directory, abort
 from flask_restx import Api, Resource, fields, Namespace
+from sqlalchemy.sql.functions import count
+
+from modules.my_time import online_check
+from modules.location_module import get_address
 from . import db
 from .utils import need_access, need_access, get_api_key_by_username, is_valid_api_key
 from .models import Transport, TransportModel, Storage, User, CashWialon, Comments, Alert, CashHistoryWialon, Reports, \
@@ -37,6 +41,9 @@ parser_api_namespace = Namespace('parser', description='Parser commands API')
 api.add_namespace(parser_api_namespace)
 api_key_namespace = Namespace('key', description='API key')
 api.add_namespace(api_key_namespace)
+api_car_namespace = Namespace('car', description='Car info')
+api.add_namespace(api_car_namespace)
+
 wialon_token = os.getenv('WIALON_TOKEN', 'default_token')
 wialon_api_url = os.getenv('WIALON_HOST', 'default_host')
 warnings.simplefilter('ignore', InsecureRequestWarning)
@@ -114,7 +121,109 @@ class HealthCheck(Resource):
         }
 
 
-@api.route('/cars')
+@api_car_namespace.route('/get_info/<lot_number>')
+class GetCarInfo(Resource):
+    @api_car_namespace.doc(params={
+        'lot_number': 'Номер лота'
+    })
+    @api.response(200, 'Успешно')
+    @api.response(404, 'Лот не был найден')
+    @need_access(1)
+    def get(self, lot_number):
+        try:
+            # Получение информации о транспорте
+            car = db.session.query(Transport).filter(Transport.uNumber == lot_number).first()
+            if not car:
+                return "Car not found", 404
+
+            # Получение информации о хранилище
+            storage = db.session.query(Storage).filter(Storage.ID == car.storage_id).first()
+            if not storage:
+                return {"error": "Storage not found for the specified car"}, 404
+
+            # Получение информации о модели
+            transport_model = db.session.query(TransportModel).filter(TransportModel.id == car.model_id).first()
+            if not transport_model:
+                return {"error": "Transport model not found for the specified car"}, 404
+
+            # Получение информации из Wialon
+            wialon = db.session.query(CashWialon).filter(CashWialon.nm.like(car.uNumber)).all()
+            monitoring_json_response = {"monitoring": []}
+            if wialon:
+                for item in wialon:
+                    monitoring_json_block = {
+                        "wialon_uid": item.uid,
+                        "pos_x": item.pos_y,
+                        "pos_y": item.pos_x,
+                        "address": str(get_address(item.pos_y, item.pos_x)),
+                        "last_time": mytime.unix_to_moscow_time(item.last_time),
+                        "online": online_check(item.last_time)
+                    }
+                    monitoring_json_response["monitoring"].append(monitoring_json_block)
+
+            # Получение информации об активных предупреждениях
+            alerts_json_append = {}
+            alerts = db.session.query(Alert).filter(Alert.uNumber == car.uNumber, Alert.status == 0).order_by(
+                Alert.date.desc()).first()
+            if alerts:
+                alerts_json_append = {
+                    "alerts": {
+                        "alert": "open",
+                        "alert_type": alerts.type,
+                        "alert_datetime": alerts.date
+                    }
+                }
+
+            # Формирование результата
+            result = {
+                "transport": {
+                    "lot_number": car.uNumber,
+                    "storage_id": car.storage_id,
+                    "model_id": car.model_id,
+                    "manufacture_year": car.manufacture_year,
+                    "vin": car.vin
+                },
+                "storage": {
+                    "1c_id": storage.ID,
+                    "name": storage.name,
+                    "type": storage.type,
+                    "region": storage.region,
+                    "address": storage.address,
+                    "organization": storage.organization
+                },
+                "transport_model": {
+                    "1c_id": transport_model.id,
+                    "type": transport_model.type,
+                    "name": transport_model.name,
+                    "lift_type": transport_model.lift_type,
+                    "engine": transport_model.engine,
+                    "country": transport_model.country,
+                    "machine_type": transport_model.engine,
+                    "brand": transport_model.brand,
+                    "model": transport_model.model
+                },
+                "rent": {
+                    "x": car.x,
+                    "y": car.y,
+                    "address": str(get_address(car.x, car.y)),
+                    "customer": car.customer,
+                    "customer_contact": car.customer_contact,
+                    "manager": car.manager
+                }
+            }
+
+            # Добавляем данные из monitoring_json_response и alerts_json_append к результату
+            result.update(monitoring_json_response)
+            if alerts_json_append:
+                result.update(alerts_json_append)
+
+            return result, 200
+        except Exception as e:
+            return {"error": "An unexpected error occurred", "details": str(e)}, 500
+
+
+
+@api_car_namespace.route('/all_monitoring_cars')
 class CarsResource(Resource):
     @api.param('type', 'Тип транспортного средства', type=str)
     @api.param('region', 'Регион', type=str)
@@ -189,7 +298,7 @@ class CarsResource(Resource):
         return jsonify(result)
 
 
-@api.route('/get_car_history')
+@api_car_namespace.route('/get_history')
 class GetCarHistory(Resource):
 
     @api.param('nm', 'Номер транспортного средства', _required=True)
@@ -240,7 +349,7 @@ class GetCarHistory(Resource):
             return {'error': 'Database query failed'}, 500
 
 
-@api.route('/change_disable_virtual_operator')
+@api_car_namespace.route('/change_disable_virtual_operator')
 class ChangeDisableVirtualOperator(Resource):
 
     @api.param('car_name', 'Номер транспортного средства', _required=True)

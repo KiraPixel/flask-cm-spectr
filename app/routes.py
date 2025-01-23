@@ -6,6 +6,7 @@ import re
 
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash, make_response, send_file, g
 
+from modules.my_time import online_check
 from .models import db, User, Transport, TransportModel, Storage, CashWialon, CashCesar, Alert, Comments, TransferTasks
 from .utils import need_access
 from modules import report_generator, my_time, hash_password
@@ -42,14 +43,17 @@ def home():
         'last_time_start': request.args.get('last_time_start'),
         'last_time_end': request.args.get('last_time_end'),
         'voperator': request.args.get('voperator'),
-        '1cparser': request.args.get('1cparser')
+        '1cparser': request.args.get('1cparser'),
+        'online': request.args.get('online')
     }
 
     # Создаем базовый запрос с объединением трех таблиц
-    query = db.session.query(Transport, Storage, TransportModel).outerjoin(
+    query = db.session.query(Transport, Storage, TransportModel, CashWialon).outerjoin(
         Storage, Transport.storage_id == Storage.ID
     ).outerjoin(
         TransportModel, Transport.model_id == TransportModel.id
+    ).outerjoin(
+        CashWialon, Transport.uNumber == CashWialon.nm
     )
 
     # Применяем фильтры к запросу
@@ -83,6 +87,17 @@ def home():
             query = query.filter(Transport.parser_1c == 1)
     else:
         query = query.filter(Transport.parser_1c == 1)
+    if filters['last_time_start'] or filters['last_time_end'] or filters['online']:
+
+        last_time_start_unix = my_time.to_unix_time(filters['last_time_start']) if filters['last_time_start'] else 0
+        last_time_end_unix = my_time.to_unix_time(filters['last_time_end']) if filters['last_time_end'] else time.time()
+        if filters['online'] == 'no':
+            if last_time_end_unix >= my_time.five_minutes_ago_unix():
+                last_time_end_unix = my_time.five_minutes_ago_unix()
+        if filters['online'] == 'yes':
+            if last_time_start_unix == 0:
+                last_time_start_unix = my_time.five_minutes_ago_unix()
+        query = query.filter(CashWialon.last_time.between(last_time_start_unix, last_time_end_unix))
 
     # Выполняем запрос и получаем данные
     data_db = query.all()
@@ -105,27 +120,11 @@ def home():
                                      for transport, storage, transport_model in combined_data}.values())
 
         data_db = unique_combined_data
-    # Обрабатываем фильтрацию по дате
-    if filters['last_time_start'] or filters['last_time_end']:
-        last_time_start_unix = my_time.to_unix_time(filters['last_time_start']) if filters['last_time_start'] else 0
-        last_time_end_unix = my_time.to_unix_time(filters['last_time_end']) if filters['last_time_end'] else time.time()
-
-        # Получаем данные из CashWialon в указанный временной интервал
-        cash_wialon_data = db.session.query(CashWialon).filter(
-            CashWialon.last_time.between(last_time_start_unix, last_time_end_unix)
-        ).all()
-
-        # Фильтруем данные на основе временного интервала
-        filtered_data = []
-        for transport, storage, transport_model in data_db:
-            if any(data.nm.startswith(transport.uNumber) for data in cash_wialon_data):
-                filtered_data.append((transport, storage, transport_model))
-        data_db = filtered_data
 
     columns = ['№ Лота', 'Модель', 'Склад', 'Регион']
     columns_data = []
     # Формируем данные для отображения
-    for transport, storage, transport_model in data_db:
+    for transport, storage, transport_model, wialon in data_db:
         transport_number = transport.uNumber
         transport_model_name = transport_model.name if transport_model else 'None'
         storage_name = storage.name if storage else 'None'

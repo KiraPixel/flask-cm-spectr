@@ -89,7 +89,7 @@
                 type: filters.type || '', // Если фильтр пуст, передаём пустую строку
                 region: filters.region || ''
             });
-            const url = `/api/cars?${params.toString()}`;
+            const url = `{{ url_for('api.car_cars_resource') }}?${params.toString()}`;
 
             // Выполняем запрос к API с фильтрами
             const response = await fetch(url);

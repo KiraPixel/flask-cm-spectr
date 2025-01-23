@@ -62,7 +62,7 @@
             return;
         }
 
-        fetch(`/api/get_car_history?nm=${carName}&time_from=${dateFrom}&time_to=${dateTo}`)
+        fetch(`{{ url_for('api.car_get_car_history') }}?nm=${carName}&time_from=${dateFrom}&time_to=${dateTo}`)
             .then(response => response.json())
             .then(data => {
                 spinner.style.display = 'none'; // Прячем спиннер после загрузки данных

@@ -26,11 +26,11 @@ def online_check(unix_time):
         current_time = datetime.datetime.now().timestamp()
         time_difference = current_time - unix_time
         if time_difference <= 300:  # 5 minutes in seconds
-            return "online"
+            return "Online"
         else:
-            return "offline"
+            return "Offline"
     except:
-        return "unknown"
+        return "Unknown"
 
 
 def get_time_minus_three_days():

@@ -83,6 +83,9 @@ class TransportModel(db.Model):
     lift_type = db.Column(db.String(100))
     engine = db.Column(db.String(100))
     country = db.Column(db.String(100))
+    machine_type = db.Column(db.String(100))
+    brand = db.Column(db.String(100))
+    model = db.Column(db.String(100))
     transports = db.relationship('Transport', back_populates='transport_model',
                                  primaryjoin="Transport.model_id == TransportModel.id")
 

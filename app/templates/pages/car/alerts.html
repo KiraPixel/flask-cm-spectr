@@ -81,7 +81,7 @@
 <script>
     document.getElementById('virtualOperatorButton').addEventListener('click', function() {
         const carName = "{{ car.uNumber }}"; // Подставляем номер автомобиля
-        const apiUrl = "{{ url_for('api.change_disable_virtual_operator') }}?car_name=" + carName;
+        const apiUrl = "{{ url_for('api.car_change_disable_virtual_operator') }}?car_name=" + carName;
 
     fetch(apiUrl)
         .then(response => {
