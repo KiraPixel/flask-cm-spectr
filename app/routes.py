@@ -116,21 +116,26 @@ def home():
         # Объединяем оба списка и удаляем дубли
         combined_data = region_filtered_data + region_users_data
         # Используем set, чтобы удалить дубли, и преобразуем обратно в список
-        unique_combined_data = list({(transport.uNumber, storage.name, storage.region): (transport, storage, transport_model)
-                                     for transport, storage, transport_model in combined_data}.values())
+        unique_combined_data = list({
+                                        (transport.uNumber, storage.name, storage.region): (
+                                        transport, storage, transport_model)
+                                        for item in combined_data if len(item) == 3  # Проверка длины
+                                        for transport, storage, transport_model in [item]  # Распаковка после проверки
+                                    }.values())
 
         data_db = unique_combined_data
 
     columns = ['№ Лота', 'Модель', 'Склад', 'Регион']
     columns_data = []
     # Формируем данные для отображения
-    for transport, storage, transport_model, wialon in data_db:
-        transport_number = transport.uNumber
-        transport_model_name = transport_model.name if transport_model else 'None'
-        storage_name = storage.name if storage else 'None'
-        storage_region = storage.region if storage else 'None'
+    if data_db is not None:
+        for transport, storage, transport_model, wialon in data_db:
+            transport_number = transport.uNumber
+            transport_model_name = transport_model.name if transport_model else 'None'
+            storage_name = storage.name if storage else 'None'
+            storage_region = storage.region if storage else 'None'
 
-        columns_data.append([transport_number, transport_model_name, storage_name, storage_region])
+            columns_data.append([transport_number, transport_model_name, storage_name, storage_region])
 
     # Отображаем шаблон с результатами фильтрации
     return render_template('pages/search/page.html', columns=columns, table_rows=columns_data, redi='/cars/', request=request)

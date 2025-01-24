@@ -252,6 +252,8 @@ class CarsResource(Resource):
             query = query.filter(Storage.region.like(f'%{filters["region"]}%'))
 
         if user.role <= -1:
+            if not user_access_managers and not user_access_regions:
+                return {'message': 'No data found.'}, 404
             if user_access_managers:
                 query = query.filter(Transport.manager.in_(user_access_managers))
             if user_access_regions:
