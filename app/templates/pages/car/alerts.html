@@ -18,6 +18,8 @@
                                 Нет координат: {{ alert.data }}
                             {% elif alert.type == 'distance' %}
                                 В {{ alert.data }} км от положенного места
+                            {% elif alert.type == 'no_docs_cords' %}
+                                В ДО нет координат
                             {% elif alert.type == 'no_equipment' %}
                                 Нет оборудования: {{ alert.data }}
                             {% elif alert.type == 'not_work' %}

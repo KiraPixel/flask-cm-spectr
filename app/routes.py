@@ -140,7 +140,7 @@ def home():
 @bp.route('/virtual_operator')
 @need_access(0)
 def virtual_operator():
-    distance = db.session.query(Alert).filter(Alert.status == 0, Alert.type.in_(['distance', 'gps'])).order_by(Alert.date.desc()).all()
+    distance = db.session.query(Alert).filter(Alert.status == 0, Alert.type.in_(['distance', 'gps', 'no_docs_cords'])).order_by(Alert.date.desc()).all()
     not_work = db.session.query(Alert).filter(Alert.status == 0, Alert.type == 'not_work').order_by(Alert.date.desc()).all()
     no_equipment = db.session.query(Alert).filter(Alert.status == 0, Alert.type == 'no_equipment').order_by(Alert.date.desc()).all()
     last_100_alerts = db.session.query(Alert).order_by(Alert.date.desc()).limit(100).all()
@@ -168,7 +168,7 @@ def dashboard():
         'offline_over_48': offline_over_48_count
     }
     #розыск
-    distance = len(db.session.query(Alert).filter(Alert.status == 0, Alert.type.in_(['distance', 'gps'])).all())
+    distance = len(db.session.query(Alert).filter(Alert.status == 0, Alert.type.in_(['distance', 'gps', 'no_docs_cords'])).all())
 
     # Cesar
     online_count = db.session.query(CashWialon).filter(

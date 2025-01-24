@@ -25,6 +25,7 @@
                     <p class="mb-1 text-muted">
                         {% if alert.type == 'gps' %} Нет координат {{ alert.data }}
                         {% elif alert.type == 'distance' %} В {{ alert.data }} км от положенного места
+                        {% elif alert.type == 'no_docs_cords' %} В ДО нет координат
                         {% elif alert.type == 'no_equipment' %} Нет оборудования {{ alert.data }}
                         {% elif alert.type == 'not_work' %} Оборудование {{ alert.data }} не в сети
                         {% else %} {{ alert.data }} {% endif %}
@@ -56,17 +57,25 @@
                             </button>
                         </li>
                     </ul>
-
-                    <!-- Поле поиска -->
-                    <div class="d-flex align-items-center">
-                        <input type="text" class="form-control w-100 me-2" id="search-input" placeholder="Поиск по машинам">
-                    </div>
                 </div>
 
-                <!-- Даты -->
-                <div class="d-flex mb-4">
-                    <input type="date" id="start-date" class="form-control me-2" placeholder="Дата от">
-                    <input type="date" id="end-date" class="form-control" placeholder="Дата до">
+                <!-- Поле поиска -->
+                <div class="d-flex justify-content-between mb-4 align-items-center">
+                    <!-- Поле поиска по машинам -->
+                    <div class="d-flex align-items-center w-25 me-2">
+                        <input type="text" class="form-control w-100" id="search-input" placeholder="Номер Лота">
+                    </div>
+
+                    <!-- Поле поиска по описанию -->
+                    <div class="d-flex align-items-center w-50 me-2">
+                        <input type="text" class="form-control w-100" id="text-search-input" placeholder="Описание алерта">
+                    </div>
+
+                    <!-- Даты -->
+                    <div class="d-flex w-50">
+                        <input type="date" id="start-date" class="form-control me-2" placeholder="Дата от">
+                        <input type="date" id="end-date" class="form-control" placeholder="Дата до">
+                    </div>
                 </div>
 
                 <!-- Карточки -->
@@ -85,6 +94,7 @@
                                 <p class="card-text">
                                     {% if alert.type == 'gps' %} Нет координат от блока {{ alert.data }}
                                     {% elif alert.type == 'distance' %} ТС находится в {{ alert.data }} км от своего места работы
+                                    {% elif alert.type == 'no_docs_cords' %} В ДО нет координат
                                     {% else %} {{ alert.data }} {% endif %}
                                 </p>
                                 <div class="d-flex justify-content-between align-items-center">
@@ -107,6 +117,7 @@
                 {% endmacro %}
 
                 <div class="tab-content" id="pills-tabContent" style="min-height: 1000px;">
+
                     <!-- Theft Alerts -->
                     <div class="tab-pane fade show active" id="pills-theft" role="tabpanel" aria-labelledby="pills-theft-tab">
                         <div class="row" id="theft-items">
@@ -164,11 +175,13 @@
 <script>
 document.addEventListener("DOMContentLoaded", function() {
     const searchInput = document.getElementById('search-input');
+    const textSearchInput = document.getElementById('text-search-input'); // Новое поле для поиска по тексту
     const startDateInput = document.getElementById('start-date');
     const endDateInput = document.getElementById('end-date');
 
     function filterItems() {
         const searchTerm = searchInput.value.toUpperCase();
+        const textSearchTerm = textSearchInput.value.toUpperCase(); // Получаем текст из поля для поиска по тексту
         const startDate = startDateInput.value ? new Date(startDateInput.value + "T00:00:00").getTime() / 1000 : null; // Начало дня (00:00:00)
         const endDate = endDateInput.value ? new Date(endDateInput.value + "T23:59:59").getTime() / 1000 : null; // Конец дня (23:59:59)
         const activeTab = document.querySelector('.tab-pane.active');
@@ -177,18 +190,20 @@ document.addEventListener("DOMContentLoaded", function() {
         // Фильтруем элементы на основе ввода пользователя
         const filteredItems = items.filter(item => {
             const title = item.querySelector('.card-title').textContent.toUpperCase();
+            const itemText = item.querySelector('.card-text') ? item.querySelector('.card-text').textContent.toUpperCase() : ''; // Текст в card-text
             const itemDate = item.querySelector('small').textContent.trim();
 
             // Преобразуем дату в формат, который можно сравнивать (например, '12-11-2024 19:47:21' -> UNIX timestamp)
             const itemDateUnix = parseDateToUnix(itemDate);
 
-            // Проверка поиска по тексту
+            // Проверка поиска по заголовку и тексту
             const matchesSearch = title.includes(searchTerm);
+            const matchesTextSearch = itemText.includes(textSearchTerm); // Проверка по тексту в .card-text
 
             // Проверка фильтра по дате
             const matchesDateRange = (!startDate || itemDateUnix >= startDate) && (!endDate || itemDateUnix <= endDate);
 
-            return matchesSearch && matchesDateRange;
+            return matchesSearch && matchesTextSearch && matchesDateRange;
         });
 
         // Скрываем все элементы
@@ -196,7 +211,7 @@ document.addEventListener("DOMContentLoaded", function() {
             item.style.display = 'none';
         });
 
-        if (searchTerm || startDate || endDate) {
+        if (searchTerm || textSearchTerm || startDate || endDate) {
             // Если есть фильтры, показываем подходящие элементы
             filteredItems.forEach(item => {
                 item.style.display = 'block';
@@ -236,8 +251,11 @@ document.addEventListener("DOMContentLoaded", function() {
         return date.getTime() / 1000; // Возвращаем UNIX timestamp
     }
 
-    // Обработчик для поиска
+    // Обработчик для поиска по машинам
     searchInput.addEventListener('input', filterItems);
+
+    // Обработчик для поиска по тексту
+    textSearchInput.addEventListener('input', filterItems);
 
     // Обработчик для изменения дат
     startDateInput.addEventListener('change', filterItems);
@@ -247,13 +265,15 @@ document.addEventListener("DOMContentLoaded", function() {
     const tabs = document.querySelectorAll('.nav-link');
     tabs.forEach(tab => {
         tab.addEventListener('click', function() {
-            searchInput.value = ''; // Очищаем поле поиска
+            searchInput.value = ''; // Очищаем поле поиска по машинам
+            textSearchInput.value = ''; // Очищаем поле поиска по тексту
             startDateInput.value = ''; // Очищаем поле даты
             endDateInput.value = ''; // Очищаем поле даты
             filterItems(); // Обновляем результаты поиска
         });
     });
 });
+
 
 
 document.addEventListener('DOMContentLoaded', function () {

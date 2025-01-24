@@ -33,7 +33,7 @@
         {% for item in cesar %}
         var cesarMark = new ymaps.Placemark([{{ item.pos_x }}, {{ item.pos_y }}], {
             hintContent: 'Метка Cesar',
-            balloonContent: 'UID блока: {{ item.object_name }}'
+            balloonContent: 'PIN блока: {{ item.pin }}'
         },
             {
                 preset: `islands#orangeDotIcon`,
@@ -48,7 +48,7 @@
         {% for item in wialon %}
         var cesarMark = new ymaps.Placemark([{{ item.pos_y }}, {{ item.pos_x }}], {
             hintContent: 'Метка Wialon',
-            balloonContent: 'UID блока: {{ item.nm }}'
+            balloonContent: 'UID блока: {{ item.uid }}'
         },
             {
                 preset: `islands#blueDotIcon`,

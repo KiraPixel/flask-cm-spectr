@@ -139,7 +139,7 @@ def filegen(args):
         output.write('Date;uNumber;type;data;comment;comment_editor;region;storage;model;manager;customer' + '\n')
         alerts = Alert.query
         if args == "vopereator_theft_risk":
-            alerts = alerts.filter(Alert.status == 0, Alert.type == 'distance').all()
+            alerts = alerts.filter(Alert.status == 0, Alert.type.in_(['distance', 'gps', 'no_docs_cords'])).all()
         elif args == "vopereator_nonworking_equipment":
             alerts = alerts.filter(Alert.status == 0, Alert.type == 'not_work').all()
         elif args == "vopereator_no_equipment":
