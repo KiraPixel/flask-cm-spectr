@@ -650,6 +650,7 @@ class AddNewCar(Resource):
     @parser_api_namespace.response(200, 'Успешно добавлено')
     @parser_api_namespace.response(400, 'Неверный запрос (например, отсутствуют параметры)')
     @parser_api_namespace.response(500, 'Ошибка при выполнении запроса к базе данных')
+    @need_access(1)
     def post(self):
         """Добавление нового автомобиля"""
         data = request.json
