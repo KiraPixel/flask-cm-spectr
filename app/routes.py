@@ -97,11 +97,13 @@ def home():
         if filters['online'] == 'yes':
             if last_time_start_unix == 0:
                 last_time_start_unix = my_time.five_minutes_ago_unix()
-        query = query.filter(CashWialon.last_time.between(last_time_start_unix, last_time_end_unix))
+        if not filters['online'] == 'all':
+            query = query.filter(CashWialon.last_time.between(last_time_start_unix, last_time_end_unix))
 
     # Выполняем запрос и получаем данные
     data_db = query.all()
 
+    print(data_db)
     # Фильтруем транспорт по доступам пользователя
     user = User.query.filter_by(username=session['username']).first_or_404()
     if user.role <= -1:
@@ -306,6 +308,7 @@ def get_car(car_id):
         return "Car not found", 404
 
     wialon = db.session.query(CashWialon).filter(CashWialon.nm.like(search_pattern)).all()
+
     cesar = []
     if user.cesar_access == 1:
         cesar = db.session.query(CashCesar).filter(CashCesar.object_name.like(search_pattern)).all()
