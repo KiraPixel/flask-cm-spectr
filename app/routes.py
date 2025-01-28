@@ -103,7 +103,6 @@ def home():
     # Выполняем запрос и получаем данные
     data_db = query.all()
 
-    print(data_db)
     # Фильтруем транспорт по доступам пользователя
     user = User.query.filter_by(username=session['username']).first_or_404()
     if user.role <= -1:
