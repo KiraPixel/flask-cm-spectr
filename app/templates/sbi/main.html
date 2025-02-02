@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SBI</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="icon" href="{{ url_for('static', filename='img/logo_sbi.png') }}">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: flex-start;
+            align-items: flex-start;
+            height: 100vh;
+            margin: 20px;
+        }
+        .charts-container {
+            display: flex;
+            gap: 20px;
+        }
+        .chart-container {
+            width: 650px;
+            height: 440px;
+            padding: 10px;
+            border: 2px solid #000;
+            border-radius: 10px;
+            background-color: #f9f9f9;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow: hidden;
+        }
+        canvas {
+            max-width: 100%;
+            max-height: 350px;
+        }
+        .total-count {
+            margin-top: 10px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="charts-container">
+        <div class="chart-container">
+            <h3>Кол-во спецтехники (аренда)</h3>
+            <canvas id="transportChart"></canvas>
+            <div id="totalCount" class="total-count"></div>
+        </div>
+        <div class="chart-container">
+            <h3>Типы спецтехники по регионам (аренда)</h3>
+            <canvas id="barChart"></canvas>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const chartData = {{ chart_data | tojson | safe }};
+            console.log("Полученные данные:", chartData);
+
+            if (!chartData || Object.keys(chartData).length === 0) {
+                console.error("Ошибка: chartData пуст или не определён!");
+                return;
+            }
+
+            // Предопределённые цвета для круговой диаграммы
+            const backgroundColors = {
+                "Химки (г)": "#FFFF33",
+                "Санкт-Петербург (г)": "#FF3300",
+                "Новосибирск (г)": "#6666CC",
+                "Екатеринбург (г)": "#6600CC",
+                "Ростов-на-Дону (г)": "#33CC66",
+                "Минераловодский (р-н)": "#339999",
+                "Краснодар (г)": "#CC3300",
+                "Воронеж (г)": "#999999",
+                "Самара (г)": "#99FFFF",
+                "Казань (г)": "#3300FF",
+                "Набережные Челны (г)": "#6666FF",
+                "Калуга (г)": "#996600",
+                "Нижний Новгород (г)": "#330099",
+                "Саратов (г)": "#33CC99"
+            };
+
+            // Данные для круговой диаграммы
+            const regions = Object.keys(chartData);
+            const totalCounts = regions.map(region =>
+                Object.values(chartData[region]).reduce((sum, count) => sum + count, 0)
+            );
+
+            const totalCars = totalCounts.reduce((sum, count) => sum + count, 0);
+            document.getElementById("totalCount").innerText = `Общее количество машин: ${totalCars}`;
+
+            const colors = regions.map(region => backgroundColors[region] || "#CCCCCC");
+
+            const ctxPie = document.getElementById('transportChart').getContext('2d');
+            new Chart(ctxPie, {
+                type: 'pie',
+                data: {
+                    labels: regions,
+                    datasets: [{
+                        label: 'Кол-во транспорта по регионам',
+                        data: totalCounts,
+                        backgroundColor: colors,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top' }
+                    }
+                }
+            });
+
+            // Данные для столбчатой диаграммы (без "ДСТ")
+            const types = [...new Set(Object.values(chartData).flatMap(region => Object.keys(region)))].filter(type => type !== "ДСТ");
+
+            const datasets = types.map(type => ({
+                label: type,
+                data: regions.map(region => chartData[region][type] || 0),
+                backgroundColor: `hsl(${Math.random() * 360}, 70%, 60%)`
+            }));
+
+            const ctxBar = document.getElementById('barChart').getContext('2d');
+            new Chart(ctxBar, {
+                type: 'bar',
+                data: {
+                    labels: regions,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { ticks: { autoSkip: false, maxRotation: 45, minRotation: 45 } },
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

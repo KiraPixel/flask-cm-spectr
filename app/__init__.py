@@ -1,6 +1,8 @@
 from datetime import timedelta
 from flask import Flask
 import os
+
+from .routes_sbi import sbi
 from .utils import storage_id_to_name
 from .models import db
 
@@ -31,6 +33,7 @@ def create_app():
     app.register_blueprint(admin_bp, url_prefix='/admin')
     app.register_blueprint(us_bp, url_prefix='/user_profile')
     app.register_blueprint(architect, url_prefix='/architect')
+    app.register_blueprint(sbi, url_prefix='/sbi')
 
     app.jinja_env.filters['unix_to_datetime'] = my_time.unix_to_moscow_time
     app.jinja_env.filters['online_check'] = my_time.online_check
