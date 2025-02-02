@@ -2,23 +2,24 @@ from flask import Blueprint, request, render_template, jsonify
 from .models import db, Transport, Storage, TransportModel
 import json
 from sqlalchemy import func
+from .utils import need_access
 
 
 sbi = Blueprint('sbi', __name__)
 
 @sbi.route('/')
+@need_access(1)
 def index():
     # Данные для круговой диаграммы (общий подсчет техники по регионам)
     region_query = db.session.query(
         Storage.region,
         func.count(Transport.id).label('car_count')
     ).join(Transport, Transport.storage_id == Storage.ID) \
+        .filter(Transport.parser_1c == 1) \
         .group_by(Storage.region) \
         .all()
 
     region_data = [{'region': region, 'car_count': car_count} for region, car_count in region_query]
-    print("Region Data:", region_query)  # Вывод данных в терминал для проверки
-    print("region_data перед отправкой в шаблон:", region_data)
 
     # Данные для столбчатой диаграммы (разделение по типам техники)
     query = db.session.query(
@@ -27,6 +28,7 @@ def index():
         func.count(Transport.id).label('car_count')
     ).join(Transport, Transport.storage_id == Storage.ID) \
         .join(TransportModel, Transport.model_id == TransportModel.id) \
+        .filter(Transport.parser_1c == 1) \
         .group_by(Storage.region, TransportModel.type) \
         .all()
 
