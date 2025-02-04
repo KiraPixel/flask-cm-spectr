@@ -7,7 +7,8 @@ import re
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash, make_response, send_file, g
 
 from modules.my_time import online_check
-from .models import db, User, Transport, TransportModel, Storage, CashWialon, CashCesar, Alert, Comments, TransferTasks
+from .models import db, User, Transport, TransportModel, Storage, CashWialon, CashCesar, Alert, Comments, TransferTasks, \
+    IgnoredStorage
 from .utils import need_access
 from modules import report_generator, my_time, hash_password
 
@@ -339,6 +340,7 @@ def get_car(car_id):
 
     storage = db.session.query(Storage).filter(Storage.ID == car.storage_id).first()
     transport_model = db.session.query(TransportModel).filter(TransportModel.id == car.model_id).first()
+    ignored_storages = db.session.query(IgnoredStorage).all()
 
     return render_template(
         'pages/car/page.html',
@@ -353,7 +355,8 @@ def get_car(car_id):
         wialon_sens=wialon_sens,
         alerts=alerts,
         comments=comments,
-        transfers=transfers
+        transfers=transfers,
+        ignored_storages=ignored_storages
     )
 
 
@@ -389,7 +392,8 @@ def send_report():
 def map_page():
     wialon = db.session.query(CashWialon).all()
     cesar = db.session.query(CashCesar).all()
-    return render_template('standalone/map.html', cesar=cesar, wialon=wialon)
+    ignored_storages = db.session.query(IgnoredStorage).all()
+    return render_template('standalone/map.html', cesar=cesar, wialon=wialon, ignored_storages=ignored_storages)
 
 
 @bp.route('/maps/')
