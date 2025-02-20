@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Типы спецтехники по регионам (аренда)</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="icon" href="{{ url_for('static', filename='img/logo_sbi.png') }}">
+    {% include 'sbi/style.html' %}
+</head>
+<body>
+    <div class="chart-container">
+        <h3>Типы спецтехники по регионам (аренда)</h3>
+        <canvas id="barChart"></canvas>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const chartData = {{ chart_data | tojson | safe }};
+            console.log("Полученные данные:", chartData);
+
+            if (!chartData || Object.keys(chartData).length === 0) {
+                console.error("Ошибка: chartData пуст или не определён!");
+                return;
+            }
+
+            const regions = Object.keys(chartData);
+            const types = [...new Set(Object.values(chartData).flatMap(region => Object.keys(region)))].filter(type => type !== "ДСТ");
+
+            const datasets = types.map(type => ({
+                label: type,
+                data: regions.map(region => chartData[region][type] || 0),
+                backgroundColor: `hsl(${Math.random() * 360}, 70%, 60%)`
+            }));
+
+            const ctxBar = document.getElementById('barChart').getContext('2d');
+            new Chart(ctxBar, {
+                type: 'bar',
+                data: {
+                    labels: regions,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { ticks: { autoSkip: false, maxRotation: 45, minRotation: 45 } },
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
