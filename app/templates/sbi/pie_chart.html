@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Кол-во спецтехники (аренда)</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="icon" href="{{ url_for('static', filename='img/logo_sbi.png') }}">
+    {% include 'sbi/style.html' %}
+</head>
+<body>
+    <div class="chart-container">
+        <h3>Кол-во спецтехники (аренда)</h3>
+        <canvas id="transportChart"></canvas>
+        <div id="totalCount" class="total-count"></div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const chartData = {{ chart_data | tojson | safe }};
+            console.log("Полученные данные:", chartData);
+
+            if (!chartData || Object.keys(chartData).length === 0) {
+                console.error("Ошибка: chartData пуст или не определён!");
+                return;
+            }
+
+            const backgroundColors = {
+                "Химки (г)": "#B22222",
+                "Санкт-Петербург (г)": "#00FF7F",
+                "Новосибирск (г)": "#008B8B",
+                "Екатеринбург (г)": "#FF8C00",
+                "Ростов-на-Дону (г)": "#FFD700",
+                "Минераловодский (р-н)": "#4682B4",
+                "Краснодар (г)": "#CD5C5C",
+                "Воронеж (г)": "#A9A9A9",
+                "Самара (г)": "#008080",
+                "Казань (г)": "#808000",
+                "Набережные Челны (г)": "#A0522D",
+                "Калуга (г)": "#BC8F8F",
+                "Нижний Новгород (г)": "#BA55D3",
+                "Саратов (г)": "#00008B",
+                "Московская (обл)": "#8B008B",
+                "Благовещенск (г)": "#4B0082"
+            };
+
+            const regions = Object.keys(chartData);
+            const totalCounts = regions.map(region =>
+                Object.values(chartData[region]).reduce((sum, count) => sum + count, 0)
+            );
+
+            const totalCars = totalCounts.reduce((sum, count) => sum + count, 0);
+            document.getElementById("totalCount").innerText = `Общее количество машин: ${totalCars}`;
+
+            const colors = regions.map(region => backgroundColors[region] || "#CCCCCC");
+
+            const ctxPie = document.getElementById('transportChart').getContext('2d');
+            new Chart(ctxPie, {
+                type: 'pie',
+                data: {
+                    labels: regions,
+                    datasets: [{
+                        label: 'Кол-во транспорта по регионам',
+                        data: totalCounts,
+                        backgroundColor: colors,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top' }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -31,7 +31,7 @@ def index():
         .filter(Transport.parser_1c == 1) \
         .group_by(Storage.region, TransportModel.type) \
         .all()
-
+    
     # Преобразуем данные в удобный формат для диаграммы
     chart_data = {}
     for region, type_, count in query:
