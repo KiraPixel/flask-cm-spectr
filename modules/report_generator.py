@@ -217,7 +217,7 @@ def filegen(args):
                                 f"{item.manager or ''};{item.disable_virtual_operator};{item.parser_1c}"
                     output.write(final_str + '\n')
         elif args == "main_transport_model":
-            output.write('ID;Тип;Название;Тип подъемника;Двигатель;Страна\n')
+            output.write('ID;Тип направления;Название;Тип подъемника;Двигатель;Страна;Тип техники;Бренд;Модель\n')
 
             query = db.session.query(
                 TransportModel.id,
@@ -225,7 +225,10 @@ def filegen(args):
                 TransportModel.name,
                 TransportModel.lift_type,
                 TransportModel.engine,
-                TransportModel.country
+                TransportModel.country,
+                TransportModel.machine_type,
+                TransportModel.brand,
+                TransportModel.model,
             )
 
             results = query.all()
