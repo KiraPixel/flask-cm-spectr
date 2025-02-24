@@ -228,13 +228,13 @@ def filegen(args):
                 TransportModel.country,
                 TransportModel.machine_type,
                 TransportModel.brand,
-                TransportModel.model,
+                TransportModel.model
             )
 
             results = query.all()
             for item in results:
                 final_str = f"{item.id};{item.type or ''};{item.name or ''};" \
-                            f"{item.lift_type or ''};{item.engine or ''};{item.country or ''}"
+                            f"{item.lift_type or ''};{item.engine or ''};{item.country or ''};{item.machine_type or ''};{item.brand or ''};{item.model or ''}"
                 output.write(final_str + '\n')
         elif args == "main_storage":
             output.write('ID;Название;Тип;Регион;Адрес;Организация\n')
