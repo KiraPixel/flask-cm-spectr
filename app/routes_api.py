@@ -711,16 +711,16 @@ class AddNewCar(Resource):
         try:
             db.session.add(new_car)
             db.session.commit()
-
             # Обновление статуса задач
             tasks = db.session.query(ParserTasks).filter(
                 ParserTasks.task_name.in_(['new_car', 'new_car_error']),
                 ParserTasks.variable == uNumber,
-                ParserTasks.task_completed == 0
+                ParserTasks.task_completed == 0,
             ).all()
 
             for task in tasks:
                 task.task_completed = 1
+                task.task_manager = session['username']
 
             if tasks:
                 db.session.commit()

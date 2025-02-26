@@ -171,6 +171,7 @@ class ParserTasks(db.Model):
     info = db.Column(db.String(100))
     variable = db.Column(db.String(100))
     task_completed = db.Column(db.Integer, default=0)
+    task_manager = db.Column(db.String(100))
 
 
 class TransferTasks(db.Model):

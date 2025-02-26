@@ -85,8 +85,8 @@ def parser_page():
                 "ИДМодели": root.attrib.get("ИДМодели", "").strip() or "None",
                 "серия": root.attrib.get("Серия", "").strip() or "None",
                 "серия_год_выпуска": root.attrib.get("СерияГодВыпуска", "").strip() or "None",
-                "широта": root.attrib.get("Широта", "").strip() or "None",
-                "долгота": root.attrib.get("Долгота", "").strip() or "None",
+                "широта": root.attrib.get("Широта", "").strip() or "0",
+                "долгота": root.attrib.get("Долгота", "").strip() or "0",
                 "контрагент": root.attrib.get("Контрагент", "").strip() or "None",
                 "менеджер": root.attrib.get("ОтветственныйМенеджер", "").strip() or "None"
             }
