@@ -39,6 +39,11 @@ def need_access(required_role):
             msk_time = datetime.datetime.fromtimestamp(my_time.now_unix_time(),
                                                        tz=datetime.timezone(datetime.timedelta(hours=3)))
             user.last_activity = msk_time.strftime('%Y-%m-%d %H:%M')
+
+            if user.first_login == datetime.datetime(1999, 12, 2, 0, 0, 0):
+                user.first_login = msk_time.strftime('%Y-%m-%d %H:%M')
+            if user.password_activated_date == datetime.datetime(1999, 12, 2, 0, 0, 0):
+                user.password_activated_date = msk_time.strftime('%Y-%m-%d %H:%M')
             db.session.commit()  # Сохраняем данные о времени последней активности
 
             # Проверяем роль пользователя
