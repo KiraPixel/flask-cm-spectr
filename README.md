@@ -1,4 +1,4 @@
-# Project Name
+# flask-cm-spektr
 
 ## Overview
 This repository contains **CM.drawio** and other assets. The content is protected by a strict license.
