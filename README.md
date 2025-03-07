@@ -1,10 +1,8 @@
-# flask-cm-spektr
-
-## Overview
-This repository contains **CM.drawio** and other assets. The content is protected by a strict license.
+#lask-cm-spektr
 
 ### File:
-- [CM.drawio](./CM.drawio)
+- ![CM drawio](https://github.com/user-attachments/assets/9b096eb6-1bc2-4e68-9f71-f0ab865b1842)
+
 
 ## License  
 This project is licensed under the **Creative Commons Attribution-NonCommercial 4.0 International License**.  
