@@ -1,0 +1,64 @@
+<div class="tab-pane fade show active" id="info" role="tabpanel" aria-labelledby="info-tab">
+    <div class="row g-3">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-3">
+                <div class="card-header rounded-top-3">
+                    <h5 class="mb-0"><i class="bi bi-house me-2"></i> Информация о складе</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-2"><strong>Название склада:</strong> <span id="storage_name" class="text-muted">-</span></p>
+                    <p class="mb-2"><strong>Тип склада:</strong> <span id="storage_type" class="text-muted">-</span></p>
+                    <p class="mb-2"><strong>Регион:</strong> <span id="storage_region" class="text-muted">-</span></p>
+                    <p class="mb-0"><strong>Адрес:</strong> <span id="storage_address" class="text-muted">-</span></p>
+                </div>
+            </div>
+        </div>
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-3">
+                <div class="card-header rounded-top-3">
+                    <h5 class="mb-0"><i class="bi bi-truck me-2"></i> Модель транспортного средства</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-2"><strong>Тип:</strong> <span id="model_type" class="text-muted">-</span></p>
+                    <p class="mb-2"><strong>Название:</strong> <span id="model_name" class="text-muted">-</span></p>
+                    <p class="mb-2"><strong>Бренд:</strong> <span id="brand" class="text-muted">-</span></p>
+                    <p class="mb-0"><strong>VIN:</strong> <span id="vin" class="text-muted">-</span></p>
+                </div>
+            </div>
+        </div>
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-3">
+                <div class="card-header rounded-top-3">
+                    <h5 class="mb-0"><i class="bi bi-person-workspace me-2"></i> Аренда</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-2"><strong>Клиент:</strong> <span id="customer" class="text-muted">-</span></p>
+                    <p class="mb-2"><strong>Контакт клиента:</strong> <span id="customer_contact" class="text-muted">-</span></p>
+                    <p class="mb-2"><strong>Менеджер:</strong> <span id="manager" class="text-muted">-</span></p>
+                    <p class="mb-0"><strong>Координаты:</strong> <span id="coordinates" class="text-muted">-</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    console.log('Info script loaded'); // Для отладки
+    window.addEventListener('carDataLoaded', function() {
+        console.log('carDataLoaded event received in Info'); // Для отладки
+        if (window.carData && window.carData.transport) {
+            document.getElementById('storage_name').textContent = window.carData.storage?.name || '-';
+            document.getElementById('storage_type').textContent = window.carData.storage?.type || '-';
+            document.getElementById('storage_region').textContent = window.carData.storage?.region || '-';
+            document.getElementById('storage_address').textContent = window.carData.storage?.address || '-';
+            document.getElementById('model_type').textContent = window.carData.transport_model?.type || '-';
+            document.getElementById('model_name').textContent = window.carData.transport_model?.name || '-';
+            document.getElementById('brand').textContent = window.carData.transport_model?.brand || '-';
+            document.getElementById('vin').textContent = window.carData.transport?.vin || '-';
+            document.getElementById('customer').textContent = window.carData.rent?.customer || '-';
+            document.getElementById('customer_contact').textContent = window.carData.rent?.customer_contact || '-';
+            document.getElementById('manager').textContent = window.carData.rent?.manager || '-';
+            document.getElementById('coordinates').textContent = `${window.carData.rent?.x || '-'}, ${window.carData.rent?.y || '-'}`;
+        }
+    });
+</script>

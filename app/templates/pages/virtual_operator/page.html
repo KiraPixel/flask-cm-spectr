@@ -12,7 +12,7 @@
             <h5 class="mb-3">Последние уведомления</h5>
             <div class="list-group" style="max-height: 1000px; overflow-y: auto;">
                 {% for alert in last_100_alerts %}
-                <a href="{{ url_for('main.get_car', car_id=alert.uNumber) }}"
+                <a href="{{ url_for('main.car', car_id=alert.uNumber) }}"
                    class="list-group-item list-group-item-action {% if alert.status == 1 %}list-group-item-secondary{% endif %}">
                     <div class="d-flex w-500 justify-content-between">
                         {% if alert.status %}
@@ -85,7 +85,7 @@
                             <div class="card-body">
                                 <div class="d-flex justify-content-between">
                                     <h5 class="card-title">
-                                        <a href="{{ url_for('main.get_car', car_id=alert.uNumber) }}" class="{{ text_color }} text-decoration-none">
+                                        <a href="{{ url_for('main.car', car_id=alert.uNumber) }}" class="{{ text_color }} text-decoration-none">
                                             {{ alert.uNumber }}
                                         </a>
                                     </h5>

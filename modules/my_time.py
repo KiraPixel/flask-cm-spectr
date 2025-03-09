@@ -32,6 +32,17 @@ def online_check(unix_time):
     except:
         return "Unknown"
 
+def online_check_cesar(unix_time):
+    try:
+        current_time = datetime.datetime.now().timestamp()
+        time_difference = current_time - unix_time
+        if time_difference <= 259200:  # 5 minutes in seconds
+            return "Online"
+        else:
+            return "Offline"
+    except:
+        return "Unknown"
+
 
 def get_time_minus_three_days():
     current_time = time.time()

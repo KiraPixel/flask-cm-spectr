@@ -4,6 +4,7 @@ import tempfile
 from sqlalchemy import func
 
 from app.models import Transport, CashCesar, CashWialon, Reports, Alert, TransportModel, Storage
+from app.utils import get_address_from_coords
 from . import my_time, location_module, coord_math
 from app import db
 from modules import mail_sender
@@ -31,7 +32,7 @@ def filegen(args):
             output.write('wialon_id,uNumber,uid,last_time,last_pos_time,address' + '\n')
             query = CashWialon.query.all()
             for row in query:
-                location = f"{location_module.get_address(row.pos_y, row.pos_x)}"
+                location = f"{get_address_from_coords(row.pos_y, row.pos_x)}"
                 location = location.replace(',', '')
                 final_str = (
                     f'{row.id},'

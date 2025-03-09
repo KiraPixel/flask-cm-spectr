@@ -1,0 +1,144 @@
+<div class="tab-pane fade" id="monitoring" role="tabpanel" aria-labelledby="monitoring-tab">
+    <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-body p-4">
+            <h4 class="mb-4 fw-bold">Мониторинг</h4>
+            <div id="movementInfo">
+                <div class="alert alert-info text-center">Загрузка данных...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+console.log('Monitoring script loaded');
+
+window.addEventListener('carDataLoaded', function() {
+    console.log('carDataLoaded event received in Monitoring');
+    const movementContainer = document.getElementById('movementInfo');
+
+    if (!window.carData || !window.carData.monitoring || window.carData.monitoring.length === 0) {
+        movementContainer.innerHTML = `
+            <div class="alert alert-warning text-center">
+                Данные мониторинга отсутствуют
+            </div>`;
+        return;
+    }
+
+    const wialonUnits = window.carData.monitoring.filter(item => item.type === 'wialon');
+    const otherUnits = window.carData.monitoring.filter(item => item.type !== 'wialon');
+
+    let monitoringHtml = '';
+
+    // Секция Wialon
+    if (wialonUnits.length > 0) {
+        monitoringHtml += '<h5 class="mb-3">Wialon</h5>';
+        const wialonColumnClass = wialonUnits.length === 1 ? 'col-12' : 'col-12 col-md-6';
+        monitoringHtml += '<div class="row g-3 mb-4">';
+        wialonUnits.forEach(item => {
+            const coords = item.pos_x && item.pos_y ? `${item.pos_x},${item.pos_y}` : '-';
+            monitoringHtml += `
+                <div class="${wialonColumnClass}">
+                    <div class="card border shadow-sm h-100 rounded-3">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="card-title fw-bold mb-0">${item.uid || '-'}</h6>
+                                <span class="badge ${item.online === 'Online' ? 'bg-success' : 'bg-danger'}">
+                                    ${item.online || 'Неизвестно'}
+                                </span>
+                            </div>
+                            <p class="mb-1 small"><strong>Последнее обновление:</strong> ${item.last_time || '-'}</p>
+                            <p class="mb-1 small"><strong>Координаты:</strong>
+                                <span class="coords-link" data-coords="${coords}" style="cursor: ${coords === '-' ? 'default' : 'pointer'}; color: ${coords === '-' ? 'inherit' : 'var(--bs-primary)'};">
+                                    ${item.pos_x || '-'}, ${item.pos_y || '-'}
+                                </span>
+                            </p>
+                            <p class="mb-0 small"><strong>Адрес:</strong> ${item.address || '-'}</p>
+                        </div>
+                    </div>
+                </div>`;
+        });
+        monitoringHtml += '</div>';
+    }
+
+    // Секция остальных типов
+    if (otherUnits.length > 0) {
+        monitoringHtml += '<h5 class="mb-3">Другие системы</h5>';
+        const otherColumnClass = otherUnits.length <= 2 ? 'col-12 col-md-6' : 'col-12 col-md-6 col-lg-4';
+        monitoringHtml += '<div class="row g-3">';
+        otherUnits.forEach(item => {
+            const coords = item.pos_x && item.pos_y ? `${item.pos_x},${item.pos_y}` : '-';
+            monitoringHtml += `
+                <div class="${otherColumnClass}">
+                    <div class="card border shadow-sm h-100 rounded-3">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="card-title fw-bold mb-0">${item.pin || item.uid || '-'}</h6>
+                                <span class="badge ${item.online === 'Online' ? 'bg-success' : 'bg-danger'}">
+                                    ${item.online || 'Неизвестно'}
+                                </span>
+                            </div>
+                            <p class="mb-1 small"><strong>Последнее обновление:</strong> ${item.last_time || '-'}</p>
+                            <p class="mb-1 small"><strong>Координаты:</strong>
+                                <span class="coords-link" data-coords="${coords}" style="cursor: ${coords === '-' ? 'default' : 'pointer'}; color: ${coords === '-' ? 'inherit' : 'var(--bs-primary)'};">
+                                    ${item.pos_x || '-'}, ${item.pos_y || '-'}
+                                </span>
+                            </p>
+                            <p class="mb-0 small"><strong>Адрес:</strong> ${item.address || '-'}</p>
+                        </div>
+                    </div>
+                </div>`;
+        });
+        monitoringHtml += '</div>';
+    }
+
+    movementContainer.innerHTML = monitoringHtml;
+
+    // Добавляем обработчики клика на координаты
+    document.querySelectorAll('.coords-link').forEach(link => {
+        link.addEventListener('click', function() {
+            const coordsStr = this.getAttribute('data-coords');
+            if (coordsStr && coordsStr !== '-') {
+                const [lat, lon] = coordsStr.split(',').map(Number);
+                if (!isNaN(lat) && !isNaN(lon) && window.MapController) {
+                    window.MapController.setCenter([lat, lon], 15); // Зум до уровня 15
+                }
+            }
+        });
+    });
+});
+</script>
+
+<style>
+.card.border {
+    border-color: var(--bs-border-color);
+    transition: all 0.3s ease;
+}
+
+.card.border:hover {
+    border-color: var(--bs-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+h5 {
+    color: var(--bs-heading-color);
+}
+
+.badge {
+    padding: 0.4em 0.8em;
+}
+
+.coords-link:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+    .card-body {
+        padding: 1rem;
+    }
+}
+</style>

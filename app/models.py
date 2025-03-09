@@ -147,6 +147,15 @@ class Alert(db.Model):
     date_time_edit = db.Column(db.Integer, nullable=False, default=0)
 
 
+class Coord(db.Model):
+    __tablename__ = 'coord_cash'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    pos_x = db.Column(db.Float, default=0.0)
+    pos_y = db.Column(db.Float, default=0.0)
+    address = db.Column(db.String(100), nullable=True)
+    updated_time = db.Column(db.Integer, nullable=False, default=0)
+
+
 class Comments(db.Model):
     __tablename__ = 'comments'
     comment_id = db.Column(db.Integer, primary_key=True, autoincrement=True)

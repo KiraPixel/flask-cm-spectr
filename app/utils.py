@@ -1,7 +1,7 @@
 from functools import wraps
 from flask import session, flash, redirect, url_for, render_template, request
-from .models import db, User, Storage
-from modules import my_time
+from .models import db, User, Storage, Coord
+from modules import my_time, location_module
 import datetime
 
 
@@ -59,6 +59,47 @@ def need_access(required_role):
     return decorator
 
 
+def get_address_from_coords(x, y):
+    if not x or not y or x == 0 or y == 0:
+        return "Convert error"
+
+    # Округляем до 4 знаков после запятой
+    x = float(f"{float(x):.4f}")
+    y = float(f"{float(y):.4f}")
+
+    # Ищем с небольшой погрешностью
+    epsilon = 0.0001
+    coord = Coord.query.filter(
+        Coord.pos_x.between(x - epsilon, x + epsilon),
+        Coord.pos_y.between(y - epsilon, y + epsilon)
+    ).first()
+
+    current_time = int(datetime.datetime.now().timestamp())
+    three_months_seconds = 90 * 24 * 60 * 60
+
+    if coord:
+        if (current_time - coord.updated_time) <= three_months_seconds:
+            return coord.address
+
+    new_address = location_module.get_address(x, y)
+
+    if new_address == "Convert error":
+        return "Convert error"
+
+    if coord:
+        coord.address = new_address
+        coord.updated_time = current_time
+    else:
+        new_coord = Coord(
+            pos_x=x,
+            pos_y=y,
+            address=new_address,
+            updated_time=current_time
+        )
+        db.session.add(new_coord)
+
+    db.session.commit()
+    return new_address
 
 def storage_id_to_name(storage_id):
     storage = db.session.query(Storage).filter(Storage.ID == storage_id).first()

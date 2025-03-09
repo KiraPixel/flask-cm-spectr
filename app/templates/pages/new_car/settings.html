@@ -1,0 +1,31 @@
+<div class="tab-pane fade" id="settings" role="tabpanel" aria-labelledby="settings-tab">
+    <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-body">
+            <button id="virtualOperatorToggle" class="btn btn-outline-primary w-100">
+                Виртуальный оператор
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    console.log('Settings script loaded'); // Для отладки
+    window.addEventListener('carDataLoaded', function() {
+        console.log('carDataLoaded event received in Settings'); // Для отладки
+        const lotNumber = document.getElementById('lotNumber').textContent.trim();
+        if (window.carData && window.carData.car_setting) {
+            const virtualOperatorBtn = document.getElementById('virtualOperatorToggle');
+            const isEnabled = window.carData.car_setting.virtual_operator === 0;
+            virtualOperatorBtn.className = `btn btn-outline-${isEnabled ? 'success' : 'danger'} w-100`;
+            virtualOperatorBtn.textContent = `Виртуальный оператор ${isEnabled ? 'Включен' : 'Выключен'}`;
+            virtualOperatorBtn.addEventListener('click', function() {
+                fetch(`/api/car/change_disable_virtual_operator?car_name=${encodeURIComponent(lotNumber)}`)
+                    .then(response => {
+                        if (response.ok) location.reload();
+                        else alert('Ошибка при изменении состояния виртуального оператора.');
+                    })
+                    .catch(error => alert('Ошибка: ' + error));
+            });
+        }
+    });
+</script>

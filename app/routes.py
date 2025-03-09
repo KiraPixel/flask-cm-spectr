@@ -25,7 +25,6 @@ def set_user():
         g.user = None
 
 
-
 # Главная страница
 @bp.route('/', endpoint='home')
 @need_access(-2)
@@ -140,7 +139,7 @@ def home():
             columns_data.append([transport_number, transport_model_name, storage_name, storage_region])
 
     # Отображаем шаблон с результатами фильтрации
-    return render_template('pages/search/page.html', columns=columns, table_rows=columns_data, redi='/cars/', request=request)
+    return render_template('pages/search/page.html', columns=columns, table_rows=columns_data, redi='/car/', request=request)
 
 
 # Страница состояния
@@ -294,7 +293,7 @@ def logout():
 
 
 # Страница информации о конкретной машине
-@bp.route('/cars/<string:car_id>')
+@bp.route('/old_cars/<string:car_id>')
 @need_access(-1)
 def get_car(car_id):
     user = User.query.filter_by(username=session['username']).first_or_404()
@@ -359,6 +358,21 @@ def get_car(car_id):
         ignored_storages=ignored_storages
     )
 
+@bp.route('/car/<string:car_id>')
+@need_access(-1)
+def car(car_id):
+    text = car_id.replace(' ', '')
+    if re.match(r'^[A-Z]+\d{5}$', text):
+        if text[1] != ' ':
+            car_id = text[:1] + ' ' + text[1:]
+    car_name = f'{car_id}'
+    ignored_storages = db.session.query(IgnoredStorage).all()
+
+    return render_template(
+        'pages/new_car/page.html',
+        car_name=car_name,
+        ignored_storages = ignored_storages
+    )
 
 # Скачивание отчета
 @bp.route('/send_report', endpoint="send_report")

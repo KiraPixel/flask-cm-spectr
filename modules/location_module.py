@@ -6,9 +6,11 @@ geolocator = Nominatim(user_agent="KiraPixel1")
 def get_address(x, y):
     if x == 0 or y == 0:
         return None
-    location = geolocator.reverse((x, y), exactly_one=True)
-
-    return location
+    try:
+        location = geolocator.reverse((x, y), exactly_one=True)
+        return location
+    except:
+        return f"Convert error"
 
 
 def get_address_decorator(coords=None):

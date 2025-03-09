@@ -42,7 +42,7 @@
 
             // Добавляем обработчик клика для перехода по URL
             marker.events.add('click', () => {
-                window.open(`/cars/${uNumber}`, '_blank'); // Переход на страницу в новом окне
+                window.open(`/car/${uNumber}`, '_blank'); // Переход на страницу в новом окне
             });
 
             // Сохраняем метку в markers и добавляем её на карту
@@ -145,7 +145,7 @@
 
             carItem.innerHTML = `
                 <strong>${car.uNumber}</strong>
-                <button class="btn btn-link" onclick="window.open('/cars/${encodeURIComponent(car.uNumber)}', '_blank');">
+                <button class="btn btn-link" onclick="window.open('/car/${encodeURIComponent(car.uNumber)}', '_blank');">
                     <i class="bi bi-card-heading"></i> <!-- Иконка "Карточка ТС" -->
                 </button>
                 <button class="btn btn-link" onclick="toggleDeviceList('${car.uNumber}')">

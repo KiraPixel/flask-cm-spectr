@@ -1,0 +1,825 @@
+{% extends 'main.html' %}
+
+{% block title %}
+Карточка лота - {{ car_name }}
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid p-0 min-vh-100 d-flex flex-column">
+    <div class="row flex-grow-1" id="mainRow">
+        <div class="col-12 col-md-6 p-0 flex-grow-1 d-none d-md-block" id="mapColumn">
+            <div id="map" class="shadow-sm" style="height: 80%; min-height: 0; border-radius: 0.5rem 0 0 0.5rem;"></div>
+        </div>
+        <div class="col-12 col-md-6 p-4" id="tabsColumn">
+            <div class="fixed-relative" style="top: 1rem;">
+                <h1 class="mb-4 fw-bold fs-2"><span id="lotNumber">{{ car_name }}</span></h1>
+                <ul class="nav nav-tabs nav-fill mb-4 border-0 flex-md-row" id="myTab" role="tablist">
+                    <li class="nav-item d-md-none">
+                        <button class="nav-link px-4 py-2 shadow-sm rounded-3" id="map-tab" data-bs-toggle="tab" data-bs-target="#mapPane" type="button" role="tab" aria-controls="mapPane" aria-selected="false">
+                            <i class="bi bi-map me-2"></i> Карта
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link active px-4 py-2 shadow-sm rounded-3" id="info-tab" data-bs-toggle="tab" data-bs-target="#info" type="button" role="tab" aria-controls="info" aria-selected="true">
+                            <i class="bi bi-info-circle me-2"></i> Инфо
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link px-4 py-2 shadow-sm rounded-3" id="monitoring-tab" data-bs-toggle="tab" data-bs-target="#monitoring" type="button" role="tab" aria-controls="monitoring" aria-selected="false">
+                            <i class="bi bi-eye me-2"></i> Мониторинг
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link px-4 py-2 shadow-sm rounded-3" id="transfers-tab" data-bs-toggle="tab" data-bs-target="#transfers" type="button" role="tab" aria-controls="transfers" aria-selected="false">
+                            <i class="bi bi-arrow-left-right me-2"></i> Переходы
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link px-4 py-2 shadow-sm rounded-3" id="alerts-tab" data-bs-toggle="tab" data-bs-target="#alerts" type="button" role="tab" aria-controls="alerts" aria-selected="false">
+                            <i class="bi bi-bell me-2"></i> Оповещения
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link px-4 py-2 shadow-sm rounded-3" id="comments-tab" data-bs-toggle="tab" data-bs-target="#comments" type="button" role="tab" aria-controls="comments" aria-selected="false">
+                            <i class="bi bi-chat-left-text me-2"></i> Комментарии
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link px-4 py-2 shadow-sm rounded-3" id="movement-tab" data-bs-toggle="tab" data-bs-target="#movement" type="button" role="tab" aria-controls="movement" aria-selected="false">
+                            <i class="bi bi-geo-alt me-2"></i> Перемещение ТС
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link px-4 py-2 shadow-sm rounded-3" id="settings-tab" data-bs-toggle="tab" data-bs-target="#settings" type="button" role="tab" aria-controls="settings" aria-selected="false">
+                            <i class="bi bi-gear me-2"></i> Настройки
+                        </button>
+                    </li>
+                </ul>
+                <div class="tab-content p-0" id="myTabContent">
+                    <div class="tab-pane fade d-md-none" id="mapPane" role="tabpanel" aria-labelledby="map-tab">
+                        <div class="card border-0 shadow-sm rounded-3">
+                            <div class="card-body p-0">
+                                <div id="mobileMap" class="shadow-sm" style="height: 300px; border-radius: 0.5rem;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade show active" id="info" role="tabpanel" aria-labelledby="info-tab">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <div class="card border-0 shadow-sm rounded-3">
+                                    <div class="card-header rounded-top-3">
+                                        <h5 class="mb-0"><i class="bi bi-house me-2"></i> Информация о складе</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="mb-2"><strong>Название склада:</strong> <span id="storage_name" class="text-muted">-</span></p>
+                                        <p class="mb-2"><strong>Тип склада:</strong> <span id="storage_type" class="text-muted">-</span></p>
+                                        <p class="mb-2"><strong>Регион:</strong> <span id="storage_region" class="text-muted">-</span></p>
+                                        <p class="mb-0"><strong>Адрес:</strong> <span id="storage_address" class="text-muted">-</span></p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="card border-0 shadow-sm rounded-3">
+                                    <div class="card-header rounded-top-3">
+                                        <h5 class="mb-0"><i class="bi bi-truck me-2"></i> Модель транспортного средства</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="mb-2"><strong>Тип:</strong> <span id="model_type" class="text-muted">-</span></p>
+                                        <p class="mb-2"><strong>Название:</strong> <span id="model_name" class="text-muted">-</span></p>
+                                        <p class="mb-2"><strong>Бренд:</strong> <span id="brand" class="text-muted">-</span></p>
+                                        <p class="mb-0"><strong>VIN:</strong> <span id="vin" class="text-muted">-</span></p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="card border-0 shadow-sm rounded-3">
+                                    <div class="card-header rounded-top-3">
+                                        <h5 class="mb-0"><i class="bi bi-person-workspace me-2"></i> Аренда</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="mb-2"><strong>Клиент:</strong> <span id="customer" class="text-muted">-</span></p>
+                                        <p class="mb-2"><strong>Контакт клиента:</strong> <span id="customer_contact" class="text-muted">-</span></p>
+                                        <p class="mb-2"><strong>Менеджер:</strong> <span id="manager" class="text-muted">-</span></p>
+                                        <p class="mb-0"><strong>Координаты:</strong> <span id="coordinates" class="text-muted">-</span></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="monitoring" role="tabpanel" aria-labelledby="monitoring-tab">
+                        <div class="card border-0 shadow-sm rounded-3">
+                            <div class="card-body">
+                                <div id="movementInfo"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="transfers" role="tabpanel" aria-labelledby="transfers-tab">
+                        <div class="card border-0 shadow-sm rounded-3">
+                            <div class="card-body">
+                                <div id="transfersInfo"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="alerts" role="tabpanel" aria-labelledby="alerts-tab">
+                        <div class="card border-0 shadow-sm rounded-3">
+                            <div class="card-body">
+                                <div id="alertsInfo"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="comments" role="tabpanel" aria-labelledby="comments-tab">
+                        <div class="card border-0 shadow-sm rounded-3">
+                            <div class="card-body">
+                                <div id="commentsList" class="mb-4"></div>
+                                <div class="mt-4">
+                                    <h4 class="mb-3">Добавить комментарий</h4>
+                                    <form id="commentForm">
+                                        <div class="mb-3">
+                                            <textarea id="commentText" name="text" class="form-control" rows="3" placeholder="Введите ваш комментарий" required></textarea>
+                                        </div>
+                                        <input type="hidden" name="uNumber" value="{{ car_name }}">
+                                        <button type="submit" class="btn btn-primary w-100">Добавить комментарий</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="movement" role="tabpanel" aria-labelledby="movement-tab">
+                        <div class="card border-0 shadow-sm rounded-3">
+                            <div class="card-body">
+                                <div class="row g-3 align-items-end">
+                                    <div class="col-md-5">
+                                        <label for="dateFrom" class="form-label fw-bold">Дата и время от:</label>
+                                        <input type="datetime-local" class="form-control" id="dateFrom" required>
+                                    </div>
+                                    <div class="col-md-5">
+                                        <label for="dateTo" class="form-label fw-bold">Дата и время до:</label>
+                                        <input type="datetime-local" class="form-control" id="dateTo" required>
+                                    </div>
+                                    <div class="col-md-2 d-flex align-items-end gap-2">
+                                        <button class="btn btn-primary" id="applyBtn">Применить</button>
+                                        <button class="btn btn-outline-secondary" id="clearBtn">Очистить</button>
+                                        <div id="spinner" class="spinner-border text-primary" style="display: none;" role="status">
+                                            <span class="visually-hidden">Загрузка...</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="settings" role="tabpanel" aria-labelledby="settings-tab">
+                        <div class="card border-0 shadow-sm rounded-3">
+                            <div class="card-body">
+                                <button id="virtualOperatorToggle" class="btn btn-outline-primary w-100">
+                                    Виртуальный оператор
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="loading" class="alert alert-info position-fixed bottom-0 start-50 translate-middle-x mb-4 shadow" style="display: none; z-index: 1050; width: 90%; max-width: 500px;">
+        Загрузка данных...
+    </div>
+    <div id="error" class="alert alert-danger position-fixed bottom-0 start-50 translate-middle-x mb-4 shadow" style="display: none; z-index: 1050; width: 90%; max-width: 500px;"></div>
+</div>
+
+<!-- Модальное окно для комментариев -->
+<div class="modal fade" id="commentModal" tabindex="-1" aria-labelledby="commentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-3 shadow-lg">
+            <div class="modal-header rounded-top-3">
+                <h5 class="modal-title" id="commentModalLabel">Редактирование комментария</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Автор:</strong> <span id="modalAuthor" class="text-muted"></span> (<span id="modalEditTime" class="text-muted"></span>)</p>
+                <input type="hidden" id="modalCommentId">
+                <p><strong>Комментарий:</strong></p>
+                <textarea id="modalComment" class="form-control" rows="4" required></textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Закрыть</button>
+                <button type="button" id="saveCommentButton" class="btn btn-primary">Сохранить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .comment-text {
+        min-height: 50px;
+        padding: 10px;
+        border: 1px solid #e9ecef;
+        border-radius: 0.25rem;
+        transition: border-color 0.3s, background-color 0.3s;
+        white-space: pre-wrap;
+    }
+    .comment-text.editing {
+        border-color: #0d6efd;
+        background-color: #ffffff;
+        box-shadow: 0 0 5px rgba(13, 110, 253, 0.3);
+    }
+    .dark-theme .comment-text {
+        border-color: #495057;
+    }
+    .dark-theme .comment-text.editing {
+        background-color: #343a40;
+        color: #ffffff;
+    }
+    .nav-tabs .nav-link {
+        transition: all 0.3s ease;
+    }
+    .nav-tabs .nav-link:hover {
+        background-color: #e9ecef;
+    }
+    .dark-theme .nav-tabs .nav-link:hover {
+        background-color: #495057;
+    }
+    .card-header {
+        border-bottom: none;
+    }
+    .card-body p {
+        font-size: 1rem;
+        line-height: 1.5;
+    }
+
+    @media (max-width: 800px) {
+        #mainRow {
+            flex-direction: column;
+        }
+        #mapColumn {
+            display: none; /* Скрываем карту в колонке на мобильных */
+        }
+        #tabsColumn {
+            padding: 1rem;
+        }
+        .nav-tabs {
+            flex-direction: column; /* Вертикальный список */
+            gap: 0.5rem; /* Отступ между вкладками */
+        }
+        .nav-tabs .nav-link {
+            width: 100%; /* Полная ширина для каждой вкладки */
+            border-radius: 0.5rem; /* Скругленные углы для всех сторон */
+            margin-bottom: 0; /* Убираем отступ снизу от Bootstrap */
+            text-align: left; /* Выравнивание текста слева */
+        }
+        #mobileMap {
+            height: 300px; /* Квадратная карта */
+            width: 100%;
+            max-width: 300px; /* Ограничение ширины */
+            margin: 0 auto; /* Центрирование */
+            border-radius: 0.5rem;
+        }
+    }
+
+    @media (min-width: 801px) {
+        #mapPane {
+            display: none; /* Скрываем вкладку "Карта" на десктопе */
+        }
+    }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+<script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const lotNumber = document.getElementById('lotNumber').textContent.trim();
+    const loading = document.getElementById('loading');
+    const errorDiv = document.getElementById('error');
+    const currentUser = '{{ session.username }}';
+    let myMap, mobileMap, historyData = [];
+
+    loading.style.display = 'block';
+
+    fetch(`/api/car/get_info/${encodeURIComponent(lotNumber)}`, {
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(response => {
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        return response.json();
+    })
+    .then(data => {
+        loading.style.display = 'none';
+
+        if (data.error) {
+            errorDiv.textContent = 'Ошибка: ' + data.error + (data.details ? ' - ' + data.details : '');
+            errorDiv.style.display = 'block';
+            return;
+        }
+
+        if (data.transport) {
+            document.getElementById('storage_name').textContent = data.storage?.name || '-';
+            document.getElementById('storage_type').textContent = data.storage?.type || '-';
+            document.getElementById('storage_region').textContent = data.storage?.region || '-';
+            document.getElementById('storage_address').textContent = data.storage?.address || '-';
+            document.getElementById('model_type').textContent = data.transport_model?.type || '-';
+            document.getElementById('model_name').textContent = data.transport_model?.name || '-';
+            document.getElementById('brand').textContent = data.transport_model?.brand || '-';
+            document.getElementById('vin').textContent = data.transport?.vin || '-';
+            document.getElementById('customer').textContent = data.rent?.customer || '-';
+            document.getElementById('customer_contact').textContent = data.rent?.customer_contact || '-';
+            document.getElementById('manager').textContent = data.rent?.manager || '-';
+            document.getElementById('coordinates').textContent = `${data.rent?.x || '-'}, ${data.rent?.y || '-'}`;
+        }
+
+        if (data.monitoring && data.monitoring.length > 0) {
+            let monitoringHtml = '<div class="row row-cols-1 row-cols-md-3 g-3">';
+            data.monitoring.forEach(item => {
+                monitoringHtml += `
+                    <div class="col">
+                        <div class="card border-0 shadow-sm h-100 rounded-3">
+                            <div class="card-body">
+                                <h6 class="card-title fw-bold mb-2"><i class="bi bi-${item.type === 'wialon' ? 'satellite' : 'gps'} me-2"></i>${item.type.toUpperCase()}</h6>
+                                <p class="mb-1"><strong>ID:</strong> ${item.type === 'wialon' ? item.uid || '-' : item.pin || '-'}</p>
+                                <p class="mb-1"><strong>Координаты:</strong> ${item.pos_x || '-'}, ${item.pos_y || '-'}</p>
+                                <p class="mb-1"><strong>Адрес:</strong> ${item.address || '-'}</p>
+                                <p class="mb-1"><strong>Последнее обновление:</strong> ${item.last_time || '-'}</p>
+                                <p class="mb-0"><strong>Статус:</strong> ${item.online ? '<span class="text-success">Онлайн</span>' : '<span class="text-danger">Офлайн</span>'}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            monitoringHtml += '</div>';
+            document.getElementById('movementInfo').innerHTML = monitoringHtml;
+        }
+
+        if (data.transfers && data.transfers.length > 0) {
+            let transfersHtml = '<ul class="list-group list-group-flush">';
+            data.transfers.forEach(item => {
+                transfersHtml += `
+                    <li class="list-group-item border-0">
+                        <strong class="text-muted">Дата:</strong> ${item.date || '-'}<br>
+                        <strong class="text-muted">Тип:</strong> ${item.type || '-'}<br>
+                        <strong class="text-muted">Старое значение:</strong> ${item.old_value || '-'}<br>
+                        <strong class="text-muted">Новое значение:</strong> ${item.new_value || '-'}
+                    </li>
+                `;
+            });
+            transfersHtml += '</ul>';
+            document.getElementById('transfersInfo').innerHTML = transfersHtml;
+        }
+
+        if (data.alert && data.alert.length > 0) {
+            let alertsHtml = '<div class="row row-cols-1 row-cols-md-2 g-4">';
+            data.alert.forEach(item => {
+                let alertText = '';
+                switch (item.type) {
+                    case 'gps': alertText = `Нет координат: ${item.data || '-'}`; break;
+                    case 'distance': alertText = `В ${item.data || '-'} км от положенного места`; break;
+                    case 'no_docs_cords': alertText = 'В ДО нет координат'; break;
+                    case 'no_equipment': alertText = `Нет оборудования: ${item.data || '-'}`; break;
+                    case 'not_work': alertText = `Оборудование ${item.data || '-'} не в сети`; break;
+                    default: alertText = item.comment || '-';
+                }
+                alertsHtml += `
+                    <div class="col">
+                        <div class="card h-100 border-${item.status === 1 ? 'success' : 'danger'} shadow-sm rounded-3">
+                            <div class="card-header rounded-top-3">
+                                <h5 class="card-title mb-0">${alertText}</h5>
+                            </div>
+                            <div class="card-footer d-flex justify-content-between align-items-center">
+                                <small class="text-muted">${item.datetime || '-'}</small>
+                                <div class="d-flex align-items-center">
+                                    <button class="btn btn-sm p-0 me-2" data-bs-toggle="modal" data-bs-target="#commentModal"
+                                            data-comment="${item.comment || ''}" data-author="${item.comment_editor || ''}"
+                                            data-edit-time="${item.comment_date_time || ''}" data-comment-id="${item.id}"
+                                            title="Редактировать комментарий">
+                                        <i class="bi ${item.comment ? 'bi-chat-right-dots' : 'bi-chat-right'}"></i>
+                                    </button>
+                                    <span class="badge bg-${item.status === 1 ? 'success' : 'danger'}">
+                                        ${item.status === 1 ? 'Решено' : 'Активно'}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            alertsHtml += '</div>';
+            document.getElementById('alertsInfo').innerHTML = alertsHtml;
+        } else {
+            document.getElementById('alertsInfo').innerHTML = '<p class="text-muted text-center">По этой ТС нет уведомлений от виртуального диспетчера</p>';
+        }
+
+        if (data.comments && data.comments.length > 0) {
+            let commentsHtml = '';
+            data.comments.forEach(item => {
+                commentsHtml += `
+                    <div class="card mb-3 shadow-sm rounded-3" id="comment-${item.id}">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h5 class="card-title mb-0">${item.author || '-'}</h5>
+                                <small class="text-muted">${item.datetime || '-'}</small>
+                            </div>
+                            <div class="comment-text" id="commentText-${item.id}" contenteditable="false">${item.text || '-'}</div>
+                            ${item.author === '{{ session.username }}' ? `
+                                <div class="mt-3 d-flex gap-2">
+                                    <button class="btn btn-outline-danger btn-sm delete-comment" data-id="${item.id}">Удалить</button>
+                                    <button class="btn btn-outline-secondary btn-sm edit-comment" data-id="${item.id}">Редактировать</button>
+                                    <button class="btn btn-success btn-sm save-comment" data-id="${item.id}" style="display: none;">Сохранить</button>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+            document.getElementById('commentsList').innerHTML = commentsHtml;
+        } else {
+            document.getElementById('commentsList').innerHTML = '<p class="text-muted text-center">Пока нет комментариев.</p>';
+        }
+
+        // Настройки: переключатель виртуального оператора
+        if (data.car_setting) {
+            const virtualOperatorBtn = document.getElementById('virtualOperatorToggle');
+            const isEnabled = data.car_setting.virtual_operator === 0;
+            virtualOperatorBtn.className = `btn btn-outline-${isEnabled ? 'success' : 'danger'} w-100`;
+            virtualOperatorBtn.textContent = `Виртуальный оператор ${isEnabled ? 'Включен' : 'Выключен'}`;
+            virtualOperatorBtn.addEventListener('click', function() {
+                fetch(`/api/car/change_disable_virtual_operator?car_name=${encodeURIComponent(lotNumber)}`)
+                    .then(response => {
+                        if (response.ok) location.reload();
+                        else alert('Ошибка при изменении состояния виртуального оператора.');
+                    })
+                    .catch(error => alert('Ошибка: ' + error));
+            });
+        }
+
+        // Добавление комментария без перезагрузки
+        document.getElementById('commentForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const formData = new FormData(this);
+            const commentText = document.getElementById('commentText').value.trim();
+
+            if (!commentText) {
+                alert('Комментарий не может быть пустым');
+                return;
+            }
+
+            fetch('/api/add_comment', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'comment_ok') {
+                    const commentsList = document.getElementById('commentsList');
+                    const newCommentHtml = `
+                        <div class="card mb-3 shadow-sm rounded-3" id="comment-new-${Date.now()}">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h5 class="card-title mb-0">${currentUser}</h5>
+                                    <small class="text-muted">${new Date().toLocaleString('ru-RU')}</small>
+                                </div>
+                                <div class="comment-text" id="commentText-new-${Date.now()}" contenteditable="false">${commentText}</div>
+                                <div class="mt-3 d-flex gap-2">
+                                    <button class="btn btn-outline-danger btn-sm delete-comment" data-id="new-${Date.now()}">Удалить</button>
+                                    <button class="btn btn-outline-secondary btn-sm edit-comment" data-id="new-${Date.now()}">Редактировать</button>
+                                    <button class="btn btn-success btn-sm save-comment" data-id="new-${Date.now()}" style="display: none;">Сохранить</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    if (commentsList.querySelector('p.text-muted')) {
+                        commentsList.innerHTML = newCommentHtml;
+                    } else {
+                        commentsList.insertAdjacentHTML('afterbegin', newCommentHtml);
+                    }
+                    document.getElementById('commentText').value = '';
+                    bindCommentEventListeners();
+                } else {
+                    alert('Ошибка при добавлении комментария: ' + (data.message || 'Попробуйте снова.'));
+                }
+            })
+            .catch(error => alert('Ошибка на сервере: ' + error));
+        });
+
+        // Функция для привязки обработчиков событий к кнопкам комментариев
+        function bindCommentEventListeners() {
+            document.querySelectorAll('.edit-comment').forEach(button => {
+                button.removeEventListener('click', editCommentHandler);
+                button.addEventListener('click', editCommentHandler);
+            });
+
+            document.querySelectorAll('.save-comment').forEach(button => {
+                button.removeEventListener('click', saveCommentHandler);
+                button.addEventListener('click', saveCommentHandler);
+            });
+
+            document.querySelectorAll('.delete-comment').forEach(button => {
+                button.removeEventListener('click', deleteCommentHandler);
+                button.addEventListener('click', deleteCommentHandler);
+            });
+        }
+
+        function editCommentHandler() {
+            const commentId = this.getAttribute('data-id');
+            const commentDiv = document.getElementById(`commentText-${commentId}`);
+            commentDiv.setAttribute('contenteditable', 'true');
+            commentDiv.classList.add('editing');
+            commentDiv.focus();
+            this.style.display = 'none';
+            document.querySelector(`.save-comment[data-id="${commentId}"]`).style.display = 'inline-block';
+        }
+
+        function saveCommentHandler() {
+            const commentId = this.getAttribute('data-id');
+            const commentDiv = document.getElementById(`commentText-${commentId}`);
+            const commentText = commentDiv.textContent.trim();
+
+            if (!commentText) {
+                alert('Комментарий не может быть пустым');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('text', commentText);
+            formData.append('comment_id', commentId);
+
+            fetch('/api/edit_comment', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'edit_ok') {
+                    commentDiv.setAttribute('contenteditable', 'false');
+                    commentDiv.classList.remove('editing');
+                    this.style.display = 'none';
+                    document.querySelector(`.edit-comment[data-id="${commentId}"]`).style.display = 'inline-block';
+                } else {
+                    alert('Ошибка при сохранении: ' + (data.message || 'Попробуйте снова.'));
+                }
+            })
+            .catch(error => alert('Ошибка на сервере: ' + error));
+        }
+
+        function deleteCommentHandler() {
+            const commentId = this.getAttribute('data-id');
+            const commentDiv = document.getElementById(`commentText-${commentId}`);
+            const removedText = `${commentDiv.textContent.trim()}_removed`;
+
+            const formData = new FormData();
+            formData.append('text', removedText);
+            formData.append('comment_id', commentId);
+            formData.append('action', 'delete');
+
+            fetch('/api/edit_comment', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'edit_ok') location.reload();
+                else alert('Ошибка при удалении: ' + (data.message || 'Попробуйте снова.'));
+            })
+            .catch(error => alert('Ошибка на сервере: ' + error));
+        }
+
+        bindCommentEventListeners();
+
+        ymaps.ready(function() {
+            // Инициализация основной карты (для десктопа)
+            myMap = new ymaps.Map("map", {
+                center: [55.751574, 37.573856],
+                zoom: 3,
+                controls: ['zoomControl', 'fullscreenControl', 'typeSelector', 'rulerControl']
+            });
+
+            // Инициализация мобильной карты (для вкладки)
+            mobileMap = new ymaps.Map("mobileMap", {
+                center: [55.751574, 37.573856],
+                zoom: 3,
+                controls: ['zoomControl', 'fullscreenControl', 'typeSelector', 'rulerControl']
+            });
+
+            let centerCoords = [55.751574, 37.573856];
+            let hasCoords = false;
+            let initialObjects = [];
+
+            if (data.rent?.x && data.rent?.y) {
+                centerCoords = [data.rent.x, data.rent.y];
+                hasCoords = true;
+                let placemark = new ymaps.Placemark([data.rent.x, data.rent.y], {
+                    hintContent: 'Место работы',
+                    balloonContent: 'Здесь работает автомобиль'
+                }, { preset: 'islands#redDotIcon', iconCaptionMaxWidth: '150' });
+                myMap.geoObjects.add(placemark);
+                mobileMap.geoObjects.add(placemark);
+                initialObjects.push(placemark);
+            } else if (data.monitoring) {
+                const wialonItem = data.monitoring.find(item => item.type === 'wialon' && item.pos_y && item.pos_x);
+                if (wialonItem) {
+                    centerCoords = [wialonItem.pos_x, wialonItem.pos_y];
+                    hasCoords = true;
+                } else {
+                    const cesarItem = data.monitoring.find(item => item.type === 'cesar' && item.pos_y && item.pos_x);
+                    if (cesarItem) {
+                        centerCoords = [cesarItem.pos_x, cesarItem.pos_y];
+                        hasCoords = true;
+                    }
+                }
+            }
+
+            myMap.setCenter(centerCoords, 13);
+            mobileMap.setCenter(centerCoords, 13);
+
+            {% for item in ignored_storages %}
+            myMap.geoObjects.add(new ymaps.Circle(
+                [[{{ item.pos_x }}, {{ item.pos_y }}], {{ item.radius * 1000 }}],
+                { hintContent: 'Игнорируемая зона', balloonContent: '{{ item.named }}' },
+                { fillColor: "#FF000050", strokeColor: "#FF0000", strokeWidth: 2 }
+            ));
+            mobileMap.geoObjects.add(new ymaps.Circle(
+                [[{{ item.pos_x }}, {{ item.pos_y }}], {{ item.radius * 1000 }}],
+                { hintContent: 'Игнорируемая зона', balloonContent: '{{ item.named }}' },
+                { fillColor: "#FF000050", strokeColor: "#FF0000", strokeWidth: 2 }
+            ));
+            myMap.geoObjects.add(new ymaps.Placemark(
+                [{{ item.pos_x }}, {{ item.pos_y }}],
+                { hintContent: 'Метка игнорируемой зоны', balloonContent: '{{ item.named }}' },
+                { preset: 'islands#darkGreenDotIcon' }
+            ));
+            mobileMap.geoObjects.add(new ymaps.Placemark(
+                [{{ item.pos_x }}, {{ item.pos_y }}],
+                { hintContent: 'Метка игнорируемой зоны', balloonContent: '{{ item.named }}' },
+                { preset: 'islands#darkGreenDotIcon' }
+            ));
+            initialObjects.push(new ymaps.Circle(
+                [[{{ item.pos_x }}, {{ item.pos_y }}], {{ item.radius * 1000 }}],
+                { hintContent: 'Игнорируемая зона', balloonContent: '{{ item.named }}' },
+                { fillColor: "#FF000050", strokeColor: "#FF0000", strokeWidth: 2 }
+            ));
+            initialObjects.push(new ymaps.Placemark(
+                [{{ item.pos_x }}, {{ item.pos_y }}],
+                { hintContent: 'Метка игнорируемой зоны', balloonContent: '{{ item.named }}' },
+                { preset: 'islands#darkGreenDotIcon' }
+            ));
+            {% endfor %}
+
+            if (data.monitoring) {
+                data.monitoring.forEach(item => {
+                    if (item.type === 'cesar' && item.pos_y && item.pos_x) {
+                        let cesarMark = new ymaps.Placemark([item.pos_x, item.pos_y], {
+                            hintContent: 'Метка Cesar',
+                            balloonContent: `PIN блока: ${item.pin || '-'}`
+                        }, { preset: 'islands#orangeDotIcon', iconCaptionMaxWidth: '150' });
+                        myMap.geoObjects.add(cesarMark);
+                        mobileMap.geoObjects.add(cesarMark);
+                        initialObjects.push(cesarMark);
+                    }
+                    if (item.type === 'wialon' && item.pos_y && item.pos_x) {
+                        let wialonMark = new ymaps.Placemark([item.pos_x, item.pos_y], {
+                            hintContent: 'Метка Wialon',
+                            balloonContent: `UID блока: ${item.uid || '-'}`
+                        }, { preset: 'islands#blueDotIcon', iconCaptionMaxWidth: '150' });
+                        myMap.geoObjects.add(wialonMark);
+                        mobileMap.geoObjects.add(wialonMark);
+                        initialObjects.push(wialonMark);
+                    }
+                });
+            }
+
+            if (!hasCoords && myMap.geoObjects.getLength() > 0) {
+                myMap.setBounds(myMap.geoObjects.getBounds(), { checkZoomRange: true });
+                mobileMap.setBounds(myMap.geoObjects.getBounds(), { checkZoomRange: true });
+            }
+
+            document.getElementById('applyBtn').addEventListener('click', function() {
+                const spinner = document.getElementById('spinner');
+                spinner.style.display = 'inline-block';
+                const dateFrom = new Date(document.getElementById('dateFrom').value).getTime() / 1000;
+                const dateTo = new Date(document.getElementById('dateTo').value).getTime() / 1000;
+                const carName = lotNumber;
+
+                if (isNaN(dateFrom) || isNaN(dateTo) || dateFrom >= dateTo) {
+                    alert('Пожалуйста, выберите корректные даты и время.');
+                    spinner.style.display = 'none';
+                    return;
+                }
+
+                fetch(`/api/car/get_history?nm=${encodeURIComponent(carName)}&time_from=${dateFrom}&time_to=${dateTo}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        spinner.style.display = 'none';
+                        if (data.error) {
+                            alert(data.error);
+                            return;
+                        }
+                        historyData = data;
+                        plotRouteAndMarkers();
+                    })
+                    .catch(error => {
+                        spinner.style.display = 'none';
+                        alert('Ошибка при получении истории передвижения: ' + error);
+                    });
+            });
+
+            document.getElementById('clearBtn').addEventListener('click', function() {
+                myMap.geoObjects.removeAll();
+                mobileMap.geoObjects.removeAll();
+                initialObjects.forEach(obj => {
+                    myMap.geoObjects.add(obj);
+                    mobileMap.geoObjects.add(obj);
+                });
+                document.getElementById('dateFrom').value = '';
+                document.getElementById('dateTo').value = '';
+                historyData = [];
+                myMap.setCenter([55.751574, 37.573856], hasCoords ? 13 : 3);
+                mobileMap.setCenter([55.751574, 37.573856], hasCoords ? 13 : 3);
+                if (!hasCoords && myMap.geoObjects.getLength() > 0) {
+                    myMap.setBounds(myMap.geoObjects.getBounds(), { checkZoomRange: true });
+                    mobileMap.setBounds(myMap.geoObjects.getBounds(), { checkZoomRange: true });
+                }
+            });
+
+            function plotRouteAndMarkers() {
+                myMap.geoObjects.removeAll();
+                mobileMap.geoObjects.removeAll();
+                initialObjects.forEach(obj => {
+                    myMap.geoObjects.add(obj);
+                    mobileMap.geoObjects.add(obj);
+                });
+                const coordinates = historyData.map(entry => [entry.pos_y, entry.pos_x]);
+
+                if (coordinates.length > 0) {
+                    let startMark = new ymaps.Placemark(coordinates[0], {
+                        balloonContent: 'Начало маршрута'
+                    }, { preset: 'islands#greenDotIcon' });
+                    myMap.geoObjects.add(startMark);
+                    mobileMap.geoObjects.add(startMark);
+                }
+
+                if (coordinates.length > 1) {
+                    let endMark = new ymaps.Placemark(coordinates[coordinates.length - 1], {
+                        balloonContent: 'Конец маршрута'
+                    }, { preset: 'islands#redDotIcon' });
+                    myMap.geoObjects.add(endMark);
+                    mobileMap.geoObjects.add(endMark);
+                    myMap.setCenter(coordinates[coordinates.length - 1], 12);
+                    mobileMap.setCenter(coordinates[coordinates.length - 1], 12);
+
+                    const line = new ymaps.GeoObject({
+                        geometry: {
+                            type: 'LineString',
+                            coordinates: coordinates
+                        },
+                        properties: {
+                            hintContent: 'Маршрут',
+                            balloonContent: 'Это линия маршрута'
+                        }
+                    }, {
+                        strokeWidth: 4,
+                        strokeColor: '#0000FF'
+                    });
+                    myMap.geoObjects.add(line);
+                    mobileMap.geoObjects.add(line);
+                }
+            }
+        });
+
+        // Логика модального окна для алертов
+        const commentModal = document.getElementById('commentModal');
+        const saveCommentButton = document.getElementById('saveCommentButton');
+
+        commentModal.addEventListener('show.bs.modal', function(event) {
+            const button = event.relatedTarget;
+            document.getElementById('modalAuthor').textContent = button.getAttribute('data-author') || 'Неизвестен';
+            document.getElementById('modalEditTime').textContent = button.getAttribute('data-edit-time') || '';
+            document.getElementById('modalComment').value = button.getAttribute('data-comment') || '';
+            document.getElementById('modalCommentId').value = button.getAttribute('data-comment-id');
+        });
+
+        saveCommentButton.addEventListener('click', function() {
+            const commentId = document.getElementById('modalCommentId').value;
+            const newComment = document.getElementById('modalComment').value.trim();
+
+            if (!commentId || newComment.length === 0 || newComment.length > 500) {
+                alert('Комментарий не может быть пустым или длиннее 500 символов.');
+                return;
+            }
+
+            fetch('/api/edit_report_comment', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ comment_id: commentId, comment: newComment })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'edit_ok') location.reload();
+                else alert('Ошибка сохранения комментария.');
+            })
+            .catch(error => alert('Ошибка при отправке данных: ' + error));
+        });
+    })
+    .catch(error => {
+        loading.style.display = 'none';
+        errorDiv.textContent = 'Ошибка при загрузке данных: ' + error.message;
+        errorDiv.style.display = 'block';
+    });
+});
+</script>
+{% endblock %}

@@ -19,7 +19,6 @@ def create_app():
     app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('SQLALCHEMY_DATABASE_URL', 'sqlite:///default.db')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "false"
-
     db.init_app(app)
 
     from .routes import bp as main_bp
