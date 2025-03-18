@@ -23,12 +23,10 @@
                         <small>{{ alert.date | unix_to_datetime }}</small>
                     </div>
                     <p class="mb-1 text-muted">
-                        {% if alert.type == 'gps' %} Нет координат {{ alert.data }}
-                        {% elif alert.type == 'distance' %} В {{ alert.data }} км от положенного места
-                        {% elif alert.type == 'no_docs_cords' %} В ДО нет координат
-                        {% elif alert.type == 'no_equipment' %} Нет оборудования {{ alert.data }}
-                        {% elif alert.type == 'not_work' %} Оборудование {{ alert.data }} не в сети
-                        {% else %} {{ alert.data }} {% endif %}
+                        {% if alert.type == 'distance' %} {{ alert.alert_type.localization }} {{ alert.data }} км
+                        {% elif alert.type == 'no_equipment' %} {{ alert.alert_type.localization }} {{ alert.data }}
+                        {% elif alert.type == 'not_work' %} {{ alert.alert_type.localization }}: {{ alert.data }}
+                        {% else %} {{ alert.alert_type.localization }} {% endif %}
                     </p>
                 </a>
                 {% endfor %}
@@ -92,10 +90,8 @@
                                     <small class="text-muted">{{ alert.date | unix_to_datetime }}</small>
                                 </div>
                                 <p class="card-text">
-                                    {% if alert.type == 'gps' %} Нет координат от блока {{ alert.data }}
-                                    {% elif alert.type == 'distance' %} ТС находится в {{ alert.data }} км от своего места работы
-                                    {% elif alert.type == 'no_docs_cords' %} В ДО нет координат
-                                    {% else %} {{ alert.data }} {% endif %}
+                                    {% if alert.type == 'distance' %} {{ alert.alert_type.localization }} {{ alert.data }} км
+                                    {% else %} {{ alert.alert_type.localization }} {% endif %}
                                 </p>
                                 <div class="d-flex justify-content-between align-items-center">
                                     <small class="text-muted">

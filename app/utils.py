@@ -1,6 +1,8 @@
 from functools import wraps
+from symtable import Class
+
 from flask import session, flash, redirect, url_for, render_template, request
-from .models import db, User, Storage, Coord
+from .models import db, User, Storage, Coord, AlertType
 from modules import my_time, location_module
 import datetime
 
@@ -124,3 +126,23 @@ def get_api_key_by_username(username):
     if user:
         return user.api_token
     return None
+
+
+def get_alert_type(alert_name):
+    """
+    Возвращает инфу по алерту
+    """
+    class AlertObject():
+        def __init__(self, alert_name):
+            alert = AlertType.query.filter_by(alert_un=alert_name).first()
+            self.alert_name = alert.alert_un
+            self.localization = alert.localization
+            self.criticality = alert.criticality
+            self.category = alert.category
+
+
+    return AlertObject(alert_name)
+
+
+
+

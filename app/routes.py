@@ -8,7 +8,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, sessio
 
 from modules.my_time import online_check
 from .models import db, User, Transport, TransportModel, Storage, CashWialon, CashCesar, Alert, Comments, TransferTasks, \
-    IgnoredStorage
+    IgnoredStorage, AlertType
 from .utils import need_access
 from modules import report_generator, my_time, hash_password
 
@@ -146,10 +146,10 @@ def home():
 @bp.route('/virtual_operator')
 @need_access(0)
 def virtual_operator():
-    distance = db.session.query(Alert).filter(Alert.status == 0, Alert.type.in_(['distance', 'gps', 'no_docs_cords'])).order_by(Alert.date.desc()).all()
-    not_work = db.session.query(Alert).filter(Alert.status == 0, Alert.type == 'not_work').order_by(Alert.date.desc()).all()
-    no_equipment = db.session.query(Alert).filter(Alert.status == 0, Alert.type == 'no_equipment').order_by(Alert.date.desc()).all()
-    last_100_alerts = db.session.query(Alert).order_by(Alert.date.desc()).limit(100).all()
+    distance = db.session.query(Alert).join(AlertType, Alert.type==AlertType.alert_un).filter(Alert.status == 0, Alert.type.in_(['distance', 'gps', 'no_docs_cords'])).order_by(Alert.date.desc()).all()
+    not_work = db.session.query(Alert).join(AlertType, Alert.type==AlertType.alert_un).filter(Alert.status == 0, Alert.type == 'not_work').order_by(Alert.date.desc()).all()
+    no_equipment = db.session.query(Alert).join(AlertType, Alert.type==AlertType.alert_un).filter(Alert.status == 0, Alert.type == 'no_equipment').order_by(Alert.date.desc()).all()
+    last_100_alerts = db.session.query(Alert).join(AlertType, Alert.type==AlertType.alert_un).order_by(Alert.date.desc()).limit(100).all()
 
     return render_template('pages/virtual_operator/page.html',
                            distance=distance,
