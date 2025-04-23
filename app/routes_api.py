@@ -128,10 +128,9 @@ class GetCarInfo(Resource):
     })
     @api.response(200, 'Успешно')
     @api.response(404, 'Лот не был найден')
-    @need_access(1)
+    @need_access(-1)
     def get(self, lot_number):
         try:
-            print('may')
             user = User.query.filter_by(username=session['username']).first_or_404()
             # Получение информации о транспорте
             car = db.session.query(Transport).filter(Transport.uNumber == lot_number).first()

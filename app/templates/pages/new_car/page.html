@@ -8,57 +8,78 @@
 <div class="container-fluid p-0 min-vh-100 d-flex flex-column">
     <div class="row flex-grow-1" id="mainRow">
         <div class="col-12 col-md-6 p-0 flex-grow-1 d-none d-md-block" id="mapColumn">
+            <a href="/old_cars/{{ car_name }}" class="btn btn-outline-secondary mb-4">
+                <i class="bi bi-arrow-left-circle me-2"></i> Открыть в старом дизайне
+            </a>
             <div id="map" class="shadow-sm" style="height: 80%; min-height: 0; border-radius: 0.5rem 0 0 0.5rem;"></div>
         </div>
         <div class="col-12 col-md-6 p-4" id="tabsColumn">
             <div class="fixed-relative" style="top: 1rem;">
                 <h1 class="mb-4 fw-bold fs-2"><span id="lotNumber">{{ car_name }}</span></h1>
                 <ul class="nav nav-tabs nav-fill mb-4 border-0 flex-md-row" id="myTab" role="tablist">
+                    {% if g.user.role >= -1 %}
                     <li class="nav-item d-md-none">
                         <button class="nav-link px-4 py-2 shadow-sm rounded-3" id="map-tab" data-bs-toggle="tab" data-bs-target="#mapPane" type="button" role="tab" aria-controls="mapPane" aria-selected="false">
                             <i class="bi bi-map me-2"></i> Карта
                         </button>
                     </li>
+                    {% endif %}
+                    {% if g.user.role >= -1 %}
                     <li class="nav-item">
                         <button class="nav-link active px-4 py-2 shadow-sm rounded-3" id="info-tab" data-bs-toggle="tab" data-bs-target="#info" type="button" role="tab" aria-controls="info" aria-selected="true">
                             <i class="bi bi-info-circle me-2"></i> Карточка Лота
                         </button>
                     </li>
+                    {% endif %}
+                    {% if g.user.role >= -1 %}
                     <li class="nav-item">
                         <button class="nav-link px-4 py-2 shadow-sm rounded-3" id="transfers-tab" data-bs-toggle="tab" data-bs-target="#transfers" type="button" role="tab" aria-controls="transfers" aria-selected="false">
                             <i class="bi bi-arrow-left-right me-2"></i> Перемещения
                         </button>
                     </li>
+                    {% endif %}
+                    {% if g.user.role >= 0 %}
                     <li class="nav-item">
                         <button class="nav-link px-4 py-2 shadow-sm rounded-3" id="monitoring-tab" data-bs-toggle="tab" data-bs-target="#monitoring" type="button" role="tab" aria-controls="monitoring" aria-selected="false">
                             <i class="bi bi-device-ssd me-2"></i> Оборудование
                         </button>
                     </li>
+                    {% endif %}
+                    {% if g.user.role >= 0 %}
                     <li class="nav-item">
                         <button class="nav-link px-4 py-2 shadow-sm rounded-3" id="movement-tab" data-bs-toggle="tab" data-bs-target="#movement" type="button" role="tab" aria-controls="movement" aria-selected="false">
                             <i class="bi bi-geo-alt me-2"></i> Трек
                         </button>
                     </li>
+                    {% endif %}
+                    {% if g.user.role >= 0 %}
                     <li class="nav-item">
                         <button class="nav-link px-4 py-2 shadow-sm rounded-3" id="sensors-tab" data-bs-toggle="tab" data-bs-target="#sensors" type="button" role="tab" aria-controls="sensors" aria-selected="false">
                             <i class="bi bi-code-square me-2"></i> Датчики
                         </button>
                     </li>
+                    {% endif %}
+                    {% if g.user.role >= 0 %}
                     <li class="nav-item">
                         <button class="nav-link px-4 py-2 shadow-sm rounded-3" id="alerts-tab" data-bs-toggle="tab" data-bs-target="#alerts" type="button" role="tab" aria-controls="alerts" aria-selected="false">
                             <i class="bi bi-bell me-2"></i> Алерты
                         </button>
                     </li>
+                    {% endif %}
+                    {% if g.user.role >= 0 %}
                     <li class="nav-item">
                         <button class="nav-link px-4 py-2 shadow-sm rounded-3" id="comments-tab" data-bs-toggle="tab" data-bs-target="#comments" type="button" role="tab" aria-controls="comments" aria-selected="false">
                             <i class="bi bi-chat-left-text me-2"></i> Комментарии
                         </button>
                     </li>
+                    {% endif %}
+                    {% if g.user.role == 1 %}
                     <li class="nav-item">
                         <button class="nav-link px-4 py-2 shadow-sm rounded-3" id="settings-tab" data-bs-toggle="tab" data-bs-target="#settings" type="button" role="tab" aria-controls="settings" aria-selected="false">
                             <i class="bi bi-gear me-2"></i> Настройки
                         </button>
                     </li>
+                    {% endif %}
                 </ul>
                 <div class="tab-content p-0" id="myTabContent">
                     {% include 'pages/new_car/map.html' %}
