@@ -31,7 +31,7 @@
                         </button>
                     </li>
                     {% endif %}
-                    {% if g.user.role >= -1 %}
+                    {% if g.user.role >= 0 %}
                     <li class="nav-item">
                         <button class="nav-link px-4 py-2 shadow-sm rounded-3" id="transfers-tab" data-bs-toggle="tab" data-bs-target="#transfers" type="button" role="tab" aria-controls="transfers" aria-selected="false">
                             <i class="bi bi-arrow-left-right me-2"></i> Перемещения
@@ -45,7 +45,7 @@
                         </button>
                     </li>
                     {% endif %}
-                    {% if g.user.role >= 0 %}
+                    {% if g.user.role >= -1 %}
                     <li class="nav-item">
                         <button class="nav-link px-4 py-2 shadow-sm rounded-3" id="movement-tab" data-bs-toggle="tab" data-bs-target="#movement" type="button" role="tab" aria-controls="movement" aria-selected="false">
                             <i class="bi bi-geo-alt me-2"></i> Трек
@@ -66,7 +66,7 @@
                         </button>
                     </li>
                     {% endif %}
-                    {% if g.user.role >= 0 %}
+                    {% if g.user.role >= -1 %}
                     <li class="nav-item">
                         <button class="nav-link px-4 py-2 shadow-sm rounded-3" id="comments-tab" data-bs-toggle="tab" data-bs-target="#comments" type="button" role="tab" aria-controls="comments" aria-selected="false">
                             <i class="bi bi-chat-left-text me-2"></i> Комментарии
