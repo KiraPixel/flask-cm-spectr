@@ -149,14 +149,18 @@ def home():
 
         data_db = unique_combined_data
 
-
-
     columns = ['№ Лота', 'Модель', 'Склад', 'Регион']
     columns_data = []
-    # Формируем данные для отображения
+    seen_unumbers = set()  # Множество для отслеживания уникальных uNumber
+
     if data_db is not None:
         for transport, storage, transport_model, wialon in data_db:
             transport_number = transport.uNumber
+            # Пропускаем запись, если uNumber уже встречался
+            if transport_number in seen_unumbers:
+                continue
+
+            seen_unumbers.add(transport_number)
             transport_model_name = transport_model.name if transport_model else 'None'
             storage_name = storage.name if storage else 'None'
             storage_region = storage.region if storage else 'None'
