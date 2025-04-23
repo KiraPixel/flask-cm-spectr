@@ -2,17 +2,14 @@
 <nav class="navbar-bottom">
     <a href="/" class="nav-link {% if request.endpoint == 'main.home' %}active{% endif %}">
         <i class="bi bi-house-door-fill"></i>
-        <span>Главная</span> <!-- Подпись для главной страницы -->
     </a>
     <a href="/maps" class="nav-link {% if request.endpoint == 'main.maps' %}active{% endif %}">
         <i class="bi bi-map"></i>
-        <span>Карта</span> <!-- Подпись для карты -->
     </a>
 
     {% if g.user.role > -1 %}
     <a href="javascript:void(0)" class="nav-link" data-bs-toggle="modal" data-bs-target="#utilitiesMenu">
         <i class="bi bi-tools"></i>
-        <span>Утилиты</span> <!-- Подпись для утилит -->
     </a>
     {% endif %}
 
@@ -20,7 +17,6 @@
     <!-- Меню пользователя -->
     <a href="javascript:void(0)" class="nav-link" data-bs-toggle="modal" data-bs-target="#userMenuMobile">
         <i class="bi bi-person-circle"></i>
-        <span>Профиль</span> <!-- Подпись для профиля -->
     </a>
     {% endif %}
 </nav>
