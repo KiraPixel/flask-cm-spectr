@@ -139,12 +139,31 @@ class Alert(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     date = db.Column(db.Integer, nullable=False, default=0)
     uNumber = db.Column(db.Text, nullable=False)
-    type = db.Column(db.Text, nullable=False)
+    type = db.Column(db.String(255), db.ForeignKey('alert_type.alert_un'), nullable=False)  # Изменяем на String(255) и добавляем ForeignKey
     data = db.Column(db.Text, nullable=False)
     status = db.Column(db.Integer, nullable=True, default=0)
     comment = db.Column(db.String(100), nullable=True)
     comment_editor = db.Column(db.String(100), nullable=True)
     date_time_edit = db.Column(db.Integer, nullable=False, default=0)
+
+    alert_type = db.relationship('AlertType', backref='alerts')
+
+
+class AlertType(db.Model):
+    __tablename__ = 'alert_type'
+    alert_un = db.Column(db.String(255), primary_key=True, nullable=False)
+    localization = db.Column(db.Text, nullable=False)
+    criticality = db.Column(db.Text)
+    category = db.Column(db.Text, nullable=False)
+
+
+class Coord(db.Model):
+    __tablename__ = 'coord_cash'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    pos_x = db.Column(db.Float, default=0.0)
+    pos_y = db.Column(db.Float, default=0.0)
+    address = db.Column(db.String(100), nullable=True)
+    updated_time = db.Column(db.Integer, nullable=False, default=0)
 
 
 class Comments(db.Model):

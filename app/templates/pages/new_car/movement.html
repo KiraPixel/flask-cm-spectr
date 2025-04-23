@@ -1,0 +1,121 @@
+<div class="tab-pane fade" id="movement" role="tabpanel" aria-labelledby="movement-tab">
+    <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-5">
+                    <label for="dateFrom" class="form-label fw-bold">Дата и время от:</label>
+                    <input type="datetime-local" class="form-control" id="dateFrom" required>
+                </div>
+                <div class="col-md-5">
+                    <label for="dateTo" class="form-label fw-bold">Дата и время до:</label>
+                    <input type="datetime-local" class="form-control" id="dateTo" required>
+                </div>
+            </div>
+            <div class="row g-3 mt-3">
+                <div class="col-md-12 d-flex gap-2">
+                    <button class="btn btn-primary" id="applyBtn">
+                        <i class="bi bi-check me-1"></i>Применить
+                    </button>
+                    <button class="btn btn-outline-secondary" id="clearBtn">
+                        <i class="bi bi-x me-1"></i>Очистить
+                    </button>
+                    <div id="spinner" class="spinner-border text-primary" style="display: none;" role="status">
+                        <span class="visually-hidden">Загрузка...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    console.log('Movement script loaded');
+    window.addEventListener('carDataLoaded', function() {
+        console.log('carDataLoaded event received in Movement');
+        const lotNumber = document.getElementById('lotNumber').textContent.trim();
+        let historyData = [];
+
+        document.getElementById('applyBtn').addEventListener('click', function() {
+            const spinner = document.getElementById('spinner');
+            spinner.style.display = 'inline-block';
+            const dateFrom = new Date(document.getElementById('dateFrom').value).getTime() / 1000;
+            const dateTo = new Date(document.getElementById('dateTo').value).getTime() / 1000;
+
+            if (isNaN(dateFrom) || isNaN(dateTo) || dateFrom >= dateTo) {
+                alert('Пожалуйста, выберите корректные даты и время.');
+                spinner.style.display = 'none';
+                return;
+            }
+
+            fetch(`/api/car/get_history?nm=${encodeURIComponent(lotNumber)}&time_from=${dateFrom}&time_to=${dateTo}`)
+                .then(response => response.json())
+                .then(data => {
+                    spinner.style.display = 'none';
+                    if (data.error) {
+                        alert(data.error);
+                        return;
+                    }
+                    historyData = data;
+                    plotRouteAndMarkers();
+                })
+                .catch(error => {
+                    spinner.style.display = 'none';
+                    alert('Ошибка при получении истории передвижения: ' + error);
+                });
+        });
+
+        document.getElementById('clearBtn').addEventListener('click', function() {
+            window.MapController.clearRoute();
+            document.getElementById('dateFrom').value = '';
+            document.getElementById('dateTo').value = '';
+            historyData = [];
+            const hasCoords = window.carData.rent?.x && window.carData.rent?.y;
+            if (!hasCoords && window.myMap.geoObjects.getLength() > 0) {
+                window.MapController.setBounds();
+            }
+        });
+
+        function plotRouteAndMarkers() {
+            if (!window.myMap || !window.mobileMap) {
+                console.error('Одна из карт не инициализирована');
+                return;
+            }
+
+            window.MapController.clearRoute();
+
+            const coordinates = historyData.map(entry => [entry.pos_y, entry.pos_x]);
+
+            if (coordinates.length > 0) {
+                let startMark = new ymaps.Placemark(coordinates[0], {
+                    balloonContent: 'Начало маршрута'
+                }, { preset: 'islands#greenDotIcon' });
+                window.MapController.addRouteObject(startMark);
+            }
+
+            if (coordinates.length > 1) {
+                let endMark = new ymaps.Placemark(coordinates[coordinates.length - 1], {
+                    balloonContent: 'Конец маршрута'
+                }, { preset: 'islands#redDotIcon' });
+                window.MapController.addRouteObject(endMark);
+
+                window.MapController.setCenter(coordinates[coordinates.length - 1], 12);
+
+                const line = new ymaps.GeoObject({
+                    geometry: {
+                        type: 'LineString',
+                        coordinates: coordinates
+                    },
+                    properties: {
+                        hintContent: 'Маршрут',
+                        balloonContent: 'Это линия маршрута'
+                    }
+                }, {
+                    strokeWidth: 4,
+                    strokeColor: '#0000FF'
+                });
+
+                window.MapController.addRouteObject(line);
+            }
+        }
+    });
+</script>

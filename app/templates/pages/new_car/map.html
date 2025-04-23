@@ -1,0 +1,188 @@
+<div class="tab-pane fade d-md-none" id="mapPane" role="tabpanel" aria-labelledby="map-tab">
+    <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-body p-0">
+            <div id="mobileMap" class="shadow-sm" style="height: 300px; border-radius: 0.5rem;"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    console.log('Map controller loaded');
+    window.addEventListener('carDataLoaded', function() {
+        console.log('carDataLoaded event received in Map controller');
+
+        const MapController = {
+            baseObjects: [],
+            routeObjects: [],
+
+            addBaseObject: function(object) {
+                const objectCopy = this.cloneMapObject(object);
+                if (window.myMap && window.myMap.geoObjects) {
+                    window.myMap.geoObjects.add(object);
+                }
+                if (window.mobileMap && window.mobileMap.geoObjects) {
+                    window.mobileMap.geoObjects.add(objectCopy);
+                }
+                this.baseObjects.push({ main: object, mobile: objectCopy });
+            },
+
+            addRouteObject: function(object) {
+                const objectCopy = this.cloneMapObject(object);
+                if (window.myMap && window.myMap.geoObjects) {
+                    window.myMap.geoObjects.add(object);
+                }
+                if (window.mobileMap && window.mobileMap.geoObjects) {
+                    window.mobileMap.geoObjects.add(objectCopy);
+                }
+                this.routeObjects.push({ main: object, mobile: objectCopy });
+            },
+
+            cloneMapObject: function(object) {
+                if (object instanceof ymaps.Placemark) {
+                    return new ymaps.Placemark(
+                        object.geometry.getCoordinates(),
+                        object.properties.getAll(),
+                        object.options.getAll()
+                    );
+                } else if (object instanceof ymaps.Circle) {
+                    return new ymaps.Circle(
+                        object.geometry.getCoordinates(),
+                        object.properties.getAll(),
+                        object.options.getAll()
+                    );
+                } else if (object instanceof ymaps.GeoObject) {
+                    const geometryType = object.geometry.getType();
+                    if (geometryType === 'LineString') {
+                        return new ymaps.GeoObject(
+                            {
+                                geometry: {
+                                    type: 'LineString',
+                                    coordinates: object.geometry.getCoordinates()
+                                },
+                                properties: object.properties.getAll()
+                            },
+                            object.options.getAll()
+                        );
+                    }
+                    // Добавьте поддержку других типов геометрии при необходимости
+                }
+                console.warn('Не удалось клонировать объект: неизвестный тип', object);
+                return null;
+            },
+
+            clearRoute: function() {
+                this.routeObjects.forEach(obj => {
+                    if (window.myMap && window.myMap.geoObjects) {
+                        window.myMap.geoObjects.remove(obj.main);
+                    }
+                    if (window.mobileMap && window.mobileMap.geoObjects) {
+                        window.mobileMap.geoObjects.remove(obj.mobile);
+                    }
+                });
+                this.routeObjects = [];
+            },
+
+            clearAndRestoreBase: function() {
+                if (window.myMap && window.myMap.geoObjects) {
+                    window.myMap.geoObjects.removeAll();
+                }
+                if (window.mobileMap && window.mobileMap.geoObjects) {
+                    window.mobileMap.geoObjects.removeAll();
+                }
+                this.baseObjects.forEach(obj => {
+                    if (window.myMap && window.myMap.geoObjects) {
+                        window.myMap.geoObjects.add(obj.main);
+                    }
+                    if (window.mobileMap && window.mobileMap.geoObjects) {
+                        window.mobileMap.geoObjects.add(obj.mobile);
+                    }
+                });
+            },
+
+            setCenter: function(coords, zoom) {
+                if (window.myMap) {
+                    window.myMap.setCenter(coords, zoom);
+                }
+                if (window.mobileMap) {
+                    window.mobileMap.setCenter(coords, zoom);
+                }
+            },
+
+            setBounds: function() {
+                if (window.myMap && window.myMap.geoObjects.getLength() > 0) {
+                    window.myMap.setBounds(window.myMap.geoObjects.getBounds(), { checkZoomRange: true });
+                }
+                if (window.mobileMap && window.mobileMap.geoObjects.getLength() > 0) {
+                    window.mobileMap.setBounds(window.mobileMap.geoObjects.getBounds(), { checkZoomRange: true });
+                }
+            },
+
+            initialize: function(data) {
+                let centerCoords = [55.751574, 37.573856];
+                let hasCoords = false;
+
+                if (data.rent?.x && data.rent?.y) {
+                    centerCoords = [data.rent.x, data.rent.y];
+                    hasCoords = true;
+                    let placemark = new ymaps.Placemark([data.rent.x, data.rent.y], {
+                        hintContent: 'Место работы',
+                        balloonContent: 'Здесь работает автомобиль'
+                    }, { preset: 'islands#redDotIcon', iconCaptionMaxWidth: '150' });
+                    this.addBaseObject(placemark);
+                } else if (data.monitoring) {
+                    const wialonItem = data.monitoring.find(item => item.type === 'wialon' && item.pos_y && item.pos_x);
+                    if (wialonItem) {
+                        centerCoords = [wialonItem.pos_x, wialonItem.pos_y];
+                        hasCoords = true;
+                    } else {
+                        const cesarItem = data.monitoring.find(item => item.type === 'cesar' && item.pos_y && item.pos_x);
+                        if (cesarItem) {
+                            centerCoords = [cesarItem.pos_x, cesarItem.pos_y];
+                            hasCoords = true;
+                        }
+                    }
+                }
+
+                this.setCenter(centerCoords, 13);
+
+                {% for item in ignored_storages %}
+                this.addBaseObject(new ymaps.Circle(
+                    [[{{ item.pos_x }}, {{ item.pos_y }}], {{ item.radius * 1000 }}],
+                    { hintContent: 'Игнорируемая зона', balloonContent: '{{ item.named }}' },
+                    { fillColor: "#FF000050", strokeColor: "#FF0000", strokeWidth: 2 }
+                ));
+                this.addBaseObject(new ymaps.Placemark(
+                    [{{ item.pos_x }}, {{ item.pos_y }}],
+                    { hintContent: 'Метка игнорируемой зоны', balloonContent: '{{ item.named }}' },
+                    { preset: 'islands#darkGreenDotIcon' }
+                ));
+                {% endfor %}
+
+                if (data.monitoring) {
+                    data.monitoring.forEach(item => {
+                        if (item.type === 'cesar' && item.pos_y && item.pos_x) {
+                            let cesarMark = new ymaps.Placemark([item.pos_x, item.pos_y], {
+                                hintContent: 'Метка Cesar',
+                                balloonContent: `PIN блока: ${item.pin || '-'}`
+                            }, { preset: 'islands#orangeDotIcon', iconCaptionMaxWidth: '150' });
+                            this.addBaseObject(cesarMark);
+                        }
+                        if (item.type === 'wialon' && item.pos_y && item.pos_x) {
+                            let wialonMark = new ymaps.Placemark([item.pos_x, item.pos_y], {
+                                hintContent: 'Метка Wialon',
+                                balloonContent: `UID блока: ${item.uid || '-'}`
+                            }, { preset: 'islands#blueDotIcon', iconCaptionMaxWidth: '150' });
+                            this.addBaseObject(wialonMark);
+                        }
+                    });
+                }
+
+                if (window.myMap) window.myMap.container.fitToViewport();
+                if (window.mobileMap) window.mobileMap.container.fitToViewport();
+            }
+        };
+
+        MapController.initialize(window.carData);
+        window.MapController = MapController;
+    });
+</script>

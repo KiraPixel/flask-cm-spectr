@@ -1,0 +1,156 @@
+<div class="tab-pane fade" id="transfers" role="tabpanel" aria-labelledby="transfers-tab">
+    <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-body p-3">
+            <div id="transfersInfo">
+                <div class="alert alert-info text-center">Загрузка данных...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+console.log('Transfers script loaded');
+
+window.addEventListener('carDataLoaded', function() {
+    console.log('carDataLoaded event received in Transfers');
+    const transfersContainer = document.getElementById('transfersInfo');
+
+    if (!window.carData || !window.carData.transfers || window.carData.transfers.length === 0) {
+        transfersContainer.innerHTML = `
+            <div class="alert alert-warning text-center">
+                История изменений отсутствует
+            </div>`;
+        return;
+    }
+
+    let transfersHtml = '<div class="timeline">';
+    window.carData.transfers.forEach((item) => {
+        const iconClass = getTransferIcon(item.type);
+
+        transfersHtml += `
+            <div class="timeline-item">
+                <div class="timeline-icon">
+                    <i class="${iconClass} text-primary"></i>
+                </div>
+                <div class="timeline-content">
+                    <div class="card shadow-sm">
+                        <div class="card-body p-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap">
+                                <h6 class="mb-0 fw-bold text-truncate">${item.type || 'Неизвестный тип'}</h6>
+                                <small class="text-muted ms-2 text-nowrap">${item.date || '-'}</small>
+                            </div>
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <p class="mb-1 fw-bold">Новое значение:</p>
+                                    <p class="mb-0 text-truncate">${item.new_value || '-'}</p>
+                                </div>
+                                <div class="col-6">
+                                    <p class="mb-1 small text-muted">Старое значение:</p>
+                                    <p class="mb-0 text-truncate small text-muted">${item.old_value || '-'}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+    });
+    transfersHtml += '</div>';
+    transfersContainer.innerHTML = transfersHtml;
+});
+
+// Функция для выбора иконки в зависимости от типа изменения
+function getTransferIcon(type) {
+    switch (type) {
+        case 'Перемещение по складу':
+            return 'bi bi-truck';
+        case 'Изменение менеджера':
+            return 'bi bi-person';
+        case 'Изменение клиента':
+            return 'bi bi-building';
+        default:
+            return 'bi bi-arrow-left-right';
+    }
+}
+</script>
+
+<style>
+.timeline {
+    position: relative;
+    padding: 0 0 20px 0;
+    width: 100%;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 19px; /* Сдвигаем чуть левее центра иконки */
+    width: 2px;
+    background: var(--bs-gray-300); /* Используем переменную Bootstrap для адаптации к теме */
+    z-index: 1; /* Помещаем линию позади иконок */
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: flex-start;
+}
+
+.timeline-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: var(--bs-body-bg); /* Фон иконки соответствует фону страницы */
+    box-shadow: 0 0 0 4px var(--bs-body-bg); /* Адаптивная обводка */
+    z-index: 2; /* Иконка поверх линии */
+}
+
+.timeline-content {
+    flex-grow: 1;
+    margin-left: 20px;
+    width: calc(100% - 60px);
+}
+
+.timeline-content .card {
+    width: 100%;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.timeline-content .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
+}
+
+.text-truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+@media (max-width: 576px) {
+    .timeline::before {
+        left: 14px;
+    }
+
+    .timeline-icon {
+        width: 30px;
+        height: 30px;
+    }
+
+    .timeline-content {
+        margin-left: 15px;
+        width: calc(100% - 45px);
+    }
+
+    .timeline-content .card-body {
+        padding: 15px !important;
+    }
+}
+</style>

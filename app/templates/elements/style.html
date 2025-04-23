@@ -1,0 +1,225 @@
+<style>
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    margin: 0;
+    padding-bottom: 60px; /* Отступ под фиксированный навбар */
+    overflow-x: hidden; /* Отключаем горизонтальный скролл */
+}
+.navbar-bottom {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100vw; /* Занимает 100% от ширины видимой области экрана */
+    background-color: #f8f9fa;
+    box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+    z-index: 1030;
+    display: flex;
+    justify-content: space-around;
+    padding: 10px 0;
+}
+.navbar-bottom .nav-link {
+    color: #6c757d;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+}
+.navbar-bottom .nav-link.active {
+    color: #0d6efd;
+}
+/* Для мобильных устройств */
+@media (max-width: 576px) {
+    .navbar-bottom {
+        display: flex;
+        justify-content: space-around;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100vw; /* Убедимся, что он точно по ширине экрана */
+        background-color: #f8f9fa;
+        z-index: 1030;
+    }
+
+    /* Скрываем футер на мобильных */
+    footer {
+        display: none;
+    }
+}
+.headers {
+    display: none;
+}
+@media (min-width: 577px) {
+    .headers {
+        display: block;
+    }
+}
+.footer {
+    display: block;
+}
+
+@media (max-width: 576px) {
+    .footer {
+        display: none;
+    }
+}
+</style>
+
+<style>
+.custom-navbar {
+    background-color: white; /* Светлая тема по умолчанию */
+    border-bottom: 1px solid #ddd;
+    padding: 10px 20px;
+    color: #333;
+    transition: background-color 0.3s, color 0.3s; /* Плавный переход */
+}
+.navbar-brand {
+    color: #333; /* Цвет текста логотипа */
+    transition: color 0.3s;
+}
+.navbar-brand .logo {
+    height: 35px;
+    margin-right: 10px;
+    filter: brightness(1); /* Яркость логотипа */
+    transition: filter 0.3s;
+}
+.nav-link {
+    color: #333;
+    font-size: 1rem;
+    margin: 0 10px;
+    transition: color 0.3s;
+}
+.nav-link:hover, .nav-link.active {
+    color: #007bff; /* Акцент для светлой темы */
+}
+.dropdown-menu {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s, border-color 0.3s;
+}
+.dropdown-item {
+    color: #333;
+    transition: color 0.3s, background-color 0.3s;
+}
+.dropdown-item:hover {
+    background-color: #f8f9fa; /* Лёгкий ховер для светлой темы */
+}
+.theme-toggle {
+    background: none;
+    border: none;
+    color: #333;
+    font-size: 1.25rem;
+    margin-right: 10px;
+    cursor: pointer;
+    transition: color 0.3s;
+}
+.navbar-toggler {
+    border-color: #333; /* Бургер-меню */
+    transition: border-color 0.3s;
+}
+.navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(51, 51, 51, 0.75)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+}
+
+/* Тёмная тема */
+[data-bs-theme="dark"] .custom-navbar {
+    background-color: #1f2a44; /* Фон шапки */
+    border-bottom: 1px solid #444;
+    color: #fff;
+}
+[data-bs-theme="dark"] .navbar-brand {
+    color: #fff;
+}
+[data-bs-theme="dark"] .navbar-brand .logo {
+    filter: brightness(1.2); /* Логотип чуть ярче в тёмной теме */
+}
+[data-bs-theme="dark"] .nav-link {
+    color: #fff;
+}
+[data-bs-theme="dark"] .nav-link:hover,
+[data-bs-theme="dark"] .nav-link.active {
+    color: #cce6ff; /* Акцент для тёмной темы */
+}
+[data-bs-theme="dark"] .dropdown-menu {
+    background: #2a3b5b;
+    border: 1px solid #555;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+[data-bs-theme="dark"] .dropdown-item {
+    color: #fff;
+}
+[data-bs-theme="dark"] .dropdown-item:hover {
+    background-color: #3b4e7a; /* Ховер для тёмной темы */
+}
+[data-bs-theme="dark"] .theme-toggle {
+    color: #fff;
+}
+[data-bs-theme="dark"] .navbar-toggler {
+    border-color: #fff;
+}
+[data-bs-theme="dark"] .navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(255, 255, 255, 0.75)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+}
+/* Разделитель в dropdown */
+.dropdown-divider {
+    border-top: 1px solid #ddd;
+}
+[data-bs-theme="dark"] .dropdown-divider {
+    border-top: 1px solid #555;
+}
+</style>
+
+
+<style>
+/* Нижний мобильный навбар */
+.navbar-bottom {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background-color: white; /* Светлая тема */
+    border-top: 1px solid #ddd;
+    display: flex;
+    justify-content: space-around;
+    padding: 5px 0; /* Уменьшаем вертикальный отступ */
+    z-index: 1000;
+    transition: background-color 0.3s, border-color 0.3s;
+}
+.navbar-bottom .nav-link {
+    color: #333;
+    text-align: center;
+    font-size: 0.8rem; /* Уменьшаем размер текста */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: color 0.3s;
+}
+.navbar-bottom .nav-link i {
+    font-size: 1.2rem; /* Уменьшаем размер иконок */
+    margin-bottom: 3px; /* Уменьшаем отступ под иконкой */
+}
+.navbar-bottom .nav-link.active {
+    color: #007bff; /* Акцент для светлой темы */
+}
+.navbar-bottom .nav-link:hover {
+    color: #007bff;
+}
+
+/* Тёмная тема для мобильного навбара */
+[data-bs-theme="dark"] .navbar-bottom {
+    background-color: #1f2a44;
+    border-top: 1px solid #444;
+}
+[data-bs-theme="dark"] .navbar-bottom .nav-link {
+    color: #fff;
+}
+[data-bs-theme="dark"] .navbar-bottom .nav-link.active {
+    color: #66b3ff; /* Акцент для тёмной темы */
+}
+[data-bs-theme="dark"] .navbar-bottom .nav-link:hover {
+    color: #66b3ff;
+}
+</style>

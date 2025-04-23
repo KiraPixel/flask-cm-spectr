@@ -8,7 +8,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, sessio
 
 from modules.my_time import online_check
 from .models import db, User, Transport, TransportModel, Storage, CashWialon, CashCesar, Alert, Comments, TransferTasks, \
-    IgnoredStorage
+    IgnoredStorage, AlertType
 from .utils import need_access
 from modules import report_generator, my_time, hash_password
 
@@ -23,7 +23,6 @@ def set_user():
         g.user = User.query.filter_by(username=username).first()
     else:
         g.user = None
-
 
 
 # Главная страница
@@ -107,25 +106,50 @@ def home():
     # Фильтруем транспорт по доступам пользователя
     user = User.query.filter_by(username=session['username']).first_or_404()
     if user.role <= -1:
-        user_access_managers = json.loads(user.access_managers)
-        user_access_regions = json.loads(user.access_regions)
+        user_access_managers = json.loads(user.access_managers) if user.access_managers else []
+        user_access_regions = json.loads(user.access_regions) if user.access_regions else []
 
-        # Фильтруем по доступным регионам
-        region_filtered_data = [item for item in data_db if item[1].region in user_access_regions]
-        # Фильтруем по доступным менеджерам
-        region_users_data = [item for item in data_db if item[0].manager in user_access_managers]
+        # Фильтруем данные, учитывая оба условия
+        combined_data = []
+        for item in data_db:
+            transport, storage, transport_model, wialon = item
+            # Проверяем регион, если user_access_regions не пустой
+            region_ok = not user_access_regions or (storage and storage.region in user_access_regions)
+            # Проверяем менеджера, если user_access_managers не пустой
+            manager_ok = not user_access_managers or (transport and transport.manager in user_access_managers)
+            # Добавляем элемент, если он удовлетворяет обоим условиям
+            if region_ok and manager_ok:
+                combined_data.append(item)
 
-        # Объединяем оба списка и удаляем дубли
-        combined_data = region_filtered_data + region_users_data
-        # Используем set, чтобы удалить дубли, и преобразуем обратно в список
-        unique_combined_data = list({
-                                        (transport.uNumber, storage.name, storage.region): (
-                                        transport, storage, transport_model)
-                                        for item in combined_data if len(item) == 3  # Проверка длины
-                                        for transport, storage, transport_model in [item]  # Распаковка после проверки
-                                    }.values())
+        # Удаляем дубли, преобразуя в множество и обратно в список
+        unique_combined_data = []
+        seen_keys = set()
+
+        for item in combined_data:
+            # Проверяем, что item содержит ровно 4 элемента
+            if len(item) != 4:
+                print(f"Пропущен элемент с неверной длиной: {item}")
+                continue
+
+            # Распаковываем элемент
+            transport, storage, transport_model, wialon = item
+
+            # Проверяем, что все необходимые атрибуты существуют
+            if not all([hasattr(transport, 'uNumber'), hasattr(storage, 'name'), hasattr(storage, 'region')]):
+                print(f"Пропущен элемент с отсутствующими атрибутами: {item}")
+                continue
+
+            # Формируем ключ для проверки уникальности
+            key = (transport.uNumber, storage.name, storage.region)
+
+            # Добавляем элемент, если ключ ещё не встречался
+            if key not in seen_keys:
+                seen_keys.add(key)
+                unique_combined_data.append(item)
 
         data_db = unique_combined_data
+
+
 
     columns = ['№ Лота', 'Модель', 'Склад', 'Регион']
     columns_data = []
@@ -140,17 +164,17 @@ def home():
             columns_data.append([transport_number, transport_model_name, storage_name, storage_region])
 
     # Отображаем шаблон с результатами фильтрации
-    return render_template('pages/search/page.html', columns=columns, table_rows=columns_data, redi='/cars/', request=request)
+    return render_template('pages/search/page.html', columns=columns, table_rows=columns_data, redi='/car/', request=request)
 
 
 # Страница состояния
 @bp.route('/virtual_operator')
 @need_access(0)
 def virtual_operator():
-    distance = db.session.query(Alert).filter(Alert.status == 0, Alert.type.in_(['distance', 'gps', 'no_docs_cords'])).order_by(Alert.date.desc()).all()
-    not_work = db.session.query(Alert).filter(Alert.status == 0, Alert.type == 'not_work').order_by(Alert.date.desc()).all()
-    no_equipment = db.session.query(Alert).filter(Alert.status == 0, Alert.type == 'no_equipment').order_by(Alert.date.desc()).all()
-    last_100_alerts = db.session.query(Alert).order_by(Alert.date.desc()).limit(100).all()
+    distance = db.session.query(Alert).join(AlertType, Alert.type==AlertType.alert_un).filter(Alert.status == 0, Alert.type.in_(['distance', 'gps', 'no_docs_cords'])).order_by(Alert.date.desc()).all()
+    not_work = db.session.query(Alert).join(AlertType, Alert.type==AlertType.alert_un).filter(Alert.status == 0, Alert.type == 'not_work').order_by(Alert.date.desc()).all()
+    no_equipment = db.session.query(Alert).join(AlertType, Alert.type==AlertType.alert_un).filter(Alert.status == 0, Alert.type == 'no_equipment').order_by(Alert.date.desc()).all()
+    last_100_alerts = db.session.query(Alert).join(AlertType, Alert.type==AlertType.alert_un).order_by(Alert.date.desc()).limit(100).all()
 
     return render_template('pages/virtual_operator/page.html',
                            distance=distance,
@@ -294,7 +318,7 @@ def logout():
 
 
 # Страница информации о конкретной машине
-@bp.route('/cars/<string:car_id>')
+@bp.route('/old_cars/<string:car_id>')
 @need_access(-1)
 def get_car(car_id):
     user = User.query.filter_by(username=session['username']).first_or_404()
@@ -359,6 +383,21 @@ def get_car(car_id):
         ignored_storages=ignored_storages
     )
 
+@bp.route('/car/<string:car_id>')
+@need_access(-1)
+def car(car_id):
+    text = car_id.replace(' ', '')
+    if re.match(r'^[A-Z]+\d{5}$', text):
+        if text[1] != ' ':
+            car_id = text[:1] + ' ' + text[1:]
+    car_name = f'{car_id}'
+    ignored_storages = db.session.query(IgnoredStorage).all()
+
+    return render_template(
+        'pages/new_car/page.html',
+        car_name=car_name,
+        ignored_storages = ignored_storages
+    )
 
 # Скачивание отчета
 @bp.route('/send_report', endpoint="send_report")

@@ -1,81 +1,115 @@
-<nav class="navbar navbar-expand-lg">
-    <div class="container-fluid d-flex justify-content-between">
-        <!-- Логотип и название -->
-        <div class="d-flex align-items-center">
-            <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Логотип" style="height: 40px; margin-right: 10px;">
-            <a class="navbar-brand mb-0" href="/" style="white-space: nowrap;">Центр мониторинга</a>
-        </div>
+<!-- Новая шапка (Bootstrap-friendly) -->
+<nav class="navbar navbar-expand-lg custom-navbar">
+    <div class="container-fluid d-flex justify-content-between align-items-center">
+        <!-- Логотип и название сайта -->
+        <a class="navbar-brand d-flex align-items-center">
+            <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Логотип" class="logo">
+            <span>Центр мониторинга</span>
+        </a>
 
-        <!-- Кнопка для мелких экранов -->
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <!-- Кнопка для мобильных устройств -->
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Переключить навигацию">
             <span class="navbar-toggler-icon"></span>
         </button>
 
         <!-- Навигационные элементы -->
-        <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
-            <ul class="navbar-nav">
+        <div class="collapse navbar-collapse" id="navbarContent">
+            <ul class="navbar-nav mx-auto">
                 <li class="nav-item">
                     <a class="nav-link {% if request.endpoint == 'main.home' %}active{% endif %}" href="/">Главная</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {% if request.endpoint == 'main.maps' %}active{% endif %}" href="/maps">Объекты на карте</a>
+                    <a class="nav-link {% if request.endpoint == 'main.maps' %}active{% endif %}" href="/maps">Карта</a>
                 </li>
                 {% if g.user.role > -1 %}
                     <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'main.virtual_operator' %}active{% endif %}" href="/virtual_operator">Виртуальный диспетчер</a>
+                        <a class="nav-link {% if request.endpoint == 'main.virtual_operator' %}active{% endif %}" href="/virtual_operator">Диспетчер</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {% if request.endpoint == 'main.dashboard' %}active{% endif %}" href="/dashboard">Дашборд</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'main.reports' %}active{% endif %}" href="/rep">Отчеты</a>
+                        <a class="nav-link {% if request.endpoint == 'main.reports' %}active{% endif %}" href="/rep">Отчёты</a>
                     </li>
                 {% endif %}
             </ul>
 
-            {% if session.username %}
-            <ul class="navbar-nav">
-                <!-- Смена темы -->
-                <li class="nav-item dropdown">
-                    <button class="btn btn-bd-primary py-2 dropdown-toggle d-flex align-items-center theme-toggle-button" id="themeDropdown" type="button" aria-expanded="false" data-bs-toggle="dropdown" aria-label="Toggle theme">
-                        <i class="bi bi-sun-fill my-1 theme-icon-active"></i>
-                        <span class="visually-hidden" id="bd-theme-text">Toggle theme</span>
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="themeDropdown">
-                        <li>
-                            <button type="button" class="dropdown-item d-flex align-items-center" data-bs-theme-value="light">
-                                <i class="bi bi-sun-fill me-2 opacity-50"></i> Light
-                                <i class="bi bi-check2 ms-auto d-none"></i>
-                            </button>
-                        </li>
-                        <li>
-                            <button type="button" class="dropdown-item d-flex align-items-center" data-bs-theme-value="dark">
-                                <i class="bi bi-moon-stars-fill me-2 opacity-50"></i> Dark
-                                <i class="bi bi-check2 ms-auto d-none"></i>
-                            </button>
-                        </li>
-                    </ul>
-                </li>
+            <ul class="navbar-nav d-flex align-items-center">
+                {% if session.username %}
+                    <!-- Переключение темы -->
+                    <li class="nav-item">
+                        <button class="btn theme-toggle" id="themeToggle">
+                            <i class="bi bi-sun"></i>
+                        </button>
+                    </li>
 
-                <!-- Меню пользователя -->
-                <li class="nav-item dropdown">
-                    <button class="btn btn-bd-primary py-2 dropdown-toggle d-flex align-items-center user-dropdown-button" id="userDropdown" type="button" aria-expanded="false" data-bs-toggle="dropdown" aria-label="User menu">
-                        <span>{{ session.username }}</span>
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userDropdown">
-                        {% if g.user.role == 1 %}
-                            <li><a class="dropdown-item" href="/admin">Админ панель</a></li>
-                            <li><a class="dropdown-item" href="/admin/parser">Парсер</a></li>
-                        {% endif %}
-                        <li><a class="dropdown-item" href="{{ url_for('user_profile.index') }}">Аккаунт</a></li>
-                        <li><a class="dropdown-item" href="/sbi">SBI report</a></li>
-                        <li><a class="dropdown-item" href="/api">API Документация</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="{{ url_for('main.logout') }}">Выйти</a></li>
-                    </ul>
-                </li>
+                    <!-- Меню пользователя -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            {{ session.username }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
+                            {% if g.user.role == 1 %}
+                                <li><a class="dropdown-item" href="/admin">Админ-панель</a></li>
+                                <li><a class="dropdown-item" href="/admin/parser">Парсер</a></li>
+                            {% endif %}
+                            <li><a class="dropdown-item" href="{{ url_for('user_profile.index') }}">Профиль</a></li>
+                            <li><a class="dropdown-item" href="/api">Документация API</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('main.logout') }}">Выход</a></li>
+                        </ul>
+                    </li>
+                {% else %}
+                    <li class="nav-item">
+                        <a class="btn btn-primary" href="{{ url_for('main.login') }}">Войти</a>
+                    </li>
+                {% endif %}
             </ul>
-            {% endif %}
         </div>
     </div>
 </nav>
+
+
+<!-- Скрипт для переключения темы -->
+<script>
+    // Функция для получения куки
+    function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+        return null;
+    }
+
+    // Функция для установки куки
+    function setCookie(name, value, days) {
+        const date = new Date();
+        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+        const expires = "expires=" + date.toUTCString();
+        document.cookie = `${name}=${value};${expires};path=/`;
+    }
+
+    // Инициализация темы при загрузке
+    (function() {
+        const savedTheme = getCookie('theme') || 'light'; // По умолчанию светлая
+        document.body.setAttribute('data-bs-theme', savedTheme);
+        const icon = document.getElementById('themeToggle').querySelector('i');
+        if (savedTheme === 'dark') {
+            icon.classList.remove('bi-sun');
+            icon.classList.add('bi-moon');
+        }
+    })();
+
+    // Переключение темы по клику
+    document.getElementById('themeToggle').addEventListener('click', function() {
+        const currentTheme = document.body.getAttribute('data-bs-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        const icon = this.querySelector('i');
+
+        document.body.setAttribute('data-bs-theme', newTheme);
+        setCookie('theme', newTheme, 365);
+
+        // Переключение иконки
+        icon.classList.toggle('bi-sun');
+        icon.classList.toggle('bi-moon');
+    });
+</script>

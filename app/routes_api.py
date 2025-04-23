@@ -12,10 +12,10 @@ from flask import Blueprint, request, jsonify, session, send_from_directory, abo
 from flask_restx import Api, Resource, fields, Namespace
 from sqlalchemy.sql.functions import count
 
-from modules.my_time import online_check
-from modules.location_module import get_address
+from modules.my_time import online_check, online_check_cesar
 from . import db
-from .utils import need_access, need_access, get_api_key_by_username, is_valid_api_key
+from .utils import need_access, need_access, get_api_key_by_username, is_valid_api_key, storage_id_to_name, \
+    get_address_from_coords
 from .models import Transport, TransportModel, Storage, User, CashWialon, Comments, Alert, CashHistoryWialon, Reports, \
     CashCesar, ParserTasks, TransferTasks
 import modules.my_time as mytime
@@ -128,9 +128,10 @@ class GetCarInfo(Resource):
     })
     @api.response(200, 'Успешно')
     @api.response(404, 'Лот не был найден')
-    @need_access(1)
+    @need_access(-1)
     def get(self, lot_number):
         try:
+            user = User.query.filter_by(username=session['username']).first_or_404()
             # Получение информации о транспорте
             car = db.session.query(Transport).filter(Transport.uNumber == lot_number).first()
             if not car:
@@ -146,33 +147,115 @@ class GetCarInfo(Resource):
             if not transport_model:
                 return {"error": "Transport model not found for the specified car"}, 404
 
+            if user.role <= -1:
+                storage = db.session.query(Storage).filter(Storage.ID == car.storage_id).first()
+                user_access_managers = json.loads(user.access_managers)
+                user_access_regions = json.loads(user.access_regions)
+                access_value = 0
+
+                if storage.region in user_access_regions:
+                    access_value = 1
+
+                if car.manager in user_access_managers:
+                    access_value = 1
+
+                if access_value == 0:
+                    return "Not access", 403
+
             # Получение информации из Wialon
             wialon = db.session.query(CashWialon).filter(CashWialon.nm.like(car.uNumber)).all()
             monitoring_json_response = {"monitoring": []}
             if wialon:
                 for item in wialon:
                     monitoring_json_block = {
-                        "wialon_uid": item.uid,
+                        "type": 'wialon',
+                        "online": online_check(item.last_time),
+                        "uid": item.uid,
+                        "unit_id": item.id,
                         "pos_x": item.pos_y,
                         "pos_y": item.pos_x,
-                        "address": str(get_address(item.pos_y, item.pos_x)),
+                        "address": str(get_address_from_coords(item.pos_y, item.pos_x)),
                         "last_time": mytime.unix_to_moscow_time(item.last_time),
-                        "online": online_check(item.last_time)
+                        "wialon_cmd": item.cmd,
+                        "wialon_sensors_list": item.sens
                     }
                     monitoring_json_response["monitoring"].append(monitoring_json_block)
 
-            # Получение информации об активных предупреждениях
-            alerts_json_append = {}
-            alerts = db.session.query(Alert).filter(Alert.uNumber == car.uNumber, Alert.status == 0).order_by(
-                Alert.date.desc()).first()
-            if alerts:
-                alerts_json_append = {
-                    "alerts": {
-                        "alert": "open",
-                        "alert_type": alerts.type,
-                        "alert_datetime": alerts.date
+            # Получение информации из Cesar Position
+            if user.cesar_access == 1:
+                cesar = db.session.query(CashCesar).filter(CashCesar.object_name.like(car.uNumber)).all()
+                for item in cesar:
+                    monitoring_json_block = {
+                        "type": 'cesar',
+                        "uid": item.unit_id,
+                        "pin": item.pin,
+                        "pos_x": item.pos_x,
+                        "pos_y": item.pos_y,
+                        "address": str(get_address_from_coords(item.pos_x, item.pos_y)),
+                        "last_time": mytime.unix_to_moscow_time(item.last_time),
+                        "online": online_check_cesar(item.last_time)
                     }
+                    monitoring_json_response["monitoring"].append(monitoring_json_block)
+
+            #Получение алертов
+            alerts_json_response = {"alert": []}
+            alerts = db.session.query(Alert).filter(Alert.uNumber == car.uNumber).order_by(
+                Alert.date.desc()).all()
+            for item in alerts:
+                alerts_json_append = {
+                    "id": item.id,
+                    "status": item.status,
+                    "type": item.type,
+                    "data": item.data,
+                    "datetime": mytime.unix_to_moscow_time(item.date),
+                    "comment": item.comment,
+                    "comment_editor": item.comment_editor,
+                    "comment_date_time": item.date_time_edit
                 }
+                alerts_json_response["alert"].append(alerts_json_append)
+
+            # Получение комментов
+            comments_json_response = {"comments": []}
+            comments = db.session.query(Comments).filter(Comments.uNumber == car.uNumber).order_by(Comments.datetime_unix.desc()).all()
+            for item in comments:
+                comments_json_append = {
+                    "id": item.comment_id,
+                    "author": item.author,
+                    "text": item.text,
+                    "datetime": mytime.unix_to_moscow_time(item.datetime_unix)
+                }
+                comments_json_response["comments"].append(comments_json_append)
+
+            #Получение переходов
+            transfers_json_response = {"transfers": []}
+            transfers = db.session.query(TransferTasks).filter(TransferTasks.uNumber == car.uNumber).order_by(
+                TransferTasks.date.desc()).all()
+            for transfer in transfers:
+                # Определяем тип изменения
+                if transfer.old_storage != transfer.new_storage:
+                    transfer_type = "Перемещение по складу"
+                    old_value = storage_id_to_name(transfer.old_storage) or "—"
+                    new_value = storage_id_to_name(transfer.new_storage) or "—"
+                elif transfer.old_manager != transfer.new_manager:
+                    transfer_type = "Изменение менеджера"
+                    old_value = transfer.old_manager or "—"
+                    new_value = transfer.new_manager or "—"
+                elif transfer.old_client != transfer.new_client:
+                    transfer_type = "Изменение клиента"
+                    old_value = transfer.old_client or "—"
+                    new_value = transfer.new_client or "—"
+                else:
+                    transfer_type = "Неизвестный тип"
+                    old_value = "—"
+                    new_value = "—"
+
+                # Добавляем данные о передаче в список
+                transfers_json_response["transfers"].append({
+                    "date": mytime.unix_to_moscow_time(transfer.date),
+                    "type": transfer_type,
+                    "old_value": old_value,
+                    "new_value": new_value
+                })
 
             # Формирование результата
             result = {
@@ -205,20 +288,26 @@ class GetCarInfo(Resource):
                 "rent": {
                     "x": car.x,
                     "y": car.y,
-                    "address": str(get_address(car.x, car.y)),
+                    "address": str(get_address_from_coords(car.x, car.y)),
                     "customer": car.customer,
                     "customer_contact": car.customer_contact,
                     "manager": car.manager
+                },
+                "car_setting:": {
+                    "virtual_operator": car.disable_virtual_operator
                 }
             }
 
             # Добавляем данные из monitoring_json_response и alerts_json_append к результату
             result.update(monitoring_json_response)
-            if alerts_json_append:
-                result.update(alerts_json_append)
+            result.update(alerts_json_response)
+            result.update(comments_json_response)
+            result.update(transfers_json_response)
+
 
             return result, 200
         except Exception as e:
+            print(e)
             return {"error": "An unexpected error occurred", "details": str(e)}, 500
 
 
@@ -456,7 +545,7 @@ def add_comment():
 
     author = session.get('username')
     if not author:
-        return jsonify({'status': 'comment_deny'})  # Можно также проверять авторизацию
+        return jsonify({'status': 'comment_deny'})
 
     uNumber = request.form.get('uNumber')
 
