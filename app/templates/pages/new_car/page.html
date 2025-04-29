@@ -101,28 +101,6 @@
     <div id="error" class="alert alert-danger position-fixed bottom-0 start-50 translate-middle-x mb-4 shadow" style="display: none; z-index: 1050; width: 90%; max-width: 500px;"></div>
 </div>
 
-<!-- Модальное окно -->
-<div class="modal fade" id="commentModal" tabindex="-1" aria-labelledby="commentModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content rounded-3 shadow-lg">
-            <div class="modal-header rounded-top-3">
-                <h5 class="modal-title" id="commentModalLabel">Редактирование комментария</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
-            </div>
-            <div class="modal-body">
-                <p><strong>Автор:</strong> <span id="modalAuthor" class="text-muted"></span> (<span id="modalEditTime" class="text-muted"></span>)</p>
-                <input type="hidden" id="modalCommentId">
-                <p><strong>Комментарий:</strong></p>
-                <textarea id="modalComment" class="form-control" rows="4" required></textarea>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Закрыть</button>
-                <button type="button" id="saveCommentButton" class="btn btn-primary">Сохранить</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU"></script>
 <script>
     console.log('Main script started');
