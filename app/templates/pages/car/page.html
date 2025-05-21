@@ -1,213 +1,250 @@
 {% extends 'main.html' %}
 
 {% block title %}
-Карточка лота
+Карточка лота - {{ car_name }}
 {% endblock %}
 
 {% block body %}
-<script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU" type="text/javascript"></script>
-<div class="row mt-4">
-    {% if car.parser_1c == 0 %}
-    <div class="alert alert-danger alert-banner m-0">
-        <strong>Внимание:</strong> ТС не попало в выгрузку 1С. Информация по аренде не актуальна!
+<div class="container-fluid p-0 min-vh-100 d-flex flex-column">
+    <div class="row flex-grow-1" id="mainRow">
+        <div class="col-12 col-md-6 p-0 flex-grow-1 d-none d-md-block" id="mapColumn">
+{#            <a href="/old_cars/{{ car_name }}" class="btn btn-outline-secondary mb-4">#}
+{#                <i class="bi bi-arrow-left-circle me-2"></i> Открыть в старом дизайне#}
+{#            </a>#}
+            <div id="map" class="shadow-sm" style="height: 80%; min-height: 0; border-radius: 0.5rem 0 0 0.5rem;"></div>
+        </div>
+        <div class="col-12 col-md-6 p-4" id="tabsColumn">
+            <div class="fixed-relative" style="top: 1rem;">
+                <h1 class="mb-4 fw-bold fs-2"><span id="lotNumber">{{ car_name }}</span></h1>
+                <ul class="nav nav-tabs nav-fill mb-4 border-0 flex-md-row" id="myTab" role="tablist">
+                    {% if g.user.role >= -1 %}
+                    <li class="nav-item d-md-none">
+                        <button class="nav-link px-4 py-2 shadow-sm rounded-3" id="map-tab" data-bs-toggle="tab" data-bs-target="#mapPane" type="button" role="tab" aria-controls="mapPane" aria-selected="false">
+                            <i class="bi bi-map me-2"></i> Карта
+                        </button>
+                    </li>
+                    {% endif %}
+                    {% if g.user.role >= -1 %}
+                    <li class="nav-item">
+                        <button class="nav-link active px-4 py-2 shadow-sm rounded-3" id="info-tab" data-bs-toggle="tab" data-bs-target="#info" type="button" role="tab" aria-controls="info" aria-selected="true">
+                            <i class="bi bi-info-circle me-2"></i> Карточка Лота
+                        </button>
+                    </li>
+                    {% endif %}
+                    {% if g.user.role >= 0 %}
+                    <li class="nav-item">
+                        <button class="nav-link px-4 py-2 shadow-sm rounded-3" id="transfers-tab" data-bs-toggle="tab" data-bs-target="#transfers" type="button" role="tab" aria-controls="transfers" aria-selected="false">
+                            <i class="bi bi-arrow-left-right me-2"></i> Перемещения
+                        </button>
+                    </li>
+                    {% endif %}
+                    {% if g.user.role >= 0 %}
+                    <li class="nav-item">
+                        <button class="nav-link px-4 py-2 shadow-sm rounded-3" id="monitoring-tab" data-bs-toggle="tab" data-bs-target="#monitoring" type="button" role="tab" aria-controls="monitoring" aria-selected="false">
+                            <i class="bi bi-device-ssd me-2"></i> Оборудование
+                        </button>
+                    </li>
+                    {% endif %}
+                    {% if g.user.role >= -1 %}
+                    <li class="nav-item">
+                        <button class="nav-link px-4 py-2 shadow-sm rounded-3" id="movement-tab" data-bs-toggle="tab" data-bs-target="#movement" type="button" role="tab" aria-controls="movement" aria-selected="false">
+                            <i class="bi bi-geo-alt me-2"></i> Трек
+                        </button>
+                    </li>
+                    {% endif %}
+                    {% if g.user.role >= 0 %}
+                    <li class="nav-item">
+                        <button class="nav-link px-4 py-2 shadow-sm rounded-3" id="sensors-tab" data-bs-toggle="tab" data-bs-target="#sensors" type="button" role="tab" aria-controls="sensors" aria-selected="false">
+                            <i class="bi bi-code-square me-2"></i> Датчики
+                        </button>
+                    </li>
+                    {% endif %}
+                    {% if g.user.role >= 0 %}
+                    <li class="nav-item">
+                        <button class="nav-link px-4 py-2 shadow-sm rounded-3" id="alerts-tab" data-bs-toggle="tab" data-bs-target="#alerts" type="button" role="tab" aria-controls="alerts" aria-selected="false">
+                            <i class="bi bi-bell me-2"></i> Алерты
+                        </button>
+                    </li>
+                    {% endif %}
+                    {% if g.user.role >= -1 %}
+                    <li class="nav-item">
+                        <button class="nav-link px-4 py-2 shadow-sm rounded-3" id="comments-tab" data-bs-toggle="tab" data-bs-target="#comments" type="button" role="tab" aria-controls="comments" aria-selected="false">
+                            <i class="bi bi-chat-left-text me-2"></i> Комментарии
+                        </button>
+                    </li>
+                    {% endif %}
+                    {% if g.user.role == 1 %}
+                    <li class="nav-item">
+                        <button class="nav-link px-4 py-2 shadow-sm rounded-3" id="settings-tab" data-bs-toggle="tab" data-bs-target="#settings" type="button" role="tab" aria-controls="settings" aria-selected="false">
+                            <i class="bi bi-gear me-2"></i> Настройки
+                        </button>
+                    </li>
+                    {% endif %}
+                </ul>
+                <div class="tab-content p-0" id="myTabContent">
+                    {% include 'pages/car/map.html' %}
+                    {% include 'pages/car/info.html' %}
+                    {% include 'pages/car/transfers.html' %}
+                    {% include 'pages/car/monitoring.html' %}
+                    {% include 'pages/car/movement.html' %}
+                    {% include 'pages/car/sensors.html' %}
+                    {% include 'pages/car/alerts.html' %}
+                    {% include 'pages/car/comments.html' %}
+                    {% include 'pages/car/settings.html' %}
+                </div>
+            </div>
+        </div>
     </div>
-    {% endif %}
+    <div id="loading" class="alert alert-info position-fixed bottom-0 start-50 translate-middle-x mb-4 shadow" style="display: none; z-index: 1050; width: 90%; max-width: 500px;">
+        Загрузка данных...
+    </div>
+    <div id="error" class="alert alert-danger position-fixed bottom-0 start-50 translate-middle-x mb-4 shadow" style="display: none; z-index: 1050; width: 90%; max-width: 500px;"></div>
 </div>
 
-<div class="container-xl mt-4">
-    <div class="row">
-        <div class="col">
-            <h2>{{ car_name }}</h2>
-            <p class="{% if wialon %}
-                       {% if wialon[0].last_time | online_check == 'Online' %}
-                           bg-success
-                       {% elif wialon[0].last_time | online_check == 'Offline' %}
-                           bg-danger
-                       {% else %}
-                           bg-secondary
-                       {% endif %}
-                   {% else %}
-                       bg-secondary
-                   {% endif %} status-badge text-white">
-                {% if wialon %}
-                    {{ wialon[0].last_time | online_check }}
-                {% else %}
-                    Unknown
-                {% endif %}
-            </p>
-        </div>
-    </div>
-    <div id="map" style="width: 100%; height: 400px;"></div>
-    <br><br>
+<script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU"></script>
+<script>
+    console.log('Main script started');
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOMContentLoaded fired');
+        const lotNumber = document.getElementById('lotNumber').textContent.trim();
+        const loading = document.getElementById('loading');
+        const errorDiv = document.getElementById('error');
 
-    <div class="row mt-4">
-        <div class="col-12">
-            {% if wialon %}
-            <h4>Wialon</h4>
-            <div class="table-responsive">
-                <table class="table table-sm table-bordered">
-                    <thead class="thead-light">
-                        <tr>
-                            <th>Название объекта</th>
-                            <th>IMEI</th>
-                            <th>Последний онлайн</th>
-                            <th>Координаты (GPS/GNSS)</th>
-                            <th>Адрес</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in wialon %}
-                        <tr>
-                            <td>{{ item.nm }}</td>
-                            <td>{{ item.uid }}</td>
-                            <td>{{ item.last_time | unix_to_datetime }}</td>
-                            <td>{{ item.pos_y }}, {{ item.pos_x }} ({{ item.gps }})</td>
-                            <td>{{ (item.pos_y, item.pos_x) | get_address }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            {% endif %}
-        </div>
-    </div>
+        loading.style.display = 'block';
 
-    <div class="row mt-4">
-        <div class="col-12">
-            {% if cesar %}
-            <h4>Цезарь</h4>
-            <div class="table-responsive">
-                <table class="table table-sm table-bordered">
-                    <thead class="thead-light">
-                        <tr>
-                            <th>Название объекта</th>
-                            <th>PIN</th>
-                            <th>Последний онлайн</th>
-                            <th>Координаты</th>
-                            <th>Адрес</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in cesar %}
-                        <tr>
-                            <td>{{ item.object_name }}</td>
-                            <td>{{ item.pin }}</td>
-                            <td>{{ item.last_time | unix_to_datetime }}</td>
-                            <td>{{ item.pos_x }}, {{ item.pos_y }}</td>
-                            <td>{{ (item.pos_x, item.pos_y) | get_address }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            {% endif %}
-        </div>
-    </div>
+        fetch(`/api/car/get_info/${encodeURIComponent(lotNumber)}`, {
+            headers: { 'Content-Type': 'application/json' }
+        })
+        .then(response => {
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            return response.json();
+        })
+        .then(data => {
+            console.log('Data loaded:', data);
+            loading.style.display = 'none';
 
-    <br><br>
+            if (data.error) {
+                errorDiv.textContent = 'Ошибка: ' + data.error + (data.details ? ' - ' + data.details : '');
+                errorDiv.style.display = 'block';
+                return;
+            }
 
-    <!-- Кнопки переключения вкладок -->
-    <div class="row mt-4">
-        <div class="btn-group d-flex flex-column flex-sm-row" role="group">
-            <a href="#info" class="btn btn-outline-primary" id="info-tab">Инфо</a>
-            {% if wialon %}
-                <a href="#car_history" class="btn btn-outline-primary" id="car_history">Трек</a>
-            {% endif %}
-            {% if g.user.role > -1 %}
-                {% if wialon %}
-                    <a href="#sensors" class="btn btn-outline-primary" id="sensors-tab">Датчики</a>
-                {% endif %}
-                <a href="#transitions" class="btn btn-outline-primary" id="transitions-tab">Переходы</a>
-                <a href="#alerts" class="btn btn-outline-primary" id="alerts-tab">Опасности</a>
-            {% endif %}
-            <a href="#comments" class="btn btn-outline-primary" id="comments-tab">Комментарии</a>
-        </div>
-    </div>
+            window.carData = data;
 
-    <!-- Контент вкладок -->
-    <div class="row mt-3">
-        <div class="tab-content" id="tab-content">
-            <div class="tab-pane" id="info-content">
-                {% include 'pages/car/info.html' %}
-            </div>
-            {% if g.user.role != -1 %}
-            <div class="tab-pane" id="sensors-content">
-                {% include 'pages/car/sensors.html' %}
-            </div>
-            {% endif %}
-            <div class="tab-pane" id="transitions-content">
-                {% include 'pages/car/transitions.html' %}
-            </div>
-            <div class="tab-pane" id="alerts-content">
-                {% include 'pages/car/alerts.html' %}
-            </div>
-            <div class="tab-pane" id="comments-content">
-                {% include 'pages/car/comments.html' %}
-            </div>
-            <div class="tab-pane" id="car_history-content">
-                {% include 'pages/car/car_history.html' %}
-            </div>
-        </div>
-    </div>
-</div>
+            ymaps.ready(function() {
+                console.log('Yandex Maps ready');
+                // Инициализация обеих карт
+                window.myMap = new ymaps.Map("map", {
+                    center: [55.751574, 37.573856],
+                    zoom: 3,
+                    controls: ['zoomControl', 'fullscreenControl', 'typeSelector', 'rulerControl']
+                });
 
-<!-- Скрипт для переключения вкладок -->
-<script type="text/javascript">
-    document.addEventListener('DOMContentLoaded', function () {
-        handleTabSwitching();
-    });
+                window.mobileMap = new ymaps.Map("mobileMap", {
+                    center: [55.751574, 37.573856],
+                    zoom: 3,
+                    controls: ['zoomControl', 'fullscreenControl', 'typeSelector', 'rulerControl']
+                });
 
-    function handleTabSwitching() {
-        const tabs = document.querySelectorAll('.btn-group .btn');
-        const tabContent = document.querySelectorAll('.tab-pane');
+                // Синхронизация карт при изменении центра или зума
+                window.myMap.events.add('boundschange', function (e) {
+                    const center = e.get('newCenter');
+                    const zoom = e.get('newZoom');
+                    window.mobileMap.setCenter(center, zoom);
+                });
 
-        function showTab(tab) {
-            tabs.forEach(tab => {
-                tab.classList.remove('btn-primary');
-                tab.classList.add('btn-outline-primary');
+                window.mobileMap.events.add('boundschange', function (e) {
+                    const center = e.get('newCenter');
+                    const zoom = e.get('newZoom');
+                    window.myMap.setCenter(center, zoom);
+                });
+
+                // Запускаем инициализацию после полной загрузки карт
+                window.dispatchEvent(new Event('carDataLoaded'));
             });
-
-            tab.classList.remove('btn-outline-primary');
-            tab.classList.add('btn-primary');
-
-            const tabName = tab.getAttribute('href').substring(1);
-            tabContent.forEach(content => {
-                if (content.getAttribute('id') === `${tabName}-content`) {
-                    content.classList.add('active');
-                } else {
-                    content.classList.remove('active');
-                }
-            });
-        }
-
-        // Show tab based on URL hash
-        const currentHash = window.location.hash || '#info';
-        const initialTab = document.querySelector(`.btn[href="${currentHash}"]`);
-        if (initialTab) {
-            showTab(initialTab);
-        }
-
-        // Add click event to tabs
-        tabs.forEach(tab => {
-            tab.addEventListener('click', function (e) {
-                e.preventDefault();
-                showTab(tab);
-                window.location.hash = tab.getAttribute('href');
-            });
+        })
+        .catch(error => {
+            console.error('Fetch error:', error);
+            loading.style.display = 'none';
+            errorDiv.textContent = 'Ошибка при загрузке данных: ' + error.message;
+            errorDiv.style.display = 'block';
         });
-    }
+    });
 </script>
+{% endblock %}
 
+{% block styles %}
 <style>
-    .status-badge {
-        display: inline-block;
-        padding: 0.3rem 1rem;
-        border-radius: 50px; /* Делает фон овальным */
-        text-align: center;
+    .comment-text {
+        min-height: 50px;
+        padding: 10px;
+        border: 1px solid #e9ecef;
+        border-radius: 0.25rem;
+        transition: border-color 0.3s, background-color 0.3s;
+        white-space: pre-wrap;
+    }
+    .comment-text.editing {
+        border-color: #0d6efd;
+        background-color: #ffffff;
+        box-shadow: 0 0 5px rgba(13, 110, 253, 0.3);
+    }
+    .dark-theme .comment-text {
+        border-color: #495057;
+    }
+    .dark-theme .comment-text.editing {
+        background-color: #343a40;
+        color: #ffffff;
+    }
+    .nav-tabs .nav-link {
+        transition: all 0.3s ease;
+    }
+    .nav-tabs .nav-link:hover {
+        background-color: #e9ecef;
+    }
+    .dark-theme .nav-tabs .nav-link:hover {
+        background-color: #495057;
+    }
+    .card-header {
+        border-bottom: none;
+    }
+    .card-body p {
         font-size: 1rem;
+        line-height: 1.5;
+    }
+
+    @media (max-width: 800px) {
+        #mainRow {
+            flex-direction: column;
+        }
+        #mapColumn {
+            display: none;
+        }
+        #tabsColumn {
+            padding: 1rem;
+        }
+        .nav-tabs {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .nav-tabs .nav-link {
+            width: 100%;
+            border-radius: 0.5rem;
+            margin-bottom: 0;
+            text-align: left;
+        }
+        #mobileMap {
+            height: 300px;
+            width: 100%;
+            max-width: 300px;
+            margin: 0 auto;
+            border-radius: 0.5rem;
+        }
+    }
+
+    @media (min-width: 801px) {
+        #mapPane {
+            display: none;
+        }
     }
 </style>
-
-{% include 'pages/car/ya_maps.html' %}
-
 {% endblock %}

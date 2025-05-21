@@ -320,73 +320,6 @@ def logout():
     flash('Вы вышли из системы', 'info')
     return redirect(url_for('main.login'))
 
-
-# Страница информации о конкретной машине
-@bp.route('/old_cars/<string:car_id>')
-@need_access(-1)
-def get_car(car_id):
-    user = User.query.filter_by(username=session['username']).first_or_404()
-    text = car_id.replace(' ', '')
-    if re.match(r'^[A-Z]+\d{5}$', text):
-        if text[1] != ' ':
-            car_id = text[:1] + ' ' + text[1:]
-    search_pattern = f'%{car_id}%'
-    car = db.session.query(Transport).filter(Transport.uNumber == car_id).first()
-    if not car:
-        return "Car not found", 404
-
-    wialon = db.session.query(CashWialon).filter(CashWialon.nm.like(search_pattern)).all()
-
-    cesar = []
-    if user.cesar_access == 1:
-        cesar = db.session.query(CashCesar).filter(CashCesar.object_name.like(search_pattern)).all()
-    alerts = db.session.query(Alert).filter(Alert.uNumber == car_id).order_by(Alert.date.desc()).all()
-    comments = db.session.query(Comments).filter(Comments.uNumber == car_id).all()
-    transfers = db.session.query(TransferTasks).filter(TransferTasks.uNumber == car.uNumber).order_by(TransferTasks.date.desc()).all()
-
-    if user.role <= -1:
-        storage = db.session.query(Storage).filter(Storage.ID == car.storage_id).first()
-        user_access_managers = json.loads(user.access_managers)
-        user_access_regions = json.loads(user.access_regions)
-        access_value = 0
-        if storage.region in user_access_regions:
-            access_value = 1
-
-        if car.manager in user_access_managers:
-            access_value = 1
-
-        if access_value == 0:
-            return "Not access", 403
-
-    if wialon:
-        # Обработка строковых данных
-        wialon_cmd = ast.literal_eval((wialon[0].cmd) if wialon[0].cmd else {})
-        wialon_sens = ast.literal_eval((wialon[0].sens) if wialon[0].sens else {})
-    else:
-        wialon_cmd = {}
-        wialon_sens = {}
-
-    storage = db.session.query(Storage).filter(Storage.ID == car.storage_id).first()
-    transport_model = db.session.query(TransportModel).filter(TransportModel.id == car.model_id).first()
-    ignored_storages = db.session.query(IgnoredStorage).all()
-
-    return render_template(
-        'pages/car/page.html',
-        car=car,
-        username=session['username'],
-        car_name=car_id,
-        cesar=cesar,
-        wialon=wialon,
-        storage=storage,
-        transport_model=transport_model,
-        wialon_cmd=wialon_cmd,
-        wialon_sens=wialon_sens,
-        alerts=alerts,
-        comments=comments,
-        transfers=transfers,
-        ignored_storages=ignored_storages
-    )
-
 @bp.route('/car/<string:car_id>')
 @need_access(-1)
 def car(car_id):
@@ -398,7 +331,7 @@ def car(car_id):
     ignored_storages = db.session.query(IgnoredStorage).all()
 
     return render_template(
-        'pages/new_car/page.html',
+        'pages/car/page.html',
         car_name=car_name,
         ignored_storages = ignored_storages
     )

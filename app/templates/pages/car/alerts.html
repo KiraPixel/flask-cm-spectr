@@ -1,77 +1,28 @@
-<!-- Уведомления-->
-<div class="mt-4">
-    <h4>Список уведомлений</h4>
-
-    <!-- Кнопка для виртуального оператора с отступом снизу -->
-    <button id="virtualOperatorButton" class="btn btn-{{ 'success' if car.disable_virtual_operator == 0 else 'danger' }} mb-3">
-        Виртуальный оператор {{ '✓' if car.disable_virtual_operator == 0 else 'X' }}
-    </button>
-
-    {% if alerts %}
-        <div class="row row-cols-1 row-cols-md-2 g-4">
-            {% for alert in alerts %}
-            <div class="col">
-                <div class="card h-100 border-{{ 'success' if alert.status == 1 else 'danger' }}">
-                    <div class="card-header bg-{{ 'success' if alert.status == 1 else 'danger' }} text-white">
-                        <h5 class="card-title mb-0">
-                            {% if alert.type == 'gps' %}
-                                Нет координат: {{ alert.data }}
-                            {% elif alert.type == 'distance' %}
-                                В {{ alert.data }} км от положенного места
-                            {% elif alert.type == 'no_docs_cords' %}
-                                В ДО нет координат
-                            {% elif alert.type == 'no_equipment' %}
-                                Нет оборудования: {{ alert.data }}
-                            {% elif alert.type == 'not_work' %}
-                                Оборудование {{ alert.data }} не в сети
-                            {% else %}
-                                {{ alert.data }}
-                            {% endif %}
-                        </h5>
-                    </div>
-                    <div class="card-footer d-flex justify-content-between align-items-center">
-                        <small class="text-muted">{{ alert.date | unix_to_datetime }}</small>
-                        <div class="d-flex align-items-center">
-                        <button
-                            class="btn btn-sm p-0"
-                            data-bs-toggle="modal"
-                            data-bs-target="#commentModal"
-                            data-comment="{{ alert.comment }}"
-                            data-author="{{ alert.comment_editor }}"
-                            data-edit-time="{{ alert.date_time_edit | unix_to_datetime }}"
-                            data-comment-id="{{ alert.id }}"
-                            title="Редактировать комментарий">
-                            <i class="bi {{ 'bi-chat-right-dots' if alert.comment else 'bi-chat-right' }}"></i>
-                        </button>
-                        <span class="badge bg-{{ 'success' if alert.status == 1 else 'danger' }} ms-2">
-                            {{ 'Решено' if alert.status == 1 else 'Активно' }}
-                        </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
+<div class="tab-pane fade" id="alerts" role="tabpanel" aria-labelledby="alerts-tab">
+    <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-body">
+            <div id="alertsInfo"></div>
         </div>
-    {% else %}
-        <p>По этой ТС нет уведомлений от виртуального диспетчера</p>
-    {% endif %}
+    </div>
 </div>
 
+
+<!-- Модальное окно -->
 <div class="modal fade" id="commentModal" tabindex="-1" aria-labelledby="commentModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-3 shadow-lg">
+            <div class="modal-header rounded-top-3">
                 <h5 class="modal-title" id="commentModalLabel">Редактирование комментария</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
             </div>
             <div class="modal-body">
-                <p><strong>Автор:</strong> <span id="modalAuthor"></span> (<span id="modalEditTime"></span>)</p>
+                <p><strong>Автор:</strong> <span id="modalAuthor" class="text-muted"></span> (<span id="modalEditTime" class="text-muted"></span>)</p>
                 <input type="hidden" id="modalCommentId">
                 <p><strong>Комментарий:</strong></p>
-                <textarea id="modalComment" class="form-control" rows="4"></textarea>
+                <textarea id="modalComment" class="form-control" rows="4" required></textarea>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Закрыть</button>
                 <button type="button" id="saveCommentButton" class="btn btn-primary">Сохранить</button>
             </div>
         </div>
@@ -79,45 +30,64 @@
 </div>
 
 
-
 <script>
-    document.getElementById('virtualOperatorButton').addEventListener('click', function() {
-        const carName = "{{ car.uNumber }}"; // Подставляем номер автомобиля
-        const apiUrl = "{{ url_for('api.car_change_disable_virtual_operator') }}?car_name=" + carName;
+    console.log('Alerts script loaded'); // Для отладки
+    window.addEventListener('carDataLoaded', function() {
+        console.log('carDataLoaded event received in Alerts'); // Для отладки
+        if (window.carData && window.carData.alert && window.carData.alert.length > 0) {
+            let alertsHtml = '<div class="row row-cols-1 row-cols-md-2 g-4">';
+            window.carData.alert.forEach(item => {
+                let alertText = '';
+                switch (item.type) {
+                    case 'gps': alertText = `Нет координат: ${item.data || '-'}`; break;
+                    case 'distance': alertText = `В ${item.data || '-'} км от положенного места`; break;
+                    case 'no_docs_cords': alertText = 'В ДО нет координат'; break;
+                    case 'no_equipment': alertText = `Нет оборудования: ${item.data || '-'}`; break;
+                    case 'not_work': alertText = `Оборудование ${item.data || '-'} не в сети`; break;
+                    default: alertText = item.comment || '-';
+                }
+                alertsHtml += `
+                    <div class="col">
+                        <div class="card h-100 border-${item.status === 1 ? 'success' : 'danger'} shadow-sm rounded-3">
+                            <div class="card-header rounded-top-3">
+                                <h5 class="card-title mb-0">${alertText}</h5>
+                            </div>
+                            <div class="card-footer d-flex justify-content-between align-items-center">
+                                <small class="text-muted">${item.datetime || '-'}</small>
+                                <div class="d-flex align-items-center">
+                                    <button class="btn btn-sm p-0 me-2" data-bs-toggle="modal" data-bs-target="#commentModal"
+                                            data-comment="${item.comment || ''}" data-author="${item.comment_editor || ''}"
+                                            data-edit-time="${item.comment_date_time_msk || ''}" data-comment-id="${item.id}"
+                                            title="Редактировать комментарий">
+                                        <i class="bi ${item.comment ? 'bi-chat-right-dots' : 'bi-chat-right'}"></i>
+                                    </button>
+                                    <span class="badge bg-${item.status === 1 ? 'success' : 'danger'}">
+                                        ${item.status === 1 ? 'Решено' : 'Активно'}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            alertsHtml += '</div>';
+            document.getElementById('alertsInfo').innerHTML = alertsHtml;
+        } else {
+            document.getElementById('alertsInfo').innerHTML = '<p class="text-muted text-center">По этой ТС нет уведомлений от виртуального диспетчера</p>';
+        }
 
-    fetch(apiUrl)
-        .then(response => {
-            if (response.ok) {
-                location.reload(); // Перезагружаем страницу при успешном ответе
-            } else {
-                alert('Ошибка при изменении состояния виртуального оператора.');
-            }
-        })
-        .catch(error => {
-            console.error('Ошибка:', error);
-        });
-
-    });
-
-    document.addEventListener('DOMContentLoaded', function () {
         const commentModal = document.getElementById('commentModal');
         const saveCommentButton = document.getElementById('saveCommentButton');
 
-        commentModal.addEventListener('show.bs.modal', function (event) {
-            const button = event.relatedTarget; // Кнопка, вызвавшая модальное окно
-            const comment = button.getAttribute('data-comment');
-            const author = button.getAttribute('data-author');
-            const edit_time = button.getAttribute('data-edit-time');
-            const commentId = button.getAttribute('data-comment-id');
-
-            // Устанавливаем данные в модальное окно
-            document.getElementById('modalAuthor').textContent = author || 'Неизвестен';
-            document.getElementById('modalEditTime').textContent = edit_time || '';
-            document.getElementById('modalComment').value = comment || '';
-            document.getElementById('modalCommentId').value = commentId;
+        commentModal.addEventListener('show.bs.modal', function(event) {
+            const button = event.relatedTarget;
+            document.getElementById('modalAuthor').textContent = button.getAttribute('data-author') || 'Неизвестен';
+            document.getElementById('modalEditTime').textContent = button.getAttribute('data-edit-time') || '';
+            document.getElementById('modalComment').value = button.getAttribute('data-comment') || '';
+            document.getElementById('modalCommentId').value = button.getAttribute('data-comment-id');
         });
 
-        saveCommentButton.addEventListener('click', function () {
+        saveCommentButton.addEventListener('click', function() {
             const commentId = document.getElementById('modalCommentId').value;
             const newComment = document.getElementById('modalComment').value.trim();
 
@@ -126,30 +96,17 @@
                 return;
             }
 
-            fetch("{{ url_for('api.edit_report_comment') }}", {
+            fetch('/api/edit_report_comment', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    comment_id: commentId,
-                    comment: newComment,
-                }),
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ comment_id: commentId, comment: newComment })
             })
             .then(response => response.json())
             .then(data => {
-                if (data.status === 'edit_ok') {
-                    location.reload(); // Обновляем страницу
-                } else {
-                    alert('Ошибка сохранения комментария.');
-                }
+                if (data.status === 'edit_ok') location.reload();
+                else alert('Ошибка сохранения комментария.');
             })
-            .catch(error => {
-                console.error('Ошибка:', error);
-                alert('Ошибка при отправке данных.');
-            });
+            .catch(error => alert('Ошибка при отправке данных: ' + error));
         });
     });
-
 </script>
-

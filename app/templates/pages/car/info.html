@@ -1,54 +1,107 @@
-<div class="row mt-4">
-
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h3>Информация о складе</h3>
-            </div>
-            <div class="card-body">
-                <p><strong>Название:</strong> {{ storage.name }}</p>
-                <p><strong>Тип:</strong> {{ storage.type }}</p>
-                <p><strong>Регион:</strong> {{ storage.region }}</p>
-                <p><strong>Адрес:</strong> {{ storage.address }}</p>
-                <p><strong>Организация:</strong> {{ storage.organization }}</p>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h3>Модель транспортного средства</h3>
-            </div>
-            <div class="card-body">
-                <p><strong>Тип:</strong> {{ transport_model.type }} - {{ transport_model.name }}</p>
-                <p><strong>Год выпуска:</strong> {{ car.manufacture_year }} ({{ transport_model.country }})</p>
-                <p><strong>VIN:</strong> {{ car.vin }}</p>
-                <p><strong>Лифт:</strong> {{ transport_model.lift_type }}</p>
-                <p><strong>Двигатель:</strong> {{ transport_model.engine }}</p>
-            </div>
-        </div>
-    </div>
-
-    <div class="row mt-4">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-header">
-                    <h3>Аренда</h3>
+<div class="tab-pane fade show active" id="info" role="tabpanel" aria-labelledby="info-tab">
+    <div class="row g-3">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-3">
+                <div class="card-header rounded-top-3">
+                    <h5 class="mb-0"><i class="bi bi-house me-2"></i> Информация о складе</h5>
                 </div>
                 <div class="card-body">
-                    <p><strong>Клиент:</strong> {{ car.customer }}</p>
-                    <p><strong>Контакт клиента:</strong> {{ car.customer_contact }}</p>
-                    <p><strong>Менеджер:</strong> {{ car.manager }}</p>
-                    <p><strong>Место работы:</strong>
-                        {% set address = (car.x, car.y) | get_address %}
-                        {{ address }}
-                        {% if address %}
-                            ({{ car.x }}, {{ car.y }})
-                        {% endif %}
+                    <p class="mb-1"><strong>Название склада:</strong> <span id="storage_name" class="text-muted">-</span></p>
+                    <p class="mb-1"><strong>Тип склада:</strong> <span id="storage_type" class="text-muted">-</span></p>
+                    <p class="mb-1"><strong>Регион:</strong> <span id="storage_region" class="text-muted">-</span></p>
+                    <p class="mb-1"><strong>Адрес:</strong> <span id="storage_address" class="text-muted">-</span></p>
+                </div>
+            </div>
+        </div>
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-3">
+                <div class="card-header rounded-top-3">
+                    <h5 class="mb-0"><i class="bi bi-truck me-2"></i> Модель транспортного средства</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-1"><strong>VIN:</strong> <span id="vin" class="text-muted">-</span></p>
+                    <p class="mb-1"><strong>Год выпуска:</strong> <span id="manufacture_year" class="text-muted">-</span></p>
+                    <p class="mb-1"><strong>Тип:</strong> <span id="model_type" class="text-muted">-</span></p>
+                    <p class="mb-1"><strong>Тип техники:</strong> <span id="machine_type" class="text-muted">-</span></p>
+                    <p class="mb-1"><strong>Бренд:</strong> <span id="brand" class="text-muted">-</span></p>
+                    <p class="mb-1"><strong>Модель:</strong> <span id="model" class="text-muted">-</span></p>
+                    <p class="mb-1"><strong>Тип подъемника:</strong> <span id="lift_type" class="text-muted">-</span></p>
+                    <p class="mb-1"><strong>Двигатель:</strong> <span id="engine" class="text-muted">-</span></p>
+                    <p class="mb-1"><strong>Название в 1С:</strong> <span id="model_name" class="text-muted">-</span></p>
+
+                </div>
+            </div>
+        </div>
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-3">
+                <div class="card-header rounded-top-3">
+                    <h5 class="mb-0"><i class="bi bi-person-workspace me-2"></i> Аренда</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-1"><strong>Клиент:</strong> <span id="customer" class="text-muted">-</span></p>
+                    <p class="mb-1"><strong>Контакт клиента:</strong> <span id="customer_contact" class="text-muted">-</span></p>
+                    <p class="mb-1"><strong>Менеджер:</strong> <span id="manager" class="text-muted">-</span></p>
+                    <p class="mb-1"><strong>Координаты:</strong>
+                        <span id="coordinates" class="coords-link" data-coords="-">-</span>
                     </p>
+                    <p class="mb-1"><strong>Адрес:</strong> <span id="address" class="text-muted">-</span></p>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+    console.log('Info script loaded'); // Для отладки
+    window.addEventListener('carDataLoaded', function() {
+        console.log('carDataLoaded event received in Info'); // Для отладки
+        if (window.carData && window.carData.transport) {
+            document.getElementById('storage_name').textContent = window.carData.storage?.name || '-';
+            document.getElementById('storage_type').textContent = window.carData.storage?.type || '-';
+            document.getElementById('storage_region').textContent = window.carData.storage?.region || '-';
+            document.getElementById('storage_address').textContent = window.carData.storage?.address || '-';
+            document.getElementById('model_type').textContent = window.carData.transport_model?.type || '-';
+            document.getElementById('model_name').textContent = window.carData.transport_model?.name || '-';
+            document.getElementById('model').textContent = window.carData.transport_model?.model || '-';
+            document.getElementById('machine_type').textContent = window.carData.transport_model?.machine_type || '-';
+            document.getElementById('brand').textContent = window.carData.transport_model?.brand || '-';
+            document.getElementById('lift_type').textContent = window.carData.transport_model?.lift_type || '-';
+            document.getElementById('engine').textContent = window.carData.transport_model?.engine || '-';
+            document.getElementById('vin').textContent = window.carData.transport?.vin || '-';
+            document.getElementById('manufacture_year').textContent = window.carData.transport?.manufacture_year || '-';
+            document.getElementById('customer').textContent = window.carData.rent?.customer || '-';
+            document.getElementById('customer_contact').textContent = window.carData.rent?.customer_contact || '-';
+            document.getElementById('manager').textContent = window.carData.rent?.manager || '-';
+
+            // Установка координат и добавление data-coords
+            const coords = window.carData.rent?.x && window.carData.rent?.y
+                ? `${window.carData.rent.x}, ${window.carData.rent.y}`
+                : '-';
+            const coordsElement = document.getElementById('coordinates');
+            coordsElement.textContent = coords;
+            coordsElement.setAttribute('data-coords', coords);
+            coordsElement.style.cursor = coords === '-' ? 'default' : 'pointer';
+            coordsElement.style.color = coords === '-' ? 'inherit' : 'var(--bs-primary)';
+
+            // Добавление обработчика клика на координаты
+            coordsElement.addEventListener('click', function() {
+                const coordsStr = this.getAttribute('data-coords');
+                if (coordsStr && coordsStr !== '-') {
+                    const [lat, lon] = coordsStr.split(',').map(Number);
+                    if (!isNaN(lat) && !isNaN(lon) && window.MapController) {
+                        window.MapController.setCenter([lat, lon], 15); // Зум до уровня 15
+                    }
+                }
+            });
+
+            document.getElementById('address').textContent = window.carData.rent?.address || '-';
+        }
+    });
+</script>
+
+
+<style>
+    .coords-link:hover {
+        text-decoration: underline;
+    }
+</style>
