@@ -211,7 +211,8 @@ class GetCarInfo(Resource):
                     "datetime": mytime.unix_to_moscow_time(item.date),
                     "comment": item.comment,
                     "comment_editor": item.comment_editor,
-                    "comment_date_time": item.date_time_edit
+                    "comment_date_time": item.date_time_edit,
+                    "comment_date_time_msk": mytime.unix_to_moscow_time(item.date_time_edit)
                 }
                 alerts_json_response["alert"].append(alerts_json_append)
 

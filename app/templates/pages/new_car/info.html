@@ -21,7 +21,11 @@
                 <div class="card-body">
                     <p class="mb-2"><strong>Тип:</strong> <span id="model_type" class="text-muted">-</span></p>
                     <p class="mb-2"><strong>Название:</strong> <span id="model_name" class="text-muted">-</span></p>
+                    <p class="mb-2"><strong>Модель:</strong> <span id="model" class="text-muted">-</span></p>
+                    <p class="mb-2"><strong>Тип модели:</strong> <span id="machine_type" class="text-muted">-</span></p>
                     <p class="mb-2"><strong>Бренд:</strong> <span id="brand" class="text-muted">-</span></p>
+                    <p class="mb-2"><strong>Тип подъемника:</strong> <span id="lift_type" class="text-muted">-</span></p>
+                    <p class="mb-2"><strong>Двигатель:</strong> <span id="engine" class="text-muted">-</span></p>
                     <p class="mb-0"><strong>VIN:</strong> <span id="vin" class="text-muted">-</span></p>
                 </div>
             </div>
@@ -53,7 +57,11 @@
             document.getElementById('storage_address').textContent = window.carData.storage?.address || '-';
             document.getElementById('model_type').textContent = window.carData.transport_model?.type || '-';
             document.getElementById('model_name').textContent = window.carData.transport_model?.name || '-';
+            document.getElementById('model').textContent = window.carData.transport_model?.model || '-';
+            document.getElementById('machine_type').textContent = window.carData.transport_model?.machine_type || '-';
             document.getElementById('brand').textContent = window.carData.transport_model?.brand || '-';
+            document.getElementById('lift_type').textContent = window.carData.transport_model?.lift_type || '-';
+            document.getElementById('engine').textContent = window.carData.transport_model?.engine || '-';
             document.getElementById('vin').textContent = window.carData.transport?.vin || '-';
             document.getElementById('customer').textContent = window.carData.rent?.customer || '-';
             document.getElementById('customer_contact').textContent = window.carData.rent?.customer_contact || '-';

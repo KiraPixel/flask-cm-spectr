@@ -6,6 +6,30 @@
     </div>
 </div>
 
+
+<!-- Модальное окно -->
+<div class="modal fade" id="commentModal" tabindex="-1" aria-labelledby="commentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-3 shadow-lg">
+            <div class="modal-header rounded-top-3">
+                <h5 class="modal-title" id="commentModalLabel">Редактирование комментария</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Автор:</strong> <span id="modalAuthor" class="text-muted"></span> (<span id="modalEditTime" class="text-muted"></span>)</p>
+                <input type="hidden" id="modalCommentId">
+                <p><strong>Комментарий:</strong></p>
+                <textarea id="modalComment" class="form-control" rows="4" required></textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Закрыть</button>
+                <button type="button" id="saveCommentButton" class="btn btn-primary">Сохранить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 <script>
     console.log('Alerts script loaded'); // Для отладки
     window.addEventListener('carDataLoaded', function() {
@@ -33,7 +57,7 @@
                                 <div class="d-flex align-items-center">
                                     <button class="btn btn-sm p-0 me-2" data-bs-toggle="modal" data-bs-target="#commentModal"
                                             data-comment="${item.comment || ''}" data-author="${item.comment_editor || ''}"
-                                            data-edit-time="${item.comment_date_time || ''}" data-comment-id="${item.id}"
+                                            data-edit-time="${item.comment_date_time_msk || ''}" data-comment-id="${item.id}"
                                             title="Редактировать комментарий">
                                         <i class="bi ${item.comment ? 'bi-chat-right-dots' : 'bi-chat-right'}"></i>
                                     </button>
