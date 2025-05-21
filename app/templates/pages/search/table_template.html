@@ -200,28 +200,29 @@
 
             const tableRows = {{ table_rows | tojson }};
 
-            document.getElementById('downloadCsv').addEventListener('click', function() {
-                let csvContent = "data:text/csv;charset=utf-8,";
+document.getElementById('downloadCsv').addEventListener('click', function() {
+    // Добавляем BOM для UTF-8, чтобы Excel корректно отображал кириллицу
+    let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
 
-                // Получаем заголовки таблицы из Flask
-                const headers = {{ columns | tojson }}.join(","); // Используем переменную columns, переданную из Flask
-                csvContent += headers + "\n"; // Добавляем заголовки в CSV
+    // Получаем заголовки таблицы из Flask
+    const headers = {{ columns | tojson }}.map(item => `"${item}"`).join(";"); // Экранируем заголовки
+    csvContent += headers + "\n"; // Добавляем заголовки в CSV
 
-                // Перебираем все строки из tableRows
-                tableRows.forEach(row => {
-                    const rowData = row.map(item => item.trim()).join(";"); // Ячейки строки разделяем запятой
-                    csvContent += rowData + "\n"; // Добавляем строку данных в CSV
-                });
+    // Перебираем все строки из tableRows
+    tableRows.forEach(row => {
+        const rowData = row.map(item => `"${item.trim()}"`).join(";"); // Экранируем значения
+        csvContent += rowData + "\n"; // Добавляем строку данных в CSV
+    });
 
-                // Создаем ссылку для скачивания
-                const encodedUri = encodeURI(csvContent);
-                const link = document.createElement('a');
-                link.setAttribute('href', encodedUri);
-                link.setAttribute('download', 'table_data.csv'); // Указываем имя файла для скачивания
-                document.body.appendChild(link); // Добавляем ссылку на страницу
-                link.click(); // Имитируем клик по ссылке для скачивания
-                document.body.removeChild(link); // Убираем ссылку после скачивания
-            });
+    // Создаем ссылку для скачивания
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', 'Результат поиска ЦМ.csv'); // Имя файла
+    document.body.appendChild(link); // Добавляем ссылку на страницу
+    link.click(); // Имитируем клик для скачивания
+    document.body.removeChild(link); // Убираем ссылку
+});
 
 
         });
