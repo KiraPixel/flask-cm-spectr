@@ -283,7 +283,7 @@ class GetCarInfo(Resource):
                     "lift_type": transport_model.lift_type,
                     "engine": transport_model.engine,
                     "country": transport_model.country,
-                    "machine_type": transport_model.engine,
+                    "machine_type": transport_model.machine_type,
                     "brand": transport_model.brand,
                     "model": transport_model.model
                 },
