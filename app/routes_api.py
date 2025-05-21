@@ -177,7 +177,8 @@ class GetCarInfo(Resource):
                         "address": str(get_address_from_coords(item.pos_y, item.pos_x)),
                         "last_time": mytime.unix_to_moscow_time(item.last_time),
                         "wialon_cmd": item.cmd,
-                        "wialon_sensors_list": item.sens
+                        "wialon_sensors_list": item.sens,
+                        "wialon_satellite_count": item.gps,
                     }
                     monitoring_json_response["monitoring"].append(monitoring_json_block)
 

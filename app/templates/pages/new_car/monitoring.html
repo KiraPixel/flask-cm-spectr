@@ -1,7 +1,6 @@
 <div class="tab-pane fade" id="monitoring" role="tabpanel" aria-labelledby="monitoring-tab">
     <div class="card border-0 shadow-sm rounded-3">
         <div class="card-body p-4">
-            <h4 class="mb-4 fw-bold">Мониторинг</h4>
             <div id="movementInfo">
                 <div class="alert alert-info text-center">Загрузка данных...</div>
             </div>
@@ -52,6 +51,7 @@ window.addEventListener('carDataLoaded', function() {
                                     ${item.pos_x || '-'}, ${item.pos_y || '-'}
                                 </span>
                             </p>
+                            <p class="mb-1 small"><strong>Спутники:</strong> ${item.wialon_satellite_count || 0}</p>
                             <p class="mb-0 small"><strong>Адрес:</strong> ${item.address || '-'}</p>
                         </div>
                     </div>
