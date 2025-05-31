@@ -7,6 +7,7 @@ sender_password = os.getenv('MAIL_PASSWORD', 'password')
 
 
 def send_email(target_email, subject, body, attachment_name=None, attachment_content=None):
+    print(sender_email, sender_login, sender_password)
     try:
         # Создаем учетные данные
         credentials = Credentials(username=sender_login, password=sender_password)
