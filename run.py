@@ -8,5 +8,5 @@ if __name__ == '__main__':
     if os.getenv('DEV', 0) == '1':
         app.debug = True
     HOST = os.getenv('HOST', '0.0.0.0')
-    PORT = int(os.getenv('PORT', '5000'))
+    PORT = int(os.getenv('PORT', '31500'))
     app.run(host=HOST, port=PORT)

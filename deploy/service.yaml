@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: flask-cm-spectr-service
+  namespace: prd-cm
+spec:
+  selector:
+    app: flask-cm-spectr
+  ports:
+    - protocol: TCP
+      port: 31500
+      targetPort: 31500
+  type: NodePort
