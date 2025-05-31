@@ -21,7 +21,7 @@ services:
       SALT: ${SALT}
       DEV: ${DEV}
     ports:
-      - "5000:5000"
+      - "31500:31500"
     stdin_open: true
     tty: true
     restart: always
