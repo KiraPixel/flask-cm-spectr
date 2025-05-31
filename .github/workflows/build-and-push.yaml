@@ -37,7 +37,7 @@ jobs:
 
     - name: Update deployment.yaml with new image tag
       run: |
-        sed -i "s|image: ghcr.io/kirapixel/flask-cm-spectr:.*|image: ghcr.io/kirapixel/flask-cm-spectr:${{ env.TAG }}|g" deployment.yaml
+        sed -i "s|image: ghcr.io/kirapixel/flask-cm-spectr:.*|image: ghcr.io/kirapixel/flask-cm-spectr:${{ env.TAG }}|g" deploy/deployment.yaml
 
     - name: Commit and push deployment update
       run: |
