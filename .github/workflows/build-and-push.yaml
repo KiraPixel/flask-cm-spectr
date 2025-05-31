@@ -25,4 +25,4 @@ jobs:
       with:
         context: .
         push: true
-        tags: ghcr.io/kirapixel/flask-cm-spectr:latest
+        tags: ghcr.io/KiraPixel/flask-cm-spectr:latest
