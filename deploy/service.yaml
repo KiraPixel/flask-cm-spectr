@@ -8,7 +8,7 @@ spec:
     app: flask-cm-spectr
   ports:
     - protocol: TCP
-      port: 32448
+      port: 31999
       targetPort: 31500
-      nodePort: 32448
+      nodePort: 31999
   type: NodePort
