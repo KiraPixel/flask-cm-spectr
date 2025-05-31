@@ -22,6 +22,7 @@ def send_email(target_email, subject, body, attachment_name=None, attachment_con
             body=HTMLBody(body),
             to_recipients=[target_email]
         )
+        print(f'Send email to {target_email} with subject "{subject}" from "{sender_email}" login {sender_login}')
         if attachment_name:
             attachment = FileAttachment(
                 name=attachment_name,
