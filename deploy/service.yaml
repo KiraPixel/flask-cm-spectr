@@ -7,6 +7,7 @@ spec:
   selector:
     app: flask-cm-spectr
   ports:
+    - port: 31500
     - protocol: TCP
       port: 31500
       targetPort: 31500
