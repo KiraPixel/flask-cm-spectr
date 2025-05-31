@@ -9,5 +9,6 @@ spec:
   ports:
     - protocol: TCP
       port: 31500
-      targetPort: 31500
+      targetPort: 32448
+      nodePort: 32448
   type: NodePort
