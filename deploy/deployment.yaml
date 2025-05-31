@@ -17,7 +17,7 @@ spec:
         - name: flask-cm-spectr
           image: ghcr.io/kirapixel/flask-cm-spectr:latest
           ports:
-            - containerPort: 5000
+            - containerPort: 31500
           envFrom:
             - secretRef:
                 name: flask-cm-spectr-secret
