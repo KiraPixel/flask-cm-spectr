@@ -77,17 +77,15 @@ def get_address_from_coords(x, y):
     ).first()
 
     current_time = int(datetime.datetime.now().timestamp())
-    three_months_seconds = 90 * 24 * 60 * 60
+    six_months_seconds = 90 * 24 * 60 * 60 * 2
 
     if coord:
-        if (current_time - coord.updated_time) <= three_months_seconds:
+        if (current_time - coord.updated_time) <= six_months_seconds:
             return coord.address
 
     new_address = location_module.get_address(x, y)
-
     if new_address == "Convert error":
-        return "Convert error"
-
+        return "Time out to convert"
     if coord:
         coord.address = new_address
         coord.updated_time = current_time
@@ -99,7 +97,6 @@ def get_address_from_coords(x, y):
             updated_time=current_time
         )
         db.session.add(new_coord)
-
     db.session.commit()
     return new_address
 

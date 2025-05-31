@@ -1,5 +1,7 @@
 import io
 import tempfile
+import time
+
 from sqlalchemy import func
 from openpyxl import Workbook
 from app.models import Transport, CashCesar, CashWialon, Reports, Alert, TransportModel, Storage
@@ -30,7 +32,21 @@ def filegen(args):
             ws.append(['wialon_id', 'uNumber', 'uid', 'last_time', 'last_pos_time', 'address'])
             query = CashWialon.query.all()
             for row in query:
-                location = get_address_from_coords(row.pos_y, row.pos_x).replace(',', '')
+                location = None
+                max_attempts = 50
+                for attempt in range(max_attempts):
+                    try:
+                        location = get_address_from_coords(row.pos_y, row.pos_x)
+                        location = str(location)
+                        if location != "Time out to convert":
+                            break
+                    except Exception as e:
+                        print(f"Попытка {attempt + 1} из {max_attempts} не удалась: {e}")
+
+                    if attempt < max_attempts - 1:
+                        time.sleep(5)
+                    if not location or location == "Time out to convert":
+                        location = "Unable to retrieve address"
                 ws.append([
                     row.id,
                     row.nm,
