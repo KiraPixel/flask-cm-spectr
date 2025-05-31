@@ -6,10 +6,15 @@ sender_user = os.getenv('MAIL_USERNAME', 'user')
 sender_domain = os.getenv('MAIL_USERNAME_DOMAIN', 'mail')
 sender_password = os.getenv('MAIL_PASSWORD', 'password')
 sender_host = os.getenv('MAIL_HOST', 'mail.ru')
+use_domain_format = os.getenv('USE_DOMAIN_FORMAT', 'at')
 
-full_username = f"{sender_domain}\\{sender_user}"
+if use_domain_format == 'backslash':
+    full_username = f"{sender_domain}\\{sender_user}"
+else:
+    full_username = f"{sender_user}@{sender_domain}"
 
 def send_email(target_email, subject, body, attachment_name=None, attachment_content=None):
+    print(f'Mail format: {full_username}')
     # try:
     # Создаем учетные данные
     config = Configuration(
