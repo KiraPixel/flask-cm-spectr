@@ -1,7 +1,7 @@
 # flask-cm-spektr
 
 ### File:
-- ![CM drawio](https://github.com/user-attachments/assets/9b096eb6-1bc2-4e68-9f71-f0ab865b1842)
+![CM drawio](https://github.com/user-attachments/assets/5af241ed-cad3-492d-9d78-f4b4cc6c2ce2)
 
 
 ## License  
