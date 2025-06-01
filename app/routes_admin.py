@@ -27,8 +27,8 @@ def admin_panel():
                             last_activity="1999-12-02 00:00:00", access_managers="[]", access_regions="[]")
             db.session.add(new_user)
             db.session.commit()
-            body = render_template('standalone/mail_new_user.html', user=new_user, password=password)
-            mail_sender.send_email(new_user.email, "Приглашение в Центр Мониторинга ЛК-СПЕКТР", body)
+            mail_content = f'{new_user}|{password}'
+            mail_sender.send_email(new_user.email, "Приглашение в Центр Мониторинга ЛК-СПЕКТР", mail_content, html_template='new_user')
             return redirect(url_for('admin.admin_panel'))
 
         elif 'name' in request.form:
@@ -215,8 +215,7 @@ def reset_pass(user_id):
     new_password = hash_password.generator_password()
     update_user_password(user_id, new_password)
 
-    body = render_template('standalone/mail_info.html', password=new_password)
-    mail_sender.send_email(user.email, "Новый временный пароль для вашего аккаунта в ЛК-СПЕКТР", body)
+    mail_sender.send_email(user.email, "Новый временный пароль для вашего аккаунта в ЛК-СПЕКТР", new_password, html_template='new_password')
 
     flash(f'Пароль пользователя {user.username} успешно сброшен.', 'success')
     return redirect(url_for('admin.admin_panel'))

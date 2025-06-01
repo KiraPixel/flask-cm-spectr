@@ -313,7 +313,7 @@ def generate_and_send_report(args, user):
         attachment_name = f'{args}.xlsx'
 
         success = mail_sender.send_email(
-            user.email, subject, body, attachment_name, report_content
+            user.email, subject, body, attachment_name=attachment_name, attachment_content=report_content
         )
 
         report_entry.status = 'Отчет отправлен' if success else 'Ошибка: Не удалось отправить отчет'

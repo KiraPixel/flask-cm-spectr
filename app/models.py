@@ -1,4 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.sql import text
+
 db = SQLAlchemy()
 
 class User(db.Model):
@@ -207,3 +209,31 @@ class TransferTasks(db.Model):
     old_client = db.Column(db.String(100))
     new_client = db.Column(db.String(100))
     date = db.Column(db.Integer())
+
+
+def insert_mailing_record_sqlalchemy(target, subject, content, html_template=None, attachment_name=None, attachment_content=None):
+    try:
+        sql = text("""
+            CALL insert_mailing_record(
+                :target,
+                :subject,
+                :content,
+                :html_template,
+                :attachment_name,
+                :attachment_content
+            )
+        """)
+        db.session.execute(sql, {
+            'target': target,
+            'subject': subject,
+            'content': content,
+            'html_template': html_template,
+            'attachment_name': attachment_name,
+            'attachment_content': attachment_content
+        })
+        db.session.commit()
+        return True  # Успешное выполнение
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error inserting mailing record: {e}")
+        return False
