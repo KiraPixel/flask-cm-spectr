@@ -50,6 +50,13 @@ def get_time_minus_three_days():
     return int(three_days_ago)
 
 
+def get_time_minus_twelve_days():
+    current_time = time.time()
+    three_days_ago = current_time - 12 * 24 * 60 * 60
+    return int(three_days_ago)
+
+
+
 def to_unix_time(time_str):
     try:
         naive_time = datetime.datetime.strptime(time_str, '%Y-%m-%dT%H:%M')

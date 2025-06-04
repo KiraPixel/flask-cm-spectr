@@ -206,10 +206,10 @@ def dashboard():
     distance = len(db.session.query(Alert).filter(Alert.status == 0, Alert.type.in_(['distance', 'gps', 'no_docs_cords'])).all())
 
     # Cesar
-    online_count = db.session.query(CashWialon).filter(
-        CashWialon.last_time >= my_time.get_time_minus_three_days()).count()
-    offline_count = db.session.query(CashWialon).filter(
-        CashWialon.last_time < my_time.get_time_minus_three_days()).count()
+    online_count = db.session.query(CashCesar).filter(
+        CashCesar.last_time >= my_time.get_time_minus_three_days()).count()
+    offline_count = db.session.query(CashCesar).filter(
+        CashCesar.last_time < my_time.get_time_minus_twelve_days()).count()
     cesar = {
         'online': online_count,
         'offline': offline_count
