@@ -123,14 +123,14 @@ def filegen(args):
                 ).count()
                 ws.append([transport.uNumber, wialon_count, cesar_count])
         elif args == 'health_no_lot':
-            ws.append(['Тип', 'Имя в системе'])
+            ws.append(['Тип', 'Имя в системе', 'WialonID/PIN'])
             transport_numbers = {t.uNumber for t in Transport.query.all()}
             for cesar in CashCesar.query.all():
                 if not any(transport_number in cesar.object_name for transport_number in transport_numbers):
-                    ws.append(['Cesar', cesar.object_name])
+                    ws.append(['Cesar', cesar.object_name, cesar.pin])
             for wialon in CashWialon.query.all():
                 if not any(transport_number in wialon.nm for transport_number in transport_numbers):
-                    ws.append(['Wialon', wialon.nm])
+                    ws.append(['Wialon', wialon.nm, wialon.uid])
         else:
             return None
     elif "vopereator" in args:
