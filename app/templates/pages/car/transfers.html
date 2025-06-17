@@ -23,7 +23,7 @@ window.addEventListener('carDataLoaded', function() {
         return;
     }
 
-    let transfersHtml = '<div class="timeline">';
+    let transfersHtml = '<div class="timeline-container"><div class="timeline">';
     window.carData.transfers.forEach((item) => {
         const iconClass = getTransferIcon(item.type);
 
@@ -54,7 +54,7 @@ window.addEventListener('carDataLoaded', function() {
                 </div>
             </div>`;
     });
-    transfersHtml += '</div>';
+    transfersHtml += '</div></div>';
     transfersContainer.innerHTML = transfersHtml;
 });
 
@@ -74,6 +74,27 @@ function getTransferIcon(type) {
 </script>
 
 <style>
+.timeline-container {
+    max-height: 600px; /* Adjust height to fit ~5 items */
+    overflow-y: auto;
+    padding-right: 10px; /* Space for scrollbar */
+    scrollbar-width: thin; /* Firefox */
+    scrollbar-color: var(--bs-gray-300) transparent; /* Firefox */
+}
+
+.timeline-container::-webkit-scrollbar {
+    width: 6px; /* Chrome, Safari, Edge */
+}
+
+.timeline-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.timeline-container::-webkit-scrollbar-thumb {
+    background-color: var(--bs-gray-300);
+    border-radius: 3px;
+}
+
 .timeline {
     position: relative;
     padding: 0 0 20px 0;
@@ -85,10 +106,10 @@ function getTransferIcon(type) {
     position: absolute;
     top: 0;
     bottom: 0;
-    left: 19px; /* Сдвигаем чуть левее центра иконки */
+    left: 19px;
     width: 2px;
-    background: var(--bs-gray-300); /* Используем переменную Bootstrap для адаптации к теме */
-    z-index: 1; /* Помещаем линию позади иконок */
+    background: var(--bs-gray-300);
+    z-index: 1;
 }
 
 .timeline-item {
@@ -106,9 +127,9 @@ function getTransferIcon(type) {
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    background: var(--bs-body-bg); /* Фон иконки соответствует фону страницы */
-    box-shadow: 0 0 0 4px var(--bs-body-bg); /* Адаптивная обводка */
-    z-index: 2; /* Иконка поверх линии */
+    background: var(--bs-body-bg);
+    box-shadow: 0 0 0 4px var(--bs-body-bg);
+    z-index: 2;
 }
 
 .timeline-content {
@@ -135,6 +156,10 @@ function getTransferIcon(type) {
 }
 
 @media (max-width: 576px) {
+    .timeline-container {
+        max-height: 500px; /* Smaller height for mobile */
+    }
+
     .timeline::before {
         left: 14px;
     }
