@@ -12,6 +12,7 @@ from flask import Blueprint, request, jsonify, session, send_from_directory, abo
 from flask_restx import Api, Resource, fields, Namespace
 from sqlalchemy.sql.functions import count
 
+from custom_api.api_wialon_connector import get_message_for_interval
 from modules.my_time import online_check, online_check_cesar
 from . import db
 from .utils import need_access, need_access, get_api_key_by_username, is_valid_api_key, storage_id_to_name, \
@@ -722,6 +723,64 @@ class WialonGetSensor(Resource):
 
         # После 6 неудачных попыток возвращаем ошибку
         return jsonify({'error': 'Failed to fetch valid sensor data after multiple attempts'}), 500
+
+
+@wialon_api_namespace.route('/wialon_get_unit_message/')
+class WialonGetUnitMessages(Resource):
+    @wialon_api_namespace.param('unit_id', 'Номер объекта в виалоне', type=int)
+    @wialon_api_namespace.param('time_to', 'unix time', type=int)
+    @wialon_api_namespace.param('time_from', 'unix time', type=int)
+    @wialon_api_namespace.response(200, 'Успешно')
+    @wialon_api_namespace.response(400, 'Неверный запрос (например, отсутствуют параметры)')
+    @wialon_api_namespace.response(500, 'Ошибка при выполнении запроса к базе данных')
+    @need_access(0)
+    def get(self):
+        params = {
+            'unit_id': request.args.get('unit_id', ''),
+            'time_from': request.args.get('time_from', ''),
+            'time_to': request.args.get('time_to', '')
+        }
+        final_response = get_message_for_interval(params["unit_id"], params["time_from"], params["time_to"])
+        if final_response:
+            return jsonify(final_response)
+        else:
+            return jsonify({'error': 'Failed to fetch valid sensor data after multiple attempts'}), 500
+
+
+@wialon_api_namespace.route('/wialon_get_unit_sensor_messages/')
+class WialonGetUnitSensorMessages(Resource):
+    @wialon_api_namespace.param('unit_id', 'Номер объекта в виалоне', type=int)
+    @wialon_api_namespace.param('time_to', 'unix time', type=int)
+    @wialon_api_namespace.param('time_from', 'unix time', type=int)
+    @wialon_api_namespace.response(200, 'Успешно')
+    @wialon_api_namespace.response(400, 'Неверный запрос (например, отсутствуют параметры)')
+    @wialon_api_namespace.response(500, 'Ошибка при выполнении запроса к базе данных')
+    @need_access(0)
+    def get(self):
+        params = {
+            'unit_id': request.args.get('unit_id', ''),
+            'time_from': request.args.get('time_from', ''),
+            'time_to': request.args.get('time_to', '')
+        }
+        final_response = get_message_for_interval(params["unit_id"], params["time_from"], params["time_to"])
+        if not final_response:
+            return jsonify({'error': 'Failed to fetch valid sensor data after multiple attempts'}), 500
+
+        formatted_response = []
+        try:
+            for message in final_response:
+                message_time = message.get('t', 0)
+                sensors = message.get('sensors', '')
+
+                formatted_response.append({
+                    'message_time': message_time,
+                    'sensors': sensors
+                })
+        except Exception as e:
+            print(e)
+
+        return jsonify(formatted_response)
+
 
 
 add_new_car_model = parser_api_namespace.model('AddNewCarModel', {

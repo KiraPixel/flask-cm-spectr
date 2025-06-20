@@ -102,6 +102,50 @@ def get_sensors(unit_id):
         return None
 
 
+def get_message_for_interval(unit_id, time_from, time_to):
+    sid=get_wialon_sid()
 
-x = get_sensors(16969674)
-print(x)
+    # Создаем слой
+    params = {
+        'layerName': 'cm_messages',
+        'itemId': unit_id,
+        'timeFrom': time_from,
+        'timeTo': time_to,
+        'tripDetector': 0,
+        'trackColor': 'cc0000ff',
+        'trackWidth': 0,
+        'arrows': 0,
+        'points': 0,
+        'pointColor': 'cc0000ff',
+        'annotations': 0
+    }
+    response = requests.get(api_url, params={
+        'svc': 'render/create_messages_layer',
+        'params': json.dumps(params),
+        'sid': sid
+    }, verify=True)
+
+    if not response.status_code == 200:
+        print(f"Error: {response.status_code} - {response.text}")
+        return None
+
+    # получаем сообщение с сенсорами из слоя
+    params = {
+        'unitId': unit_id,
+        'indexFrom': 0,
+        'indexTo': 1000000,
+        'layerName': "cm_messages",
+        'calcSensors': 'true'
+    }
+    response = requests.get(api_url, params={
+        'svc': 'render/get_messages',
+        'params': json.dumps(params),
+        'sid': sid,
+    }, verify=True)
+
+    if response.status_code == 200:
+        final_response = response.json()
+        return final_response
+    else:
+        print(f"Error: {response.status_code} - {response.text}")
+        return None

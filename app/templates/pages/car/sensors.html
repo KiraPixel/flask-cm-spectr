@@ -14,7 +14,7 @@
     </div>
 </div>
 
-<script type="text/javascript">
+<script type="text/javascript" charset="utf-8">
 // Функция для преобразования псевдо-JSON в валидный JSON
 function fixPseudoJson(str) {
     if (!str || typeof str !== 'string') return '{}';
@@ -27,7 +27,6 @@ function fixPseudoJson(str) {
     fixedStr = fixedStr.replace(/\(([^()]+)\)/g, (match, content) => `[${content.trim()}]`);
 
     if (!fixedStr.startsWith('{') || !fixedStr.endsWith('}')) {
-        console.warn('Invalid pseudo-JSON format:', str);
         return '{}';
     }
 
@@ -46,8 +45,6 @@ function initializeSensors() {
     const sensorsContainer = document.getElementById('sensorsContainer');
     const wialonUnits = window.carData.monitoring.filter(unit => unit.type === 'wialon');
 
-    console.log('Wialon units:', wialonUnits);
-
     if (wialonUnits.length === 0) {
         sensorsContainer.innerHTML = `
             <div class="col-12">
@@ -60,7 +57,7 @@ function initializeSensors() {
 
     const columnClass = wialonUnits.length === 1 ? 'col-12' : 'col-12 col-md-6';
 
-    wialonUnits.forEach(unit => {
+    wialonUnits.forEach((unit, index) => {
         let sensorsList = {};
         let commandsListData = {};
 
@@ -68,7 +65,6 @@ function initializeSensors() {
             const fixedSensors = fixPseudoJson(unit.wialon_sensors_list);
             sensorsList = JSON.parse(fixedSensors);
         } catch (e) {
-            console.error(`Error parsing wialon_sensors_list for unit ${unit.unit_id}:`, unit.wialon_sensors_list, e);
             sensorsList = {};
         }
 
@@ -76,7 +72,6 @@ function initializeSensors() {
             const fixedCommands = fixPseudoJson(unit.wialon_cmd);
             commandsListData = JSON.parse(fixedCommands);
         } catch (e) {
-            console.error(`Error parsing wialon_cmd for unit ${unit.unit_id}:`, unit.wialon_cmd, e);
             commandsListData = {};
         }
 
@@ -118,14 +113,52 @@ function initializeSensors() {
         }
 
         unitCard += `
+                <hr class="my-3">
+                <h6 class="mb-2">График датчика</h6>
+                <div class="row mb-4">
+                    <div class="col-md-4 mb-3">
+                        <label for="sensorGraphSelect-${unit.unit_id}" class="form-label">Выберите датчик</label>
+                        <select class="form-select" id="sensorGraphSelect-${unit.unit_id}">
+                            <option value="">Выберите датчик</option>
+                            ${Object.entries(sensorsList).map(([id, sensor]) => {
+                                const name = Array.isArray(sensor) ? sensor[0] : sensor;
+                                return `<option value="${id}" data-unit-id="${unit.unit_id}">[${id}] ${name}</option>`;
+                            }).join('')}
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="sensorGraphDateFrom-${unit.unit_id}" class="form-label">Дата и время от</label>
+                        <input type="datetime-local" class="form-control" id="sensorGraphDateFrom-${unit.unit_id}" step="1">
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="sensorGraphDateTo-${unit.unit_id}" class="form-label">Дата и время до</label>
+                        <input type="datetime-local" class="form-control" id="sensorGraphDateTo-${unit.unit_id}" step="1">
+                    </div>
+                    <div class="col-md-2 mb-3 align-self-end">
+                        <button type="button" class="btn btn-primary w-100 sensorGraphFetchDataBtn" data-unit-id="${unit.unit_id}">
+                            <i class="bi bi-arrow-repeat me-2"></i>
+                        </button>
                     </div>
                 </div>
-            </div>`;
+                <div class="alert alert-info sensorGraphLoadingIndicator" id="sensorGraphLoadingIndicator-${unit.unit_id}" style="display: none;">
+                    Загрузка данных...
+                </div>
+                <div class="alert alert-danger sensorGraphErrorIndicator" id="sensorGraphErrorIndicator-${unit.unit_id}" style="display: none;"></div>
+                <div class="card" style="height: 500px;">
+                    <div class="card-body">
+                        <canvas id="sensorGraphChart-${unit.unit_id}" style="max-height: 500px;"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+
         sensorsContainer.innerHTML += unitCard;
     });
 
     refreshSensors();
     setupCommandButtons();
+    setupGraphButtons();
+    setupAllDataButtons();
 }
 
 function refreshSensors() {
@@ -150,7 +183,6 @@ function refreshSensors() {
                 const fixedSensors = fixPseudoJson(unit.wialon_sensors_list);
                 sensorsData = JSON.parse(fixedSensors);
             } catch (e) {
-                console.error(`Error parsing sensors in refresh for unit ${unit.unit_id}:`, unit.wialon_sensors_list, e);
                 sensorsData = {};
             }
 
@@ -179,7 +211,6 @@ function refreshSensors() {
     })
     .catch(error => {
         loadingIndicator.style.display = 'none';
-        console.error('Ошибка обновления датчиков:', error);
     });
 }
 
@@ -214,16 +245,174 @@ function setupCommandButtons() {
         });
     });
 }
+
+function setupGraphButtons() {
+    document.querySelectorAll('.sensorGraphFetchDataBtn').forEach(button => {
+        button.addEventListener('click', function() {
+            const unitId = this.getAttribute('data-unit-id');
+            fetchSensorData(unitId);
+        });
+    });
+}
+
+function fetchSensorData(unitId) {
+    var sensorSelect = document.getElementById(`sensorGraphSelect-${unitId}`);
+    var dateFromInput = document.getElementById(`sensorGraphDateFrom-${unitId}`);
+    var dateToInput = document.getElementById(`sensorGraphDateTo-${unitId}`);
+    var loadingIndicator = document.getElementById(`sensorGraphLoadingIndicator-${unitId}`);
+    var errorIndicator = document.getElementById(`sensorGraphErrorIndicator-${unitId}`);
+
+    var sensorValue = sensorSelect.value;
+    var dateFrom = dateFromInput.value;
+    var dateTo = dateToInput.value;
+
+    var errors = [];
+    if (!sensorValue) errors.push('Датчик не выбран');
+    if (!dateFrom) errors.push('Дата и время начала не выбраны');
+    if (!dateTo) errors.push('Дата и время окончания не выбраны');
+
+    if (errors.length > 0) {
+        errorIndicator.textContent = 'Ошибка валидации: ' + errors.join(', ');
+        errorIndicator.style.display = 'block';
+        return;
+    }
+
+    var timeFrom = Math.floor(new Date(dateFrom).getTime() / 1000);
+    var timeTo = Math.floor(new Date(dateTo).getTime() / 1000);
+
+    if (isNaN(timeFrom) || isNaN(timeTo)) {
+        errorIndicator.textContent = 'Неверный формат даты или времени';
+        errorIndicator.style.display = 'block';
+        return;
+    }
+
+    loadingIndicator.style.display = 'block';
+    errorIndicator.style.display = 'none';
+
+    fetch(`/api/wialon/wialon_get_unit_sensor_messages/?unit_id=${unitId}&time_from=${timeFrom}&time_to=${timeTo}`)
+        .then(response => response.json())
+        .then(data => {
+            loadingIndicator.style.display = 'none';
+            if (data.error || !Array.isArray(data)) {
+                errorIndicator.textContent = 'Ошибка загрузки данных: ' + (data.error || 'Неверный формат данных');
+                errorIndicator.style.display = 'block';
+                return;
+            }
+            buildChart(data, sensorValue, sensorSelect.options[sensorSelect.selectedIndex].text, unitId);
+        })
+        .catch(error => {
+            loadingIndicator.style.display = 'none';
+            errorIndicator.textContent = 'Ошибка: ' + error.message;
+            errorIndicator.style.display = 'block';
+        });
+}
+
+function buildChart(data, sensorId, sensorName, unitId) {
+    const validData = data.filter(item => item.sensors[sensorId] && typeof item.sensors[sensorId].value !== 'undefined');
+
+    if (validData.length === 0) {
+        const errorIndicator = document.getElementById(`sensorGraphErrorIndicator-${unitId}`);
+        errorIndicator.textContent = 'Нет данных для выбранного датчика';
+        errorIndicator.style.display = 'block';
+        return;
+    }
+
+    // Устанавливаем maxPoints как процент от общего количества данных
+    const totalDataPoints = validData.length;
+    const maxPoints = Math.max(10, Math.floor(totalDataPoints * 0.1)); // Минимум 10 точек, максимум 10% от всех точек
+
+    // Рассчитываем шаг для агрегации данных
+    const step = Math.ceil(totalDataPoints / maxPoints);
+    const aggregatedData = validData.filter((_, index) => index % step === 0);
+
+    // Форматируем метки времени
+    const labels = aggregatedData.map(item => {
+        const date = new Date(item.message_time * 1000);
+        return date.toLocaleString('ru-RU', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    });
+
+    const values = aggregatedData.map(item => item.sensors[sensorId].value);
+
+    const unitLabel = aggregatedData[0].sensors[sensorId].format?.value || '';
+    const chartLabel = sensorName.replace(/^\[\d+\]\s*/, '');
+
+    // Уничтожаем предыдущий график, если он существует
+    const chartInstance = window[`sensorGraphChart-${unitId}`];
+    if (chartInstance instanceof Chart) {
+        chartInstance.destroy();
+    }
+
+    const ctx = document.getElementById(`sensorGraphChart-${unitId}`).getContext('2d');
+    window[`sensorGraphChart-${unitId}`] = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [{
+                label: `${chartLabel}${unitLabel ? ` (${unitLabel})` : ''}`,
+                data: values,
+                borderColor: '#0d6efd',
+                backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                fill: true,
+                tension: 0.4,
+                pointRadius: 3,
+                pointHoverRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: {
+                        color: '#212529',
+                        font: { size: 14 }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.dataset.label}: ${context.parsed.y}${unitLabel ? ' ' + unitLabel : ''}`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    ticks: {
+                        color: '#212529',
+                        maxRotation: 45,
+                        minRotation: 45,
+                        maxTicksLimit: 10
+                    }
+                },
+                y: {
+                    ticks: {
+                        color: '#212529'
+                    }
+                }
+            }
+        }
+    });
+}
+
+
 </script>
 
 <style>
 .sensors-list .border {
     transition: all 0.3s ease;
-    border-color: var(--bs-border-color); /* Адаптивная граница */
+    border-color: var(--bs-border-color);
 }
 
 .sensors-list .border:hover {
-    border-color: var(--bs-primary); /* Подсветка при наведении */
+    border-color: var(--bs-primary);
     transform: translateY(-2px);
 }
 
@@ -231,15 +420,13 @@ function setupCommandButtons() {
     padding: 0.4em 0.8em;
 }
 
-.command-btn {
-    position: relative;
-}
 
-.command-btn:disabled {
+.command-btn:disabled, .sensorGraphFetchDataBtn:disabled {
     opacity: 0.7;
 }
 
 @media (max-width: 768px) {
+
     .btn-group .btn {
         width: 100%;
         margin: 0.5rem 0 !important;
@@ -248,5 +435,13 @@ function setupCommandButtons() {
 
 .card {
     width: 100%;
+}
+
+.sensorGraphLoadingIndicator, .sensorGraphErrorIndicator {
+    margin-bottom: 1rem;
+}
+
+.sensorGraphAllDataBtn {
+    margin-bottom: 1rem;
 }
 </style>

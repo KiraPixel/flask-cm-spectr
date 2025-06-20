@@ -102,7 +102,11 @@ def get_address_from_coords(x, y):
 
 def storage_id_to_name(storage_id):
     storage = db.session.query(Storage).filter(Storage.ID == storage_id).first()
-    return storage.name
+    if storage is None:
+        storage_name = f'Неизвестный склад {storage_id}'
+    else:
+        storage_name = storage.name
+    return storage_name
 
 
 def is_valid_api_key(api_key):
