@@ -309,7 +309,10 @@ class GetCarInfo(Resource):
 
             return result, 200
         except Exception as e:
-            print(e)
+            print(f"Error occurred: {e}")
+            print(f"Car: {car}")
+            print(f"Storage: {storage}")
+            print(f"TransportModel: {transport_model}")
             return {"error": "An unexpected error occurred", "details": str(e)}, 500
 
 
