@@ -81,10 +81,21 @@ window.addEventListener('carDataLoaded', function() {
 
     commentModal.addEventListener('show.bs.modal', function(event) {
         const button = event.relatedTarget;
-        document.getElementById('modalAuthor').textContent = button.getAttribute('data-author') || 'Неизвестен';
-        document.getElementById('modalEditTime').textContent = button.getAttribute('data-edit-time') || '';
-        document.getElementById('modalComment').value = button.getAttribute('data-comment') || '';
-        document.getElementById('modalCommentId').value = button.getAttribute('data-comment-id');
+        const commentId = button.getAttribute('data-comment-id');
+        const alertItem = window.carData.alert.find(item => item.id == commentId);
+
+        if (alertItem) {
+            document.getElementById('modalAuthor').textContent = alertItem.comment_editor || 'Неизвестен';
+            document.getElementById('modalEditTime').textContent = alertItem.comment_date_time_msk || '';
+            document.getElementById('modalComment').value = alertItem.comment || '';
+            document.getElementById('modalCommentId').value = commentId;
+        } else {
+            console.error('Alert item not found for ID:', commentId);
+            document.getElementById('modalAuthor').textContent = 'Неизвестен';
+            document.getElementById('modalEditTime').textContent = '';
+            document.getElementById('modalComment').value = '';
+            document.getElementById('modalCommentId').value = '';
+        }
     });
 
     saveCommentButton.addEventListener('click', function() {
