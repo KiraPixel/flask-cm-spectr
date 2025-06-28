@@ -26,7 +26,7 @@
                         {% if alert.type == 'distance' %} {{ alert.alert_type.localization }} {{ alert.data }} км
                         {% elif alert.type == 'no_equipment' %} {{ alert.alert_type.localization }} {{ alert.data }}
                         {% elif alert.type == 'not_work' %} {{ alert.alert_type.localization }}: {{ alert.data }}
-                        {% else %} {{ alert.alert_type }} {% endif %}
+                        {% else %} {{ alert.alert_type.localization }} {% endif %}
                     </p>
                 </a>
                 {% endfor %}
@@ -313,7 +313,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        fetch("{{ url_for('api.edit_report_comment') }}", {
+        fetch('/api/users/edit_alert_comment', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

@@ -59,7 +59,7 @@
                 return;
             }
 
-            fetch('/api/add_comment', {
+            fetch('/api/users/add_comment', {
                 method: 'POST',
                 body: formData
             })
@@ -138,7 +138,7 @@
             formData.append('text', commentText);
             formData.append('comment_id', commentId);
 
-            fetch('/api/edit_comment', {
+            fetch('/api/users/edit_comment', {
                 method: 'POST',
                 body: formData
             })
@@ -166,7 +166,7 @@
             formData.append('comment_id', commentId);
             formData.append('action', 'delete');
 
-            fetch('/api/edit_comment', {
+            fetch('/api/users/edit_comment', {
                 method: 'POST',
                 body: formData
             })

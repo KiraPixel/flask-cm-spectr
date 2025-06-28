@@ -22,7 +22,7 @@ def create_app():
     db.init_app(app)
 
     from .routes import bp as main_bp
-    from .routes_api import api_bp
+    from .api import api_bp
     from .routes_admin import admin_bp
     from .routes_user_settings import us_bp
     from .routes_architect import architect

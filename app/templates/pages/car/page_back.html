@@ -459,7 +459,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            fetch('/api/add_comment', {
+            fetch('/api/users/add_comment', {
                 method: 'POST',
                 body: formData
             })
@@ -802,7 +802,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            fetch('/api/edit_report_comment', {
+            fetch('/api/users/edit_alert_comment', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ comment_id: commentId, comment: newComment })
