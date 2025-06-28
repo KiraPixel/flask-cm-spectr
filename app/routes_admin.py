@@ -1,7 +1,7 @@
 import xml.etree.ElementTree as ET
 from flask import Blueprint, request, render_template, redirect, url_for, flash, g, session
 from .utils import need_access, need_access
-from .models import db, User, Transport, IgnoredStorage, Storage, ParserTasks
+from .models import db, User, Transport, IgnoredStorage, Storage, ParserTasks, SystemSettings
 from modules import mail_sender, hash_password
 
 
@@ -51,7 +51,8 @@ def admin_panel():
 
     users = User.query.all()
     ignored_storages = IgnoredStorage.query.all()
-    return render_template('pages/admin_panel/page.html', users=users, ignored_storages=ignored_storages)
+    system_settings = SystemSettings.query.first()
+    return render_template('pages/admin_panel/page.html', users=users, ignored_storages=ignored_storages, system_settings=system_settings)
 
 
 @admin_bp.route('/parser')

@@ -25,13 +25,11 @@ def create_app():
     from .api import api_bp
     from .routes_admin import admin_bp
     from .routes_user_settings import us_bp
-    from .routes_architect import architect
 
     app.register_blueprint(main_bp)
     app.register_blueprint(api_bp, url_prefix='/api')
     app.register_blueprint(admin_bp, url_prefix='/admin')
     app.register_blueprint(us_bp, url_prefix='/user_profile')
-    app.register_blueprint(architect, url_prefix='/architect')
     app.register_blueprint(sbi, url_prefix='/sbi')
 
     app.jinja_env.filters['unix_to_datetime'] = my_time.unix_to_moscow_time

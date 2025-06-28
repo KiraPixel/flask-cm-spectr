@@ -7,13 +7,6 @@
 {% block body %}
 <div class="container">
     <h1 class="my-4">Админ панель</h1>
-    
-    <!-- Кнопка для создания нового пользователя -->
-    <div class="mb-4">
-        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
-            Пригласить пользователя
-        </button>
-    </div>
 
     <!-- Секция для вывода списка пользователей -->
     <div class="card mb-4">
@@ -21,6 +14,11 @@
             Список пользователей
         </div>
         <div class="card-body">
+            <div class="mb-4">
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                    Пригласить пользователя
+                </button>
+            </div>
             <div class="table-responsive">
                 <table class="table table-bordered">
                     <thead>
@@ -78,13 +76,11 @@
         </div>
     </div>
 
-
     <div class="card mb-4">
         <div class="card-header">
             Список игнорируемых складов
         </div>
         <div class="card-body">
-            <!-- Таблица для отображения складов с горизонтальной прокруткой -->
             <div class="table-responsive">
                 <table class="table table-bordered">
                     <thead>
@@ -102,7 +98,6 @@
                             <td>{{ storage.pos_x }}, {{ storage.pos_y }}</td>
                             <td>{{ storage.radius }}</td>
                             <td>
-                                <!-- Форма для удаления склада -->
                                 <form action="{{ url_for('admin.delete_storage', storage_id=storage.id) }}" method="POST" style="display: inline;">
                                     <button type="submit" class="btn btn-danger btn-sm">Удалить</button>
                                 </form>
@@ -113,7 +108,6 @@
                 </table>
             </div>
 
-            <!-- Форма для добавления нового склада -->
             <form id="addWarehouseForm" action="{{ url_for('admin.admin_panel') }}" method="POST" class="mt-3">
                 <div class="row">
                     <div class="col-md-4">
@@ -137,12 +131,44 @@
             </form>
         </div>
     </div>
-
-
-
-
+    <div class="card mb-4">
+        <div class="card-header">
+            Системные настройки
+        </div>
+        <div class="card-body">
+            <button type="button" class="btn btn-{{ 'danger' if system_settings.enable_voperator == 1 else 'success' }} module-btn"
+                    data-bs-toggle="modal"
+                    data-bs-target="#changeModuleModal"
+                    data-status="{{ system_settings.enable_voperator }}"
+                    data-module="Виртуальный оператор"
+                    data-url="/api/settings/change_voperator_status">
+                <span class="btn-text">
+                    {{ 'Выключить' if system_settings.enable_voperator == 1 else 'Включить' }} модуль "Виртуальный оператор"
+                </span>
+            </button>
+            <button type="button" class="btn btn-{{ 'danger' if system_settings.enable_xml_parser == 1 else 'success' }} module-btn"
+                    data-bs-toggle="modal"
+                    data-bs-target="#changeModuleModal"
+                    data-status="{{ system_settings.enable_xml_parser }}"
+                    data-module="1С парсер"
+                    data-url="/api/settings/change_xmlparser_status">
+                <span class="btn-text">
+                    {{ 'Выключить' if system_settings.enable_xml_parser == 1 else 'Включить' }} модуль "1C парсер"
+                </span>
+            </button>
+            <button type="button" class="btn btn-{{ 'danger' if system_settings.enable_db_cashing == 1 else 'success' }} module-btn"
+                    data-bs-toggle="modal"
+                    data-bs-target="#changeModuleModal"
+                    data-status="{{ system_settings.enable_db_cashing }}"
+                    data-module="ДБ кэшинг"
+                    data-url="/api/settings/change_dbcashing_status">
+                <span class="btn-text">
+                    {{ 'Выключить' if system_settings.enable_db_cashing == 1 else 'Включить' }} модуль "ДБ кэшинг"
+                </span>
+            </button>
+        </div>
+    </div>
 </div>
-
 
 <!-- Модальное окно для создания нового пользователя -->
 <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
@@ -208,6 +234,7 @@
     </div>
 </div>
 
+<!-- Модальное окно для сброса пароля -->
 <div class="modal fade" id="confirmResetPassModal" tabindex="-1" aria-labelledby="confirmResetPassLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -226,24 +253,147 @@
     </div>
 </div>
 
-<!-- Скрипт для управления модальным окном -->
+<!-- Универсальное модальное окно для изменения статуса модулей -->
+<div class="modal fade" id="changeModuleModal" tabindex="-1" aria-labelledby="changeModuleLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="changeModuleLabel">Подтверждение</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Вы уверены, что хотите изменить статус модуля?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-primary confirm-module-btn">Подтвердить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Скрипты -->
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const resetPassModal = document.getElementById('confirmResetPassModal');
     const confirmResetPassLink = document.getElementById('confirmResetPassLink');
 
+    // Обработчик для сброса пароля
     document.querySelectorAll('.reset-pass-btn').forEach(button => {
         button.addEventListener('click', (event) => {
             const userId = button.getAttribute('data-id');
-            confirmResetPassLink.href = `/admin/reset_pass/${userId}`; // Динамически обновляем ссылку
+            confirmResetPassLink.href = `/admin/reset_pass/${userId}`;
+        });
+    });
+
+    // Обработчик для кнопок модулей
+    document.querySelectorAll('.module-btn').forEach(button => {
+        button.addEventListener('click', () => {
+            const modal = document.querySelector('#changeModuleModal');
+            const modalTitle = modal.querySelector('.modal-title');
+            const confirmButton = modal.querySelector('.confirm-module-btn');
+            const moduleName = button.getAttribute('data-module');
+
+            modalTitle.textContent = `Подтверждение: ${moduleName}`;
+            confirmButton.dataset.status = button.getAttribute('data-status');
+            confirmButton.dataset.module = moduleName;
+            confirmButton.dataset.url = button.getAttribute('data-url');
+        });
+    });
+
+    // Обработчик для подтверждения изменения статуса
+    document.querySelectorAll('.confirm-module-btn').forEach(button => {
+        button.addEventListener('click', async () => {
+            const url = button.dataset.url;
+            const moduleName = button.dataset.module;
+            const currentStatus = parseInt(button.dataset.status);
+            const newStatus = currentStatus === 1 ? 0 : 1;
+            const moduleButton = document.querySelector(`.module-btn[data-module="${moduleName}"]`);
+            const buttonText = moduleButton.querySelector('.btn-text');
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ status: newStatus }),
+                });
+                const data = await response.json();
+
+                if (data.status === 1 || data.status === newStatus) {
+                    // Успешное обновление
+                    moduleButton.dataset.status = newStatus;
+                    buttonText.textContent = `${newStatus === 1 ? 'Выключить' : 'Включить'} модуль "${moduleName}"`;
+                    moduleButton.classList.toggle('btn-danger', newStatus === 1);
+                    moduleButton.classList.toggle('btn-success', newStatus !== 1);
+
+                    // Показываем уведомление
+                    const toast = document.createElement('div');
+                    toast.className = 'toast align-items-center text-white bg-success border-0';
+                    toast.role = 'alert';
+                    toast.ariaLive = 'assertive';
+                    toast.ariaAtomic = 'true';
+                    toast.innerHTML = `
+                        <div class="d-flex">
+                            <div class="toast-body">
+                                ${data.message}
+                            </div>
+                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                        </div>
+                    `;
+                    document.body.appendChild(toast);
+                    const toastInstance = new bootstrap.Toast(toast);
+                    toastInstance.show();
+
+                    // Закрываем модальное окно
+                    const modal = bootstrap.Modal.getInstance(button.closest('.modal'));
+                    modal.hide();
+                } else {
+                    // Ошибка от сервера
+                    const toast = document.createElement('div');
+                    toast.className = 'toast align-items-center text-white bg-danger border-0';
+                    toast.role = 'alert';
+                    toast.ariaLive = 'assertive';
+                    toast.ariaAtomic = 'true';
+                    toast.innerHTML = `
+                        <div class="d-flex">
+                            <div class="toast-body">
+                                ${data.message || 'Ошибка при обновлении статуса модуля'}
+                            </div>
+                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                        </div>
+                    `;
+                    document.body.appendChild(toast);
+                    const toastInstance = new bootstrap.Toast(toast);
+                    toastInstance.show();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                const toast = document.createElement('div');
+                toast.className = 'toast align-items-center text-white bg-danger border-0';
+                toast.role = 'alert';
+                toast.ariaLive = 'assertive';
+                toast.ariaAtomic = 'true';
+                toast.innerHTML = `
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            Произошла ошибка при выполнении запроса
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                `;
+                document.body.appendChild(toast);
+                const toastInstance = new bootstrap.Toast(toast);
+                toastInstance.show();
+            }
         });
     });
 });
 </script>
 
-
 <script>
-document.addEventListener('DOMContentLoaded', (event) => {
+document.addEventListener('DOMContentLoaded', () => {
     const editUserModal = new bootstrap.Modal(document.getElementById('editUserModal'));
     const editUserForm = document.getElementById('editUserForm');
     const editUsername = document.getElementById('editUsername');
@@ -252,8 +402,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
     document.querySelectorAll('.edit-user-btn').forEach(button => {
         button.addEventListener('click', (event) => {
-            event.preventDefault();  // предотвращаем переход по ссылке
-
+            event.preventDefault();
             const userId = button.getAttribute('data-id');
             const username = button.getAttribute('data-username');
             const email = button.getAttribute('data-email');
@@ -262,7 +411,6 @@ document.addEventListener('DOMContentLoaded', (event) => {
             editUsername.value = username;
             editEmail.value = email;
             editRole.value = role;
-
             editUserForm.action = `/admin/edit_user/${userId}`;
             editUserModal.show();
         });

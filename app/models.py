@@ -219,6 +219,14 @@ class TransferTasks(db.Model):
     date = db.Column(db.Integer())
 
 
+class SystemSettings(db.Model):
+    __tablename__ = 'system_settings'
+    id = db.Column(db.Integer, primary_key=True)
+    enable_voperator = db.Column(db.Integer)
+    enable_xml_parser = db.Column(db.Integer)
+    enable_db_cashing = db.Column(db.Integer)
+
+
 def insert_mailing_record_sqlalchemy(target, subject, content, html_template=None, attachment_name=None, attachment_content=None):
     try:
         sql = text("""
