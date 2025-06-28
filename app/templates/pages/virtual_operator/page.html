@@ -26,7 +26,7 @@
                         {% if alert.type == 'distance' %} {{ alert.alert_type.localization }} {{ alert.data }} км
                         {% elif alert.type == 'no_equipment' %} {{ alert.alert_type.localization }} {{ alert.data }}
                         {% elif alert.type == 'not_work' %} {{ alert.alert_type.localization }}: {{ alert.data }}
-                        {% else %} {{ alert.alert_type.localization }} {% endif %}
+                        {% else %} {{ alert.alert_type }} {% endif %}
                     </p>
                 </a>
                 {% endfor %}
@@ -52,6 +52,11 @@
                         <li class="nav-item" role="presentation">
                             <button class="nav-link" id="pills-missing-equip-tab" data-bs-toggle="pill" data-bs-target="#pills-missing-equip" type="button" role="tab" aria-controls="pills-missing-equip" aria-selected="false">
                                 <i class="bi bi-gear"></i> Отсутствие оборудования ({{ no_equipment|length }})
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="other-tab" data-bs-toggle="pill" data-bs-target="#other" type="button" role="tab" aria-controls="other" aria-selected="false">
+                                <i class="bi bi-exclamation-square"></i> Другие ({{ other|length }})
                             </button>
                         </li>
                     </ul>
@@ -140,6 +145,15 @@
                             {% endfor %}
                         </div>
                     </div>
+
+                    <div class="tab-pane fade" id="other" role="tabpanel" aria-labelledby="other-tab">
+                        <div class="row" id="other-items">
+                            {% for alert in other %}
+                                {{ alert_card(alert, 'border-primary', 'text-primary') }}
+                            {% endfor %}
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>

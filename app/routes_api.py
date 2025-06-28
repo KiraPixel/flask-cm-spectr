@@ -18,7 +18,7 @@ from . import db
 from .utils import need_access, need_access, get_api_key_by_username, is_valid_api_key, storage_id_to_name, \
     get_address_from_coords
 from .models import Transport, TransportModel, Storage, User, CashWialon, Comments, Alert, CashHistoryWialon, Reports, \
-    CashCesar, ParserTasks, TransferTasks
+    CashCesar, ParserTasks, TransferTasks, AlertType
 import modules.my_time as mytime
 
 # Создаем Blueprint для API маршрутов приложения
@@ -204,10 +204,13 @@ class GetCarInfo(Resource):
             alerts = db.session.query(Alert).filter(Alert.uNumber == car.uNumber).order_by(
                 Alert.date.desc()).all()
             for item in alerts:
+                result = db.session.query(AlertType).filter(AlertType.alert_un == item.type).first()
+                localization = result.localization if result else item.type
                 alerts_json_append = {
                     "id": item.id,
                     "status": item.status,
                     "type": item.type,
+                    "localization": localization,
                     "data": item.data,
                     "datetime": mytime.unix_to_moscow_time(item.date),
                     "comment": item.comment,

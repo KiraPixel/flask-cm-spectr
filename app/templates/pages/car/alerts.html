@@ -37,20 +37,11 @@ window.addEventListener('carDataLoaded', function() {
     if (window.carData && window.carData.alert && window.carData.alert.length > 0) {
         let alertsHtml = '<div class="alerts-container"><div class="row row-cols-1 row-cols-md-2 g-4">';
         window.carData.alert.forEach(item => {
-            let alertText = '';
-            switch (item.type) {
-                case 'gps': alertText = `Нет координат: ${item.data || '-'}`; break;
-                case 'distance': alertText = `В ${item.data || '-'} км от положенного места`; break;
-                case 'no_docs_cords': alertText = 'В ДО нет координат'; break;
-                case 'no_equipment': alertText = `Нет оборудования: ${item.data || '-'}`; break;
-                case 'not_work': alertText = `Оборудование ${item.data || '-'} не в сети`; break;
-                default: alertText = item.comment || '-';
-            }
             alertsHtml += `
                 <div class="col">
                     <div class="card h-100 border-${item.status === 1 ? 'success' : 'danger'} shadow-sm rounded-3">
                         <div class="card-header rounded-top-3">
-                            <h5 class="card-title mb-0">${alertText}</h5>
+                            <h5 class="card-title mb-0">${item.localization} ${item.data || '-'}</h5>
                         </div>
                         <div class="card-footer d-flex justify-content-between align-items-center">
                             <small class="text-muted">${item.datetime || '-'}</small>
