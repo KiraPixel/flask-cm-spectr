@@ -1,0 +1,416 @@
+{% extends 'main.html' %}
+
+{% block title %}
+Пресеты оповещений
+{% endblock %}
+
+{% block body %}
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <h2 class="mb-0 fw-bold">Пресеты оповещений</h2>
+        <button type="button" class="btn btn-primary rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#addPresetModal">
+            <i class="bi bi-plus-circle me-2"></i>Добавить пресет
+        </button>
+    </div>
+
+    <!-- Контейнер для карточек пресетов -->
+    <div id="presetsContainer" class="row g-4">
+        <!-- Карточки будут загружены через JavaScript -->
+    </div>
+
+    <!-- Модальное окно для добавления пресета -->
+    <div class="modal fade" id="addPresetModal" tabindex="-1" aria-labelledby="addPresetModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content rounded-4">
+                <div class="modal-header border-0 pb-2">
+                    <h5 class="modal-title fw-bold" id="addPresetModalLabel">Новый пресет</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addPresetForm">
+                        <div class="mb-4">
+                            <label for="presetName" class="form-label fw-semibold">Название пресета</label>
+                            <input type="text" class="form-control rounded-3" id="presetName" placeholder="Введите название" required>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Типы алертов</label>
+                            <div id="addAlertTypesContainer" class="list-group">
+                                <!-- Типы алертов будут загружены через JavaScript -->
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <label for="wialonDangerDistance" class="form-label fw-semibold">Опасное расстояние (км)</label>
+                                <input type="number" class="form-control rounded-3" id="wialonDangerDistance" value="5" min="0" required>
+                            </div>
+                            <div class="col-md-6 mb-4">
+                                <label for="wialonDangerHoursNotWork" class="form-label fw-semibold">Часы простоя</label>
+                                <input type="number" class="form-control rounded-3" id="wialonDangerHoursNotWork" value="72" min="0" required>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label for="active" class="form-label fw-semibold">Активен</label>
+                            <select class="form-select rounded-3" id="active">
+                                <option value="1" selected>Да</option>
+                                <option value="0">Нет</option>
+                            </select>
+                        </div>
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-primary rounded-pill px-4"><i class="bi bi-save me-2"></i>Сохранить</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно для редактирования пресета -->
+    <div class="modal fade" id="editPresetModal" tabindex="-1" aria-labelledby="editPresetModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content rounded-4">
+                <div class="modal-header border-0 pb-2">
+                    <h5 class="modal-title fw-bold" id="editPresetModalLabel">Редактировать пресет</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editPresetForm">
+                        <input type="hidden" id="editPresetId">
+                        <div class="mb-4">
+                            <label for="editPresetName" class="form-label fw-semibold">Название пресета</label>
+                            <input type="text" class="form-control rounded-3" id="editPresetName" placeholder="Введите название" required>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Типы алертов</label>
+                            <div id="editAlertTypesContainer" class="list-group">
+                                <!-- Типы алертов будут загружены через JavaScript -->
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <label for="editWialonDangerDistance" class="form-label fw-semibold">Опасное расстояние (км)</label>
+                                <input type="number" class="form-control rounded-3" id="editWialonDangerDistance" min="0" required>
+                            </div>
+                            <div class="col-md-6 mb-4">
+                                <label for="editWialonDangerHoursNotWork" class="form-label fw-semibold">Часы простоя</label>
+                                <input type="number" class="form-control rounded-3" id="editWialonDangerHoursNotWork" min="0" required>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label for="editActive" class="form-label fw-semibold">Активен</label>
+                            <select class="form-select rounded-3" id="editActive">
+                                <option value="1">Да</option>
+                                <option value="0">Нет</option>
+                            </select>
+                        </div>
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-primary rounded-pill px-4"><i class="bi bi-save me-2"></i>Сохранить изменения</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Загрузка всех типов алертов
+    async function loadAlertTypes() {
+        try {
+            const response = await fetch('/api/alerts_presets/alert_types');
+            const result = await response.json();
+            if (result.status === 'success') {
+                window.alertTypes = result.data.map(type => ({
+                    alert_un: type.alert_un,
+                    localization: type.localization
+                }));
+                populateAlertTypeControls();
+            } else {
+                alert('Ошибка загрузки типов алертов: ' + result.message);
+            }
+        } catch (error) {
+            alert('Ошибка при загрузке типов алертов: ' + error.message);
+        }
+    }
+
+    // Заполнение списков типов алертов с переключателями
+    function populateAlertTypeControls(preset = null) {
+        const addContainer = document.getElementById('addAlertTypesContainer');
+        const editContainer = document.getElementById('editAlertTypesContainer');
+        addContainer.innerHTML = '';
+        editContainer.innerHTML = '';
+
+        window.alertTypes.forEach(type => {
+            const addItem = document.createElement('div');
+            addItem.className = 'list-group-item d-flex justify-content-between align-items-center rounded-3 mb-2 p-3 border';
+            addItem.innerHTML = `
+                <span class="me-3">${type.localization}</span>
+                <div class="btn-group" role="group" data-alert-un="${type.alert_un}">
+                    <button type="button" class="btn btn-sm btn-outline-success alert-state me-1" data-state="enabled"><i class="bi bi-check-circle"></i></button>
+                    <button type="button" class="btn btn-sm btn-outline-danger alert-state me-1" data-state="disabled"><i class="bi bi-x-circle"></i></button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary alert-state active" data-state="inherited"><i class="bi bi-dash-circle"></i></button>
+                </div>
+            `;
+            addContainer.appendChild(addItem);
+
+            const editItem = document.createElement('div');
+            editItem.className = 'list-group-item d-flex justify-content-between align-items-center rounded-3 mb-2 p-3 border';
+            editItem.innerHTML = `
+                <span class="me-3">${type.localization}</span>
+                <div class="btn-group" role="group" data-alert-un="${type.alert_un}">
+                    <button type="button" class="btn btn-sm btn-outline-success alert-state me-1" data-state="enabled"><i class="bi bi-check-circle"></i></button>
+                    <button type="button" class="btn btn-sm btn-outline-danger alert-state me-1" data-state="disabled"><i class="bi bi-x-circle"></i></button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary alert-state${preset && !preset.enable_alert_types.includes(type.alert_un) && !preset.disable_alert_types.includes(type.alert_un) ? ' active' : ''}" data-state="inherited"><i class="bi bi-dash-circle"></i></button>
+                </div>
+            `;
+            if (preset) {
+                if (preset.enable_alert_types.includes(type.alert_un)) {
+                    editItem.querySelector('[data-state="enabled"]').classList.add('active');
+                } else if (preset.disable_alert_types.includes(type.alert_un)) {
+                    editItem.querySelector('[data-state="disabled"]').classList.add('active');
+                }
+            }
+            editContainer.appendChild(editItem);
+        });
+
+        // Добавление обработчиков для переключения состояний
+        document.querySelectorAll('.alert-state').forEach(button => {
+            button.addEventListener('click', () => {
+                const group = button.closest('.btn-group');
+                group.querySelectorAll('.alert-state').forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+            });
+        });
+    }
+
+    // Загрузка пресетов
+    async function loadPresets() {
+        try {
+            const response = await fetch('/api/alerts_presets');
+            const result = await response.json();
+            if (result.status === 'success') {
+                const container = document.getElementById('presetsContainer');
+                container.innerHTML = '';
+
+                // Фильтрация пресетов с personalized != 1
+                const filteredPresets = result.data.filter(preset => preset.personalized !== 1);
+
+                for (const preset of filteredPresets) {
+                    const vehiclesResponse = await fetch('/api/alerts_presets/vehicles_by_preset', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({preset_id: preset.id})
+                    });
+                    const vehiclesResult = await vehiclesResponse.json();
+                    const vehicleCount = vehiclesResult.status === 'success' ? vehiclesResult.data.total_count : 0;
+
+                    const card = document.createElement('div');
+                    card.className = 'col-md-6 col-lg-4';
+                    card.innerHTML = `
+                        <div class="card border-0 shadow h-100 rounded-4">
+                            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center rounded-top-4 py-3">
+                                <h5 class="mb-0 fw-semibold">${preset.preset_name}</h5>
+                                ${preset.editable ? `<button class="btn btn-sm btn-outline-light edit-preset rounded-circle" data-id="${preset.id}"><i class="bi bi-pencil"></i></button>` : ''}
+                            </div>
+                            <div class="card-body py-3 d-flex flex-wrap gap-2">
+                                <div class="d-flex align-items-center me-3 mb-2">
+                                    <i class="bi bi-truck me-2 text-primary"></i>
+                                    <span class="badge bg-primary-subtle text-primary rounded-pill">${vehicleCount}</span>
+                                </div>
+                                <div class="d-flex align-items-center me-3 mb-2">
+                                    <i class="bi bi-power me-2 text-primary"></i>
+                                    <span class="badge ${preset.active ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'} rounded-pill">${preset.active ? 'Да' : 'Нет'}</span>
+                                </div>
+                                <div class="d-flex align-items-center me-3 mb-2">
+                                    <i class="bi bi-bell-fill me-2 text-primary"></i>
+                                    <span class="badge bg-primary-subtle text-primary rounded-pill">${preset.enable_alert_types?.length || 0}</span>
+                                </div>
+                                <div class="d-flex align-items-center me-3 mb-2">
+                                    <i class="bi bi-bell-slash-fill me-2 text-primary"></i>
+                                    <span class="badge bg-primary-subtle text-primary rounded-pill">${preset.disable_alert_types?.length || 0}</span>
+                                </div>
+                                <div class="d-flex align-items-center me-3 mb-2">
+                                    <i class="bi bi-rulers me-2 text-primary"></i>
+                                    <span class="badge bg-primary-subtle text-primary rounded-pill">${preset.wialon_danger_distance} км</span>
+                                </div>
+                                <div class="d-flex align-items-center me-3 mb-2">
+                                    <i class="bi bi-clock-fill me-2 text-primary"></i>
+                                    <span class="badge bg-primary-subtle text-primary rounded-pill">${preset.wialon_danger_hours_not_work} ч</span>
+                                </div>
+                                <div class="d-flex align-items-center mb-2">
+                                    ${preset.editable ? '<i class="bi bi-pencil-fill me-2 text-primary"></i>' : ''}
+                                    <span class="badge bg-primary-subtle text-primary rounded-pill">${preset.editable ? 'Да' : ''}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                }
+
+                // Обработчики для кнопок редактирования
+                document.querySelectorAll('.edit-preset').forEach(button => {
+                    button.addEventListener('click', () => editPreset(button.dataset.id));
+                });
+            } else {
+                alert('Ошибка загрузки пресетов: ' + result.message);
+            }
+        } catch (error) {
+            alert('Ошибка при загрузке пресетов: ' + error.message);
+        }
+    }
+
+    // Добавление нового пресета
+    document.getElementById('addPresetForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const enableAlertTypes = [];
+        const disableAlertTypes = [];
+
+        document.querySelectorAll('#addAlertTypesContainer .btn-group').forEach(group => {
+            const alertUn = group.dataset.alertUn;
+            const activeState = group.querySelector('.alert-state.active').dataset.state;
+            if (activeState === 'enabled') {
+                enableAlertTypes.push(alertUn);
+            } else if (activeState === 'disabled') {
+                disableAlertTypes.push(alertUn);
+            }
+        });
+
+        const presetData = {
+            preset_name: document.getElementById('presetName').value,
+            enable_alert_types: enableAlertTypes,
+            disable_alert_types: disableAlertTypes,
+            wialon_danger_distance: parseInt(document.getElementById('wialonDangerDistance').value),
+            wialon_danger_hours_not_work: parseInt(document.getElementById('wialonDangerHoursNotWork').value),
+            active: parseInt(document.getElementById('active').value)
+        };
+
+        try {
+            const response = await fetch('/api/alerts_presets', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(presetData)
+            });
+            const result = await response.json();
+            if (result.status === 'success') {
+                alert('Пресет успешно создан');
+                bootstrap.Modal.getInstance(document.getElementById('addPresetModal')).hide();
+                document.getElementById('addPresetForm').reset();
+                populateAlertTypeControls();
+                loadPresets();
+            } else {
+                alert('Ошибка при создании пресета: ' + result.message);
+            }
+        } catch (error) {
+            alert('Ошибка при создании пресета: ' + error.message);
+        }
+    });
+
+    // Редактирование пресета
+    async function editPreset(presetId) {
+        try {
+            const response = await fetch(`/api/alerts_presets/${presetId}`);
+            const result = await response.json();
+            if (result.status === 'success') {
+                const preset = result.data;
+                document.getElementById('editPresetId').value = preset.id;
+                document.getElementById('editPresetName').value = preset.preset_name;
+                document.getElementById('editWialonDangerDistance').value = preset.wialon_danger_distance;
+                document.getElementById('editWialonDangerHoursNotWork').value = preset.wialon_danger_hours_not_work;
+                document.getElementById('editActive').value = preset.active;
+
+                populateAlertTypeControls(preset);
+                bootstrap.Modal.getOrCreateInstance(document.getElementById('editPresetModal')).show();
+            } else {
+                alert('Ошибка при загрузке пресета: ' + result.message);
+            }
+        } catch (error) {
+            alert('Ошибка при загрузке пресета: ' + error.message);
+        }
+    }
+
+    // Сохранение изменений пресета
+    document.getElementById('editPresetForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const presetId = document.getElementById('editPresetId').value;
+        const enableAlertTypes = [];
+        const disableAlertTypes = [];
+
+        document.querySelectorAll('#editAlertTypesContainer .btn-group').forEach(group => {
+            const alertUn = group.dataset.alertUn;
+            const activeState = group.querySelector('.alert-state.active').dataset.state;
+            if (activeState === 'enabled') {
+                enableAlertTypes.push(alertUn);
+            } else if (activeState === 'disabled') {
+                disableAlertTypes.push(alertUn);
+            }
+        });
+
+        const presetData = {
+            preset_name: document.getElementById('editPresetName').value,
+            enable_alert_types: enableAlertTypes,
+            disable_alert_types: disableAlertTypes,
+            wialon_danger_distance: parseInt(document.getElementById('editWialonDangerDistance').value),
+            wialon_danger_hours_not_work: parseInt(document.getElementById('editWialonDangerHoursNotWork').value),
+            active: parseInt(document.getElementById('editActive').value)
+        };
+
+        try {
+            const response = await fetch(`/api/alerts_presets/${presetId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(presetData)
+            });
+            const result = await response.json();
+            if (result.status === 'success') {
+                alert('Пресет успешно обновлен');
+                bootstrap.Modal.getInstance(document.getElementById('editPresetModal')).hide();
+                loadPresets();
+            } else {
+                alert('Ошибка при обновлении пресета: ' + result.message);
+            }
+        } catch (error) {
+            alert('Ошибка при обновлении пресета: ' + error.message);
+        }
+    });
+
+    // Инициализация страницы
+    document.addEventListener('DOMContentLoaded', () => {
+        loadAlertTypes();
+        loadPresets();
+    });
+</script>
+
+<style>
+    .card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    }
+    .list-group-item {
+        border: 1px solid var(--bs-border-color);
+        background-color: var(--bs-body-bg);
+        padding: 0.75rem 1rem;
+    }
+    .btn-outline-light.rounded-circle {
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .card-body {
+        font-size: 0.9rem;
+    }
+    .card-body .badge {
+        font-size: 0.8rem;
+    }
+</style>
+{% endblock %}

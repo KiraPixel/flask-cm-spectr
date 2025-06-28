@@ -159,12 +159,15 @@ class AlertType(db.Model):
 
 class AlertTypePresets(db.Model):
     __tablename__ = 'alerts_type_presets'
-    id = db.Column(db.Text(255), primary_key=True, autoincrement=True)
+    id = db.Column(db.Integer, nullable=False, primary_key=True, autoincrement=True)
     preset_name = db.Column(db.Text, nullable=False)
     enable_alert_types = db.Column(db.Text)
     disable_alert_types = db.Column(db.Text)
+    wialon_danger_distance = db.Column(db.Integer, default=5)
+    wialon_danger_hours_not_work = db.Column(db.Integer, default=72)
     active = db.Column(db.Integer, nullable=False, default=1)
     editable = db.Column(db.Integer, nullable=False, default=1)
+    personalized = db.Column(db.Integer, nullable=False, default=0)
 
 
 class Coord(db.Model):

@@ -4,7 +4,7 @@ from flask import session, jsonify, request
 from flask_restx import Namespace, Resource
 from ..utils import need_access, get_address_from_coords, storage_id_to_name
 from ..models import User, CashWialon, Alert, TransferTasks, db, Transport, Storage, TransportModel, CashCesar, \
-    AlertType, Comments, CashHistoryWialon
+    AlertType, Comments, CashHistoryWialon, AlertTypePresets
 from modules.my_time import one_hours_ago_unix, forty_eight_hours_ago_unix, now_unix_time, online_check, \
     unix_to_moscow_time, online_check_cesar
 import requests
@@ -337,3 +337,48 @@ class GetCarHistory(Resource):
         except Exception as e:
             print(f"Error occurred while fetching car history: {e}")
             return {'error': 'Database query failed'}, 500
+
+
+@car_ns.route('/set_preset')
+class SetPreset(Resource):
+    @car_ns.param('uNumber', 'Номер транспортного средства (uNumber)', _required=True)
+    @car_ns.param('alert_type_presets_id', 'ID пресета из AlertTypePresets (может быть null)', _required=False)
+    @car_ns.response(200, 'Успешно')
+    @car_ns.response(400, 'Неверный запрос (например, отсутствует uNumber или неверный alert_type_presets_id)')
+    @car_ns.response(404, 'Транспорт или пресет не найден')
+    @car_ns.response(500, 'Ошибка при выполнении запроса к базе данных')
+    @need_access(-1)
+    def put(self):
+        """Установка или удаление пресета для транспорта по uNumber"""
+        uNumber = request.args.get('uNumber')
+        alert_type_presets_id = request.args.get('alert_type_presets_id')
+
+        if not uNumber:
+            return {'status': 'error', 'message': 'Не указан uNumber'}, 400
+
+        try:
+            # Проверяем существование транспорта
+            transport = db.session.query(Transport).filter_by(uNumber=uNumber).first()
+            if not transport:
+                return {'status': 'error', 'message': f'Транспорт с uNumber {uNumber} не найден'}, 404
+
+            # Если alert_type_presets_id не указан или пустой, устанавливаем NULL
+            if alert_type_presets_id is None or alert_type_presets_id == '' or alert_type_presets_id.lower() == 'null':
+                transport.alert_preset= None
+            else:
+                # Проверяем, существует ли пресет
+                try:
+                    alert_type_presets_id = int(alert_type_presets_id)
+                    preset = db.session.query(AlertTypePresets).filter_by(id=alert_type_presets_id).first()
+                    if not preset:
+                        return {'status': 'error', 'message': f'Пресет с id {alert_type_presets_id} не найден'}, 404
+                    transport.alert_preset = alert_type_presets_id
+                except ValueError:
+                    return {'status': 'error', 'message': 'alert_type_presets_id должен быть целым числом или null'}, 400
+            print(transport.alert_preset, transport.uNumber)
+            db.session.commit()
+            return {'status': 'success', 'message': 'Пресет обновлен'}, 200
+
+        except Exception as e:
+            db.session.rollback()
+            return {'status': 'error', 'message': f'Ошибка при обновлении пресета: {str(e)}'}, 500

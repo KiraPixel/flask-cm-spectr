@@ -1,57 +1,564 @@
-{#<div class="tab-pane fade" id="settings" role="tabpanel" aria-labelledby="settings-tab">#}
-{#    <div class="card border-0 shadow-sm rounded-3">#}
-{#        <div class="card-body">#}
-{#            <button id="virtualOperatorToggle" class="btn btn-outline-primary w-100">#}
-{#                Виртуальный оператор#}
-{#            </button>#}
-{#        </div>#}
-{#    </div>#}
-{#</div>#}
-{##}
-{#<script>#}
-{#    window.addEventListener('carDataLoaded', function() {#}
-{#        const virtualOperatorBtn = document.getElementById('virtualOperatorToggle');#}
-{#        const lotNumberElement = document.getElementById('lotNumber');#}
-{#        if (!virtualOperatorBtn || !lotNumberElement) {#}
-{#            return;#}
-{#        }#}
-{##}
-{#        const lotNumber = lotNumberElement.textContent.trim();#}
-{#        if (!window.carData || !window.carData['car_setting:']) {#}
-{#            return;#}
-{#        }#}
-{##}
-{#        const virtualOperator = window.carData['car_setting:'].virtual_operator;#}
-{#        if (virtualOperator === undefined) {#}
-{#            return;#}
-{#        }#}
-{##}
-{#        // Функция для обновления кнопки#}
-{#        function updateButton(isEnabled) {#}
-{#            virtualOperatorBtn.className = `btn btn-outline-${isEnabled ? 'success' : 'danger'} w-100`;#}
-{#            virtualOperatorBtn.textContent = `${isEnabled ? '✔' : '✖'} Виртуальный оператор ${isEnabled ? 'Включен' : 'Выключен'}`;#}
-{#        }#}
-{##}
-{#        // Инициализируем кнопку#}
-{#        const isEnabled = virtualOperator === 0; // 0 - включен, 1 - выключен#}
-{#        updateButton(isEnabled);#}
-{##}
-{#        // Добавляем обработчик клика#}
-{#        virtualOperatorBtn.addEventListener('click', function() {#}
-{#            fetch(`/api/car/change_disable_virtual_operator?car_name=${encodeURIComponent(lotNumber)}`)#}
-{#                .then(response => {#}
-{#                    if (response.ok) {#}
-{#                        // Переключаем локальное значение virtual_operator (0 -> 1, 1 -> 0)#}
-{#                        window.carData['car_setting:'].virtual_operator = isEnabled ? 1 : 0;#}
-{#                        // Обновляем кнопку#}
-{#                        updateButton(!isEnabled);#}
-{#                    } else {#}
-{#                        alert('Ошибка при изменении состояния виртуального оператора.');#}
-{#                    }#}
-{#                })#}
-{#                .catch(error => {#}
-{#                    alert('Ошибка: ' + error);#}
-{#                });#}
-{#        });#}
-{#    });#}
-{#</script>#}
+{% block settings %}
+<div class="tab-pane fade" id="settings" role="tabpanel" aria-labelledby="settings-tab">
+    <h2 class="mb-4 fw-bold">Настройки алертов</h2>
+    <div id="defaultPreset" class="mb-4">
+        <h5 class="fw-semibold mb-3">Информация по пресетам</h5>
+        <div class="card border-0 shadow rounded-4">
+            <div class="card-body py-3">
+                <p class="mb-1"><span class="fw-medium">Пресет по умолчанию: </span><span id="defaultPresetName"></span></p>
+                <p class="mb-1" id="currentPreset" style="display: none;"><span class="fw-medium">Текущий пресет: </span><span id="currentPresetName"></span></p>
+            </div>
+        </div>
+    </div>
+    <div id="currentSettings" class="mb-4">
+        <h5 class="fw-semibold mb-3">Текущие настройки</h5>
+        <div class="card border-0 shadow rounded-4">
+            <div class="card-body py-3">
+                <div class="d-flex flex-wrap gap-2 mb-2">
+                    <i class="bi bi-bell-fill me-2 text-primary"></i>
+                    <div id="currentAlerts" class="d-flex flex-wrap gap-2"></div>
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                    <div class="d-flex align-items-center me-3">
+                        <i class="bi bi-rulers me-2 text-primary"></i>
+                        <span id="currentDistance" class="badge bg-primary-subtle text-primary rounded-pill"></span>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-clock-fill me-2 text-primary"></i>
+                        <span id="currentHours" class="badge bg-primary-subtle text-primary rounded-pill"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="customPreset" class="mb-4" style="display: none;">
+        <h5 class="fw-semibold mb-3">Установленный пресет</h5>
+        <div class="card border-0 shadow rounded-4">
+            <div class="card-body py-3">
+                <div class="mb-2">
+                    <span id="customPresetName" class="fw-medium"></span>
+                </div>
+                <div class="d-flex flex-wrap gap-2 mb-2">
+                    <i class="bi bi-bell-fill me-2 text-primary"></i>
+                    <div id="customEnableAlerts" class="d-flex flex-wrap gap-2"></div>
+                </div>
+                <div class="d-flex flex-wrap gap-2 mb-2">
+                    <i class="bi bi-bell-slash-fill me-2 text-primary"></i>
+                    <div id="customDisableAlerts" class="d-flex flex-wrap gap-2"></div>
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                    <div class="d-flex align-items-center me-3">
+                        <i class="bi bi-rulers me-2 text-primary"></i>
+                        <span id="customDistance" class="badge bg-primary-subtle text-primary rounded-pill"></span>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-clock-fill me-2 text-primary"></i>
+                        <span id="customHours" class="badge bg-primary-subtle text-primary rounded-pill"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="editSettings">
+        <h5 class="fw-semibold mb-3" id="editSettingsTitle">Создать персонализированный пресет</h5>
+        <div class="mb-3 d-flex align-items-end gap-2">
+            <div class="flex-grow-1">
+                <label for="presetSelect" class="form-label fw-semibold">Выберите пресет</label>
+                <select id="presetSelect" class="form-select rounded-3">
+                    <option value="new">Создать новый</option>
+                    <option value="remove">Удалить пресет с транспорта</option>
+                    <!-- Другие пресеты будут загружены через JavaScript -->
+                </select>
+            </div>
+            <button id="applyPresetButton" class="btn btn-primary rounded-pill px-3" style="display: none;"><i class="bi bi-check-circle"></i></button>
+        </div>
+        <form id="editSettingsForm" style="display: none;">
+            <input type="hidden" id="uNumber" value="{{ car_name }}">
+            <input type="hidden" id="selectedPresetId">
+            <div class="row mb-3">
+                <div class="col-md-6 mb-3">
+                    <label for="wialonDangerDistance" class="form-label fw-semibold">Опасное расстояние (км)</label>
+                    <input type="number" class="form-control rounded-3" id="wialonDangerDistance" min="0" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="wialonDangerHoursNotWork" class="form-label fw-semibold">Часы простоя</label>
+                    <input type="number" class="form-control rounded-3" id="wialonDangerHoursNotWork" min="0" required>
+                </div>
+            </div>
+            <div class="mb-4">
+                <label class="form-label fw-semibold">Типы алертов</label>
+                <div id="editAlertTypesContainer" class="list-group">
+                    <!-- Типы алертов будут загружены через JavaScript -->
+                </div>
+            </div>
+            <div class="d-flex justify-content-end">
+                <button type="submit" class="btn btn-primary rounded-pill px-4"><i class="bi bi-save me-2"></i>Сохранить</button>
+            </div>
+        </form>
+    </div>
+    <div id="settingsDiff" class="mt-4" style="display: none;">
+       -config.py
+        <h5 class="fw-semibold mb-3">Разница с пресетом по умолчанию</h5>
+        <div class="card border-0 shadow rounded-4">
+            <div class="card-body py-3">
+                <p class="mb-2" id="diffAlerts"></p>
+                <p class="mb-2" id="diffDistance"></p>
+                <p class="mb-2" id="diffHours"></p>
+            </div>
+        </div>
+    </div>
+    <div id="error" class="alert alert-danger" style="display: none;"></div>
+</div>
+
+<script>
+    // Ожидание полной загрузки данных
+    function initializeSettings() {
+        if (window.carData) {
+            loadSettings();
+        } else {
+            window.addEventListener('carDataLoaded', () => {
+                loadSettings();
+            });
+        }
+    }
+
+    // Загрузка текущих настроек, типов алертов и пресетов
+    async function loadSettings() {
+        const uNumber = document.getElementById('uNumber').value;
+        try {
+            // Загрузка типов алертов
+            const alertTypesResponse = await fetch('/api/alerts_presets/alert_types');
+            const alertTypesResult = await alertTypesResponse.json();
+            if (alertTypesResult.status !== 'success') {
+                throw new Error('Ошибка загрузки типов алертов: ' + alertTypesResult.message);
+            }
+            window.alertTypes = alertTypesResult.data.map(type => ({
+                alert_un: type.alert_un,
+                localization: type.localization
+            }));
+
+            // Загрузка пресетов транспорта
+            const settingsResponse = await fetch('/api/alerts_presets/vehicle', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ uNumber: uNumber })
+            });
+            const settingsResult = await settingsResponse.json();
+            if (settingsResult.status !== 'success') {
+                throw new Error('Ошибка загрузки настроек: ' + settingsResult.message);
+            }
+
+            const { default_preset, custom_preset } = settingsResult.data;
+
+            // Вычисление текущих настроек (enable_alert_list)
+            let enable_alert_list = default_preset.enable_alert_types || [];
+            let wialon_danger_distance = default_preset.wialon_danger_distance;
+            let wialon_danger_hours_not_work = default_preset.wialon_danger_hours_not_work;
+
+            if (custom_preset && custom_preset.active) {
+                const disable_alert_types = custom_preset.disable_alert_types || [];
+                const custom_enable_alert_types = custom_preset.enable_alert_types || [];
+                enable_alert_list = enable_alert_list.filter(alert => !disable_alert_types.includes(alert));
+                enable_alert_list = [...new Set([...enable_alert_list, ...custom_enable_alert_types])];
+                wialon_danger_distance = custom_preset.wialon_danger_distance;
+                wialon_danger_hours_not_work = custom_preset.wialon_danger_hours_not_work;
+            }
+
+            // Отображение информации по пресетам
+            document.getElementById('defaultPresetName').textContent = default_preset.preset_name || 'Стандартный';
+            const currentPreset = document.getElementById('currentPreset');
+            const currentPresetName = document.getElementById('currentPresetName');
+            if (custom_preset && custom_preset.active) {
+                currentPreset.style.display = 'block';
+                currentPresetName.textContent = custom_preset.preset_name || 'Неизвестный';
+            } else {
+                currentPreset.style.display = 'none';
+            }
+
+            // Отображение текущих настроек
+            const currentAlertsContainer = document.getElementById('currentAlerts');
+            currentAlertsContainer.innerHTML = '';
+            enable_alert_list.forEach(alert => {
+                const name = window.alertTypes.find(type => type.alert_un === alert)?.localization || alert;
+                const badge = document.createElement('span');
+                badge.className = 'badge bg-primary-subtle text-primary rounded-pill';
+                badge.textContent = name;
+                currentAlertsContainer.appendChild(badge);
+            });
+            document.getElementById('currentDistance').textContent = `${wialon_danger_distance} км`;
+            document.getElementById('currentHours').textContent = `${wialon_danger_hours_not_work} ч`;
+
+            // Отображение кастомного пресета и формы редактирования
+            if (custom_preset && custom_preset.active && custom_preset.personalized && custom_preset.preset_name === `Custom_${uNumber}`) {
+                document.getElementById('customPreset').style.display = 'block';
+                document.getElementById('editSettingsTitle').textContent = 'Редактировать установленный пресет';
+                document.getElementById('customPresetName').textContent = custom_preset.preset_name;
+                const customEnableAlertsContainer = document.getElementById('customEnableAlerts');
+                customEnableAlertsContainer.innerHTML = '';
+                custom_preset.enable_alert_types.forEach(alert => {
+                    const name = window.alertTypes.find(type => type.alert_un === alert)?.localization || alert;
+                    const badge = document.createElement('span');
+                    badge.className = 'badge bg-primary-subtle text-primary rounded-pill';
+                    badge.textContent = name;
+                    customEnableAlertsContainer.appendChild(badge);
+                });
+                const customDisableAlertsContainer = document.getElementById('customDisableAlerts');
+                customDisableAlertsContainer.innerHTML = '';
+                custom_preset.disable_alert_types.forEach(alert => {
+                    const name = window.alertTypes.find(type => type.alert_un === alert)?.localization || alert;
+                    const badge = document.createElement('span');
+                    badge.className = 'badge bg-primary-subtle text-primary rounded-pill';
+                    badge.textContent = name;
+                    customDisableAlertsContainer.appendChild(badge);
+                });
+                document.getElementById('customDistance').textContent = `${custom_preset.wialon_danger_distance} км`;
+                document.getElementById('customHours').textContent = `${custom_preset.wialon_danger_hours_not_work} ч`;
+                populateAlertTypeControls(custom_preset);
+                showSettingsDiff(default_preset, custom_preset);
+            } else {
+                document.getElementById('customPreset').style.display = 'none';
+                document.getElementById('editSettingsTitle').textContent = 'Создать персонализированный пресет';
+                populateAlertTypeControls();
+            }
+
+            // Заполнение формы редактирования
+            document.getElementById('wialonDangerDistance').value = wialon_danger_distance;
+            document.getElementById('wialonDangerHoursNotWork').value = wialon_danger_hours_not_work;
+
+            // Загрузка существующих пресетов
+            const presetsResponse = await fetch('/api/alerts_presets');
+            const presetsResult = await presetsResponse.json();
+            if (presetsResult.status !== 'success') {
+                throw new Error('Ошибка загрузки пресетов: ' + presetsResult.message);
+            }
+            const presetSelect = document.getElementById('presetSelect');
+            presetSelect.innerHTML = '<option value="new">Создать новый</option><option value="remove">Удалить пресет с транспорта</option>';
+            presetsResult.data.filter(preset => preset.personalized === 0).forEach(preset => {
+                const option = document.createElement('option');
+                option.value = preset.id;
+                option.textContent = preset.preset_name;
+                if (custom_preset && !custom_preset.personalized && custom_preset.id === preset.id) {
+                    option.selected = true;
+                    document.getElementById('editSettingsForm').style.display = 'none';
+                    document.getElementById('applyPresetButton').style.display = 'inline-flex';
+                }
+                presetSelect.appendChild(option);
+            });
+            if (custom_preset && custom_preset.personalized && custom_preset.preset_name === `Custom_${uNumber}`) {
+                const customOption = document.createElement('option');
+                customOption.value = custom_preset.id;
+                customOption.textContent = custom_preset.preset_name;
+                customOption.selected = true;
+                presetSelect.appendChild(customOption);
+                document.getElementById('editSettingsForm').style.display = 'block';
+                document.getElementById('selectedPresetId').value = custom_preset.id;
+                document.getElementById('applyPresetButton').style.display = 'none';
+            } else if (presetSelect.value === 'new' || presetSelect.value === 'remove') {
+                document.getElementById('applyPresetButton').style.display = 'none';
+            } else {
+                document.getElementById('applyPresetButton').style.display = 'inline-flex';
+            }
+        } catch (error) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = 'Ошибка: ' + error.message;
+            errorDiv.style.display = 'block';
+        }
+    }
+
+    // Заполнение списка типов алертов для редактирования
+    function populateAlertTypeControls(preset = null) {
+        const container = document.getElementById('editAlertTypesContainer');
+        container.innerHTML = '';
+
+        window.alertTypes.forEach(type => {
+            const item = document.createElement('div');
+            item.className = 'list-group-item d-flex justify-content-between align-items-center rounded-3 mb-2 p-3 border';
+            item.innerHTML = `
+                <span class="me-3">${type.localization}</span>
+                <div class="btn-group" role="group" data-alert-un="${type.alert_un}">
+                    <button type="button" class="btn btn-sm btn-outline-success alert-state me-1" data-state="enabled"><i class="bi bi-check-circle"></i></button>
+                    <button type="button" class="btn btn-sm btn-outline-danger alert-state me-1" data-state="disabled"><i class="bi bi-x-circle"></i></button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary alert-state${preset && !preset.enable_alert_types.includes(type.alert_un) && !preset.disable_alert_types.includes(type.alert_un) ? ' active' : ''}" data-state="inherited"><i class="bi bi-dash-circle"></i></button>
+                </div>
+            `;
+            if (preset) {
+                if (preset.enable_alert_types.includes(type.alert_un)) {
+                    item.querySelector('[data-state="enabled"]').classList.add('active');
+                } else if (preset.disable_alert_types.includes(type.alert_un)) {
+                    item.querySelector('[data-state="disabled"]').classList.add('active');
+                }
+            }
+            container.appendChild(item);
+        });
+
+        // Обработчики для переключения состояний
+        document.querySelectorAll('.alert-state').forEach(button => {
+            button.addEventListener('click', () => {
+                const group = button.closest('.btn-group');
+                group.querySelectorAll('.alert-state').forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+            });
+        });
+    }
+
+    // Отображение разницы с пресетом по умолчанию
+    function showSettingsDiff(defaultPreset, customPreset) {
+        const diffContainer = document.getElementById('settingsDiff');
+        diffContainer.style.display = 'block';
+
+        const diffAlerts = document.getElementById('diffAlerts');
+        const diffDistance = document.getElementById('diffDistance');
+        const diffHours = document.getElementById('diffHours');
+
+        // Разница в алертах
+        const addedAlerts = customPreset.enable_alert_types.filter(alert => !defaultPreset.enable_alert_types.includes(alert));
+        const removedAlerts = defaultPreset.enable_alert_types.filter(alert => customPreset.disable_alert_types.includes(alert));
+        let alertsText = '';
+        if (addedAlerts.length > 0) {
+            const addedNames = addedAlerts.map(alert => window.alertTypes.find(type => type.alert_un === alert)?.localization || alert).join(', ');
+            alertsText += `Добавленные алерты: ${addedNames}. `;
+        }
+        if (removedAlerts.length > 0) {
+            const removedNames = removedAlerts.map(alert => window.alertTypes.find(type => type.alert_un === alert)?.localization || alert).join(', ');
+            alertsText += `Удаленные алерты: ${removedNames}.`;
+        }
+        diffAlerts.textContent = alertsText || 'Алерты не изменены.';
+
+        // Разница в расстоянии
+        const distanceDiff = customPreset.wialon_danger_distance - defaultPreset.wialon_danger_distance;
+        diffDistance.textContent = distanceDiff !== 0 ? `Опасное расстояние: ${distanceDiff > 0 ? '+' : ''}${distanceDiff} км` : 'Опасное расстояние не изменено.';
+
+        // Разница в часах простоя
+        const hoursDiff = customPreset.wialon_danger_hours_not_work - defaultPreset.wialon_danger_hours_not_work;
+        diffHours.textContent = hoursDiff !== 0 ? `Часы простоя: ${hoursDiff > 0 ? '+' : ''}${hoursDiff} ч` : 'Часы простоя не изменены.';
+    }
+
+    // Обработка выбора пресета
+    document.getElementById('presetSelect').addEventListener('change', async (e) => {
+        const presetId = e.target.value;
+        const editSettingsForm = document.getElementById('editSettingsForm');
+        const editSettingsTitle = document.getElementById('editSettingsTitle');
+        const applyPresetButton = document.getElementById('applyPresetButton');
+        const uNumber = document.getElementById('uNumber').value;
+
+        if (presetId === 'new') {
+            editSettingsForm.style.display = 'block';
+            editSettingsTitle.textContent = 'Создать персонализированный пресет';
+            document.getElementById('selectedPresetId').value = '';
+            applyPresetButton.style.display = 'none';
+            // Сбрасываем форму до значений текущих настроек
+            const settingsResponse = await fetch('/api/alerts_presets/vehicle', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ uNumber: uNumber })
+            });
+            const settingsResult = await settingsResponse.json();
+            if (settingsResult.status === 'success') {
+                const { default_preset, custom_preset } = settingsResult.data;
+                let wialon_danger_distance = default_preset.wialon_danger_distance;
+                let wialon_danger_hours_not_work = default_preset.wialon_danger_hours_not_work;
+                if (custom_preset && custom_preset.active && custom_preset.personalized) {
+                    wialon_danger_distance = custom_preset.wialon_danger_distance;
+                    wialon_danger_hours_not_work = custom_preset.wialon_danger_hours_not_work;
+                    populateAlertTypeControls(custom_preset);
+                } else {
+                    populateAlertTypeControls();
+                }
+                document.getElementById('wialonDangerDistance').value = wialon_danger_distance;
+                document.getElementById('wialonDangerHoursNotWork').value = wialon_danger_hours_not_work;
+            }
+        } else if (presetId === 'remove') {
+            editSettingsForm.style.display = 'none';
+            applyPresetButton.style.display = 'none';
+            try {
+                // Сбрасываем пресет транспорта на NULL
+                const setPresetResponse = await fetch(`/api/car/set_preset?uNumber=${encodeURIComponent(uNumber)}&alert_type_presets_id=null`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const setPresetResult = await setPresetResponse.json();
+                if (setPresetResult.status !== 'success') {
+                    throw new Error('Ошибка при удалении пресета: ' + setPresetResult.message);
+                }
+                alert('Пресет успешно удален с транспорта');
+                loadSettings();
+            } catch (error) {
+                const errorDiv = document.getElementById('error');
+                errorDiv.textContent = 'Ошибка: ' + error.message;
+                errorDiv.style.display = 'block';
+            }
+        } else {
+            document.getElementById('selectedPresetId').value = presetId;
+            // Проверяем, является ли выбранный пресет персонализированным
+            const presetsResponse = await fetch('/api/alerts_presets');
+            const presetsResult = await presetsResponse.json();
+            if (presetsResult.status === 'success') {
+                const selectedPreset = presetsResult.data.find(preset => preset.id === parseInt(presetId));
+                if (selectedPreset && selectedPreset.personalized) {
+                    editSettingsForm.style.display = 'block';
+                    editSettingsTitle.textContent = 'Редактировать установленный пресет';
+                    applyPresetButton.style.display = 'none';
+                    // Заполняем форму данными пресета
+                    const settingsResponse = await fetch('/api/alerts_presets/vehicle', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ uNumber: uNumber })
+                    });
+                    const settingsResult = await settingsResponse.json();
+                    if (settingsResult.status === 'success') {
+                        const { custom_preset } = settingsResult.data;
+                        if (custom_preset && custom_preset.id === parseInt(presetId)) {
+                            populateAlertTypeControls(custom_preset);
+                            document.getElementById('wialonDangerDistance').value = custom_preset.wialon_danger_distance;
+                            document.getElementById('wialonDangerHoursNotWork').value = custom_preset.wialon_danger_hours_not_work;
+                        }
+                    }
+                } else {
+                    editSettingsForm.style.display = 'none';
+                    applyPresetButton.style.display = 'inline-flex';
+                }
+            }
+        }
+    });
+
+    // Применение выбранного пресета
+    document.getElementById('applyPresetButton').addEventListener('click', async () => {
+        const presetId = document.getElementById('presetSelect').value;
+        const uNumber = document.getElementById('uNumber').value;
+
+        if (presetId === 'new' || presetId === 'remove') {
+            return;
+        }
+
+        try {
+            // Привязываем выбранный пресет к машине
+            const setPresetResponse = await fetch(`/api/car/set_preset?uNumber=${encodeURIComponent(uNumber)}&alert_type_presets_id=${presetId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            const setPresetResult = await setPresetResponse.json();
+            if (setPresetResult.status !== 'success') {
+                throw new Error('Ошибка при установке пресета: ' + setPresetResult.message);
+            }
+            alert('Пресет успешно применен');
+            loadSettings();
+        } catch (error) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = 'Ошибка: ' + error.message;
+            errorDiv.style.display = 'block';
+        }
+    });
+
+    // Сохранение настроек
+    document.getElementById('editSettingsForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const uNumber = document.getElementById('uNumber').value;
+        const presetId = document.getElementById('selectedPresetId').value;
+        const enableAlertTypes = [];
+        const disableAlertTypes = [];
+
+        document.querySelectorAll('#editAlertTypesContainer .btn-group').forEach(group => {
+            if (group && group.dataset && group.dataset.alertUn) {
+                const alertUn = group.dataset.alertUn;
+                const activeButton = group.querySelector('.alert-state.active');
+                const activeState = activeButton ? activeButton.dataset.state : null;
+                if (activeState === 'enabled') {
+                    enableAlertTypes.push(alertUn);
+                } else if (activeState === 'disabled') {
+                    disableAlertTypes.push(alertUn);
+                }
+            }
+        });
+
+        const presetData = {
+            preset_name: `Custom_${uNumber}`,
+            enable_alert_types: enableAlertTypes,
+            disable_alert_types: disableAlertTypes,
+            wialon_danger_distance: parseInt(document.getElementById('wialonDangerDistance').value) || 0,
+            wialon_danger_hours_not_work: parseInt(document.getElementById('wialonDangerHoursNotWork').value) || 0,
+            active: 1,
+            editable: 1,
+            personalized: 1
+        };
+
+        try {
+            // Проверяем, существует ли пресет с именем Custom_${uNumber}
+            const presetsResponse = await fetch('/api/alerts_presets');
+            const presetsResult = await presetsResponse.json();
+            if (presetsResult.status !== 'success') {
+                throw new Error('Ошибка загрузки пресетов: ' + presetsResult.message);
+            }
+            const existingPreset = presetsResult.data.find(preset => preset.preset_name === `Custom_${uNumber}`);
+
+            // Создаем или обновляем кастомный пресет
+            const method = existingPreset ? 'PUT' : 'POST';
+            const url = existingPreset ? `/api/alerts_presets/${existingPreset.id}` : '/api/alerts_presets';
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(presetData)
+            });
+            const result = await response.json();
+            if (result.status !== 'success') {
+                throw new Error('Ошибка при создании/обновлении пресета: ' + result.message);
+            }
+
+            // Устанавливаем пресет для машины
+            const newPresetId = result.id || existingPreset.id;
+            const setPresetResponse = await fetch(`/api/car/set_preset?uNumber=${encodeURIComponent(uNumber)}&alert_type_presets_id=${newPresetId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            const setPresetResult = await setPresetResponse.json();
+            if (setPresetResult.status !== 'success') {
+                throw new Error('Ошибка при установке пресета: ' + setPresetResult.message);
+            }
+
+            alert('Настройки успешно сохранены');
+            loadSettings();
+        } catch (error) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = 'Ошибка: ' + error.message;
+            errorDiv.style.display = 'block';
+        }
+    });
+
+    // Инициализация
+    document.addEventListener('DOMContentLoaded', initializeSettings);
+</script>
+
+<style>
+    .card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    }
+    .list-group-item {
+        border: 1px solid var(--bs-border-color);
+        background-color: var(--bs-body-bg);
+        padding: 0.75rem 1rem;
+    }
+    .card-body {
+        font-size: 0.9rem;
+    }
+    .card-body .badge {
+        font-size: 0.8rem;
+    }
+</style>
+{% endblock %}

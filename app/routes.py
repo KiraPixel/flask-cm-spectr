@@ -316,6 +316,13 @@ def logout():
     flash('Вы вышли из системы', 'info')
     return redirect(url_for('main.login'))
 
+
+@bp.route('/alerts_presets')
+@need_access(1)
+def alert_presets():
+    return render_template('pages/alerts_presets/page.html')
+
+
 @bp.route('/car/<string:car_id>')
 @need_access(-1)
 def car(car_id):

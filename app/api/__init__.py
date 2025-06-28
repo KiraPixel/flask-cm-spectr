@@ -26,6 +26,7 @@ from .users import user_ns
 from .wialon import wialon_ns
 from .parser import parser_ns
 from .setting import settings_ns
+from .alerts_presets import alerts_presets_ns
 
 # Добавление Namespace в API
 api.add_namespace(health_ns)
@@ -35,3 +36,4 @@ api.add_namespace(user_ns)
 api.add_namespace(wialon_ns)
 api.add_namespace(parser_ns)
 api.add_namespace(settings_ns)
+api.add_namespace(alerts_presets_ns)
