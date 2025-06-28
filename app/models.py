@@ -39,17 +39,15 @@ class Transport(db.Model):
     storage_id = db.Column(db.Integer, db.ForeignKey('storage.ID'), nullable=False)
     model_id = db.Column(db.Text, db.ForeignKey('transport_model.id'), nullable=False)  # Указание внешнего ключа
     storage = db.relationship('Storage', back_populates='transports', primaryjoin="Storage.ID == Transport.storage_id")
-
     uNumber = db.Column(db.Text)
     manufacture_year = db.Column(db.Text)
     vin = db.Column(db.Text)
-    equipment = db.Column(db.JSON)
     x = db.Column(db.Float)
     y = db.Column(db.Float)
     customer = db.Column(db.Text)
     customer_contact = db.Column(db.Text)
     manager = db.Column(db.Text)
-    disable_virtual_operator = db.Column(db.Integer)
+    alert_preset = db.Column(db.Integer)
     parser_1c = db.Column(db.Integer, default=1)
 
     transport_model = db.relationship(

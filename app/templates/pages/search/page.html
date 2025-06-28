@@ -122,14 +122,14 @@
                 <option value="no" {% if request.args.get('1cparser') == 'no' %}selected{% endif %}>Нет</option>
               </select>
             </div>
-            <div class="mb-3">
-              <label for="filter-voperator" class="form-label">Мониторинг виртуальным оператором</label>
-              <select id="filter-voperator" name="voperator" class="form-control">
-                <option value="all" {% if request.args.get('voperator') == 'all' %}selected{% endif %}>Все</option>
-                <option value="yes" {% if request.args.get('voperator') == 'yes' %}selected{% endif %}>Включен</option>
-                <option value="no" {% if request.args.get('voperator') == 'no' %}selected{% endif %}>Отключен</option>
-              </select>
-            </div>
+{#            <div class="mb-3">#}
+{#              <label for="filter-voperator" class="form-label">Мониторинг виртуальным оператором</label>#}
+{#              <select id="filter-voperator" name="voperator" class="form-control">#}
+{#                <option value="all" {% if request.args.get('voperator') == 'all' %}selected{% endif %}>Все</option>#}
+{#                <option value="yes" {% if request.args.get('voperator') == 'yes' %}selected{% endif %}>Включен</option>#}
+{#                <option value="no" {% if request.args.get('voperator') == 'no' %}selected{% endif %}>Отключен</option>#}
+{#              </select>#}
+{#            </div>#}
             <div class="mb-3">
               <label for="filter-online" class="form-label">ТС в сети</label>
               <select id="filter-online" name="online" class="form-control">

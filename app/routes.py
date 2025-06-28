@@ -75,11 +75,6 @@ def home():
         query = query.filter(Transport.customer.like(f'%{filters["customer"]}%'))
     if filters['manager']:
         query = query.filter(Transport.manager.like(f'%{filters["manager"]}%'))
-    if filters['voperator']:
-        if filters['voperator'] == 'yes':
-            query = query.filter(Transport.disable_virtual_operator == 0)
-        elif filters['voperator'] == 'no':
-            query = query.filter(Transport.disable_virtual_operator == 1)
     if filters['1cparser']:
         if filters['1cparser'] == 'no':
             query = query.filter(Transport.parser_1c == 0)

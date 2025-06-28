@@ -300,7 +300,7 @@ class GetCarInfo(Resource):
                     "manager": car.manager
                 },
                 "car_setting:": {
-                    "virtual_operator": car.disable_virtual_operator
+                    "virtual_operator": car.alert_preset
                 }
             }
 
@@ -447,35 +447,6 @@ class GetCarHistory(Resource):
         except Exception as e:
             print(f"Error occurred while fetching car history: {e}")
             return {'error': 'Database query failed'}, 500
-
-
-@api_car_namespace.route('/change_disable_virtual_operator')
-class ChangeDisableVirtualOperator(Resource):
-
-    @api.param('car_name', 'Номер транспортного средства', _required=True)
-    @api.response(200, 'Успешно обновлено')
-    @api.response(400, 'Отсутствует параметр car_name')
-    @api.response(404, 'Транспортное средство не найдено')
-    @need_access(1)
-    def get(self):
-        """Изменение состояния disable_virtual_operator для транспортного средства"""
-        car_name = request.args.get('car_name')
-
-        if not car_name:
-            return {'error': 'car_name is required'}, 400
-
-        # Получаем транспортное средство по номеру
-        transport = Transport.query.filter_by(uNumber=car_name).first()
-
-        if not transport:
-            return {'error': 'Transport not found'}, 404
-
-        # Изменяем значение disable_virtual_operator
-        transport.disable_virtual_operator = 1 - transport.disable_virtual_operator  # Меняем 0 на 1 и наоборот
-        db.session.commit()
-
-        return {'message': 'Successfully updated', 'new_state': transport.disable_virtual_operator}, 200
-
 
 
 @api_key_namespace.route('/generate-api-key')
@@ -796,7 +767,7 @@ add_new_car_model = parser_api_namespace.model('AddNewCarModel', {
     'manager': fields.String(description='Менеджер, ответственный за транспорт'),
     'x': fields.Float(description='Координата x'),
     'y': fields.Float(description='Координата y'),
-    'disable_virtual_operator': fields.Integer(required=True, description='Состояние виртуального оператора (0 или 1)'),
+    'parser_1c': fields.Integer(required=True, description='Есть ли ТС в парсере 1С (0 или 1)'),
 })
 
 
@@ -821,10 +792,10 @@ class AddNewCar(Resource):
         manager = data.get('manager')
         x = data.get('x')
         y = data.get('y')
-        disable_virtual_operator = data.get('disable_virtual_operator')
+        parser_1c = data.get('parser_1c') or 0
 
-        # Проверка, что disable_virtual_operator равен 0 или 1
-        if disable_virtual_operator not in [0, 1]:
+        # Проверка, что parser_1c равен 0 или 1
+        if parser_1c not in [0, 1]:
             return {'status': 'error', 'message': 'disable_virtual_operator должен быть 0 или 1'}, 400
 
         # Проверка уникальности uNumber
@@ -861,7 +832,7 @@ class AddNewCar(Resource):
             manufacture_year=year,
             x=x,
             y=y,
-            disable_virtual_operator=disable_virtual_operator
+            parser_1c=parser_1c
         )
 
         try:
