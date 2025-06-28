@@ -201,7 +201,7 @@ def filegen(args):
                     item.wialon_count
                 ])
         elif args == "main_transport":
-            ws.append(['ID', 'Storage ID', 'Model ID', '№ Лота', 'Год выпуска', 'VIN', 'X', 'Y', 'Клиент', 'Контакт клиента', 'Менеджер', 'Отключить виртуального оператора', 'parser_1c'])
+            ws.append(['ID', 'Storage ID', 'Model ID', '№ Лота', 'Год выпуска', 'VIN', 'X', 'Y', 'Клиент', 'Контакт клиента', 'Менеджер', 'parser_1c'])
             query = db.session.query(
                 Transport.id,
                 Transport.storage_id,
@@ -214,7 +214,6 @@ def filegen(args):
                 Transport.customer,
                 Transport.customer_contact,
                 Transport.manager,
-                Transport.disable_virtual_operator,
                 Transport.parser_1c
             )
             results = query.all()
@@ -231,7 +230,6 @@ def filegen(args):
                     item.customer or '',
                     item.customer_contact or '',
                     item.manager or '',
-                    item.disable_virtual_operator,
                     item.parser_1c
                 ])
         elif args == "main_transport_model":

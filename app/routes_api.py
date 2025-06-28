@@ -796,7 +796,7 @@ class AddNewCar(Resource):
 
         # Проверка, что parser_1c равен 0 или 1
         if parser_1c not in [0, 1]:
-            return {'status': 'error', 'message': 'disable_virtual_operator должен быть 0 или 1'}, 400
+            return {'status': 'error', 'message': 'parser_1c должен быть 0 или 1'}, 400
 
         # Проверка уникальности uNumber
         if db.session.query(Transport).filter_by(uNumber=uNumber).first():
