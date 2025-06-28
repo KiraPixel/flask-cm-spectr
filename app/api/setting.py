@@ -1,6 +1,7 @@
 from flask import request
 from flask_restx import Namespace, Resource, fields
 from ..models import db, SystemSettings
+from ..utils import need_access
 
 settings_ns = Namespace('settings', description='System settings')
 
@@ -12,6 +13,7 @@ status_model = settings_ns.model('StatusModel', {
 
 class ChangeVOperatorStatus(Resource):
     @settings_ns.expect(status_model)
+    @need_access(1)
     def post(self):
         data = request.json
         status = data.get('status')
@@ -27,6 +29,7 @@ class ChangeVOperatorStatus(Resource):
 
 class ChangeXMLParserStatus(Resource):
     @settings_ns.expect(status_model)
+    @need_access(1)
     def post(self):
         data = request.json
         status = data.get('status')
@@ -43,6 +46,7 @@ class ChangeXMLParserStatus(Resource):
 
 class ChangeDBCashingStatus(Resource):
     @settings_ns.expect(status_model)
+    @need_access(1)
     def post(self):
         data = request.json
         status = data.get('status')
