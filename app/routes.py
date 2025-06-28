@@ -365,16 +365,6 @@ def send_report():
         return redirect(url_for('main.reports'))
 
 
-## уже не нужно
-@bp.route('/map/')
-@need_access(0)
-def map_page():
-    wialon = db.session.query(CashWialon).all()
-    cesar = db.session.query(CashCesar).all()
-    ignored_storages = db.session.query(IgnoredStorage).all()
-    return render_template('standalone/map.html', cesar=cesar, wialon=wialon, ignored_storages=ignored_storages)
-
-
 @bp.route('/maps/')
 @need_access(-1)
 def maps():
