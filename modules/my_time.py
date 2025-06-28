@@ -20,6 +20,9 @@ def one_hours_ago_unix():
 def forty_eight_hours_ago_unix():
     return int((datetime.datetime.now() - datetime.timedelta(hours=48)).timestamp())
 
+def seventy_two_ago_unix():
+    return int((datetime.datetime.now() - datetime.timedelta(hours=72)).timestamp())
+
 
 def online_check(unix_time):
     try:

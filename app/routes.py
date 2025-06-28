@@ -192,7 +192,7 @@ def dashboard():
     online_count = db.session.query(CashWialon).filter(CashWialon.last_time >= my_time.five_minutes_ago_unix()).count()
     offline_count = db.session.query(CashWialon).filter(CashWialon.last_time < my_time.five_minutes_ago_unix()).count()
     offline_over_48_count = db.session.query(CashWialon).filter(
-        CashWialon.last_time < my_time.forty_eight_hours_ago_unix()).count()
+        CashWialon.last_time < my_time.seventy_two_ago_unix()).count()
     wialon = {
         'online': online_count,
         'offline': offline_count,
@@ -203,7 +203,7 @@ def dashboard():
 
     # Cesar
     online_count = db.session.query(CashCesar).filter(
-        CashCesar.last_time >= my_time.get_time_minus_three_days()).count()
+        CashCesar.last_time >= my_time.get_time_minus_twelve_days()).count()
     offline_count = db.session.query(CashCesar).filter(
         CashCesar.last_time < my_time.get_time_minus_twelve_days()).count()
     cesar = {

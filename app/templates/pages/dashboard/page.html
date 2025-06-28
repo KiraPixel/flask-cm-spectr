@@ -23,7 +23,7 @@
                         </div>
                         <div class="col-md-3 mb-4">
                             <div class="card border-0 shadow-sm h-100">
-                                <div class="card-header bg-danger text-white rounded-top" data-bs-toggle="tooltip" data-bs-placement="top" title="Оборудование считается оффлайн, если не отбивалось последние 15 минут (включая оффлайн >48 часов)">
+                                <div class="card-header bg-danger text-white rounded-top" data-bs-toggle="tooltip" data-bs-placement="top" title="Оборудование считается оффлайн, если не отбивалось последние 15 минут (включая оффлайн >72 часов)">
                                     <i class="bi bi-power"></i> Оффлайн
                                 </div>
                                 <div class="card-body">
@@ -33,8 +33,8 @@
                         </div>
                         <div class="col-md-3 mb-4">
                             <div class="card border-0 shadow-sm h-100">
-                                <div class="card-header bg-warning text-dark rounded-top" data-bs-toggle="tooltip" data-bs-placement="top" title="Оборудование оффлайн более 48 часов">
-                                    <i class="bi bi-clock-history"></i> >48 часов
+                                <div class="card-header bg-warning text-dark rounded-top" data-bs-toggle="tooltip" data-bs-placement="top" title="Оборудование оффлайн более 72 часов">
+                                    <i class="bi bi-clock-history"></i> >72 часов
                                 </div>
                                 <div class="card-body">
                                     <h5 class="card-title display-6">{{ wialon['offline_over_48'] }}</h5>
@@ -73,7 +73,7 @@
                     <div class="row text-center">
                         <div class="col-md-6 mb-4">
                             <div class="card border-0 shadow-sm h-100">
-                                <div class="card-header bg-success text-white rounded-top" data-bs-toggle="tooltip" data-bs-placement="top" title="Оборудование считается онлайн, если отбивалось последние 3 дня">
+                                <div class="card-header bg-success text-white rounded-top" data-bs-toggle="tooltip" data-bs-placement="top" title="Оборудование считается онлайн, если отбивалось последние 12 дней">
                                     <i class="bi bi-check-circle"></i> Активно
                                 </div>
                                 <div class="card-body">
@@ -83,7 +83,7 @@
                         </div>
                         <div class="col-md-6 mb-4">
                             <div class="card border-0 shadow-sm h-100">
-                                <div class="card-header bg-danger text-white rounded-top" data-bs-toggle="tooltip" data-bs-placement="top" title="Нет отбивки больше 3 дней">
+                                <div class="card-header bg-danger text-white rounded-top" data-bs-toggle="tooltip" data-bs-placement="top" title="Нет отбивки больше 12 дней">
                                     <i class="bi bi-exclamation-circle"></i> Оффлайн
                                 </div>
                                 <div class="card-body">
