@@ -157,6 +157,16 @@ class AlertType(db.Model):
     category = db.Column(db.Text, nullable=False)
 
 
+class AlertTypePresets(db.Model):
+    __tablename__ = 'alerts_type_presets'
+    id = db.Column(db.Text(255), primary_key=True, autoincrement=True)
+    preset_name = db.Column(db.Text, nullable=False)
+    enable_alert_types = db.Column(db.Text)
+    disable_alert_types = db.Column(db.Text)
+    active = db.Column(db.Integer, nullable=False, default=1)
+    editable = db.Column(db.Integer, nullable=False, default=1)
+
+
 class Coord(db.Model):
     __tablename__ = 'coord_cash'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
