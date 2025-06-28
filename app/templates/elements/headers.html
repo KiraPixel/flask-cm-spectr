@@ -49,12 +49,13 @@
                             {{ session.username }}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
+                            <li><a class="dropdown-item" href="{{ url_for('user_profile.index') }}">Профиль</a></li>
                             {% if g.user.role == 1 %}
                                 <li><a class="dropdown-item" href="/admin">Админ-панель</a></li>
                                 <li><a class="dropdown-item" href="/admin/parser">Парсер</a></li>
                             {% endif %}
-                            <li><a class="dropdown-item" href="{{ url_for('user_profile.index') }}">Профиль</a></li>
                             <li><a class="dropdown-item" href="/api">Документация API</a></li>
+                            <li><a class="dropdown-item" href="/sbi">S-BI</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="{{ url_for('main.logout') }}">Выход</a></li>
                         </ul>

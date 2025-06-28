@@ -38,7 +38,7 @@
                         </button>
                     </li>
                     {% endif %}
-                    {% if g.user.role >= 0 %}
+                    {% if g.user.role >= -1 %}
                     <li class="nav-item">
                         <button class="nav-link px-4 py-2 shadow-sm rounded-3" id="monitoring-tab" data-bs-toggle="tab" data-bs-target="#monitoring" type="button" role="tab" aria-controls="monitoring" aria-selected="false">
                             <i class="bi bi-device-ssd me-2"></i> Оборудование
@@ -52,7 +52,7 @@
                         </button>
                     </li>
                     {% endif %}
-                    {% if g.user.role >= 0 %}
+                    {% if g.user.role >= -1 %}
                     <li class="nav-item">
                         <button class="nav-link px-4 py-2 shadow-sm rounded-3" id="sensors-tab" data-bs-toggle="tab" data-bs-target="#sensors" type="button" role="tab" aria-controls="sensors" aria-selected="false">
                             <i class="bi bi-code-square me-2"></i> Датчики

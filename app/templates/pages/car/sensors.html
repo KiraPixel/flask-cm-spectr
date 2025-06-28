@@ -90,7 +90,7 @@ function initializeSensors() {
                         <div class="sensors-list" data-unit-id="${unit.unit_id}">
                             ${Object.keys(sensorsList).length === 0 ? '<p class="text-muted">Датчики отсутствуют</p>' : ''}
                         </div>`;
-
+        {% if g.user.role >= 0 %}
         if (commandsListData && Object.keys(commandsListData).length > 0) {
             unitCard += `
                 <hr class="my-3">
@@ -111,6 +111,7 @@ function initializeSensors() {
             });
             unitCard += '</div>';
         }
+        {% endif %}
 
         unitCard += `
                 <hr class="my-3">

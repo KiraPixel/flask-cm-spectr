@@ -95,7 +95,7 @@ class WialonGetSensor(Resource):
     @wialon_ns.response(200, 'Успешно')
     @wialon_ns.response(400, 'Неверный запрос (например, отсутствуют параметры)')
     @wialon_ns.response(500, 'Ошибка при выполнении запроса к базе данных')
-    @need_access(0)
+    @need_access(-1)
     def get(self, unit_id):
         max_retries = 4
         delay = 10
@@ -146,7 +146,7 @@ class WialonGetUnitSensorMessages(Resource):
     @wialon_ns.response(200, 'Успешно')
     @wialon_ns.response(400, 'Неверный запрос (например, отсутствуют параметры)')
     @wialon_ns.response(500, 'Ошибка при выполнении запроса к базе данных')
-    @need_access(0)
+    @need_access(-1)
     def get(self):
         params = {
             'unit_id': request.args.get('unit_id', ''),
