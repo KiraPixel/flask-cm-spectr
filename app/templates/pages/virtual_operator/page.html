@@ -45,6 +45,11 @@
                             </button>
                         </li>
                         <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="pills-1c-tab" data-bs-toggle="pill" data-bs-target="#pills-1c" type="button" role="tab" aria-controls="pills-1c" aria-selected="true">
+                                <i class="bi bi-file-earmark-minus"></i> Нет координат в 1С ({{ no_docs_cord|length }})
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
                             <button class="nav-link" id="pills-loss-tab" data-bs-toggle="pill" data-bs-target="#pills-loss" type="button" role="tab" aria-controls="pills-loss" aria-selected="false">
                                 <i class="bi bi-tools"></i> Нерабочее оборудование ({{ not_work|length }})
                             </button>
@@ -123,6 +128,14 @@
                     <div class="tab-pane fade show active" id="pills-theft" role="tabpanel" aria-labelledby="pills-theft-tab">
                         <div class="row" id="theft-items">
                             {% for alert in distance %}
+                                {{ alert_card(alert, 'border-danger', 'text-danger') }}
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="pills-1c" role="tabpanel" aria-labelledby="pills-1c-tab">
+                        <div class="row" id="1c-items">
+                            {% for alert in no_docs_cord %}
                                 {{ alert_card(alert, 'border-danger', 'text-danger') }}
                             {% endfor %}
                         </div>

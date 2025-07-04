@@ -170,13 +170,20 @@ def home():
 @bp.route('/virtual_operator')
 @need_access(0)
 def virtual_operator():
-    distance = db.session.query(Alert).join(AlertType, Alert.type==AlertType.alert_un).filter(Alert.status == 0, Alert.type.in_(['distance', 'gps', 'no_docs_cords'])).order_by(Alert.date.desc()).all()
+    distance = db.session.query(Alert).join(AlertType, Alert.type==AlertType.alert_un).filter(Alert.status == 0, Alert.type.in_(['distance', 'gps'])).order_by(Alert.date.desc()).all()
+    no_docs_cord = db.session.query(Alert).join(AlertType, Alert.type == AlertType.alert_un).filter(Alert.status == 0, Alert.type == 'no_docs_cords').order_by(Alert.date.desc()).all()
     not_work = db.session.query(Alert).join(AlertType, Alert.type==AlertType.alert_un).filter(Alert.status == 0, Alert.type == 'not_work').order_by(Alert.date.desc()).all()
     no_equipment = db.session.query(Alert).join(AlertType, Alert.type==AlertType.alert_un).filter(Alert.status == 0, Alert.type == 'no_equipment').order_by(Alert.date.desc()).all()
+    other = db.session.query(Alert).join(AlertType, Alert.type == AlertType.alert_un).filter(Alert.status == 0,
+                                                                                             Alert.type.not_in(
+                                                                                                 ['distance', 'gps',
+                                                                                                  'no_docs_cords',
+                                                                                                  'not_work',
+                                                                                                  'no_equipment'])).order_by(Alert.date.desc()).all()
     last_100_alerts = db.session.query(Alert).join(AlertType, Alert.type==AlertType.alert_un).order_by(Alert.date.desc()).limit(100).all()
-    other = db.session.query(Alert).join(AlertType, Alert.type==AlertType.alert_un).filter(Alert.status == 0, Alert.type.not_in(['distance', 'gps', 'no_docs_cords', 'not_work', 'no_equipment'])).order_by(Alert.date.desc()).all()
     return render_template('pages/virtual_operator/page.html',
                            distance=distance,
+                           no_docs_cord=no_docs_cord,
                            not_work=not_work,
                            no_equipment=no_equipment,
                            other=other,
