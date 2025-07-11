@@ -60,8 +60,8 @@ class AddNewCar(Resource):
             return {'status': 'error', 'message': f'Не найден storage с ID {storage_id}'}, 400
 
         # Проверка длины VIN
-        if not (4 <= len(VIN) <= 20):
-            return {'status': 'error', 'message': 'VIN должен быть длиной от 4 до 20 символов'}, 400
+        if not (4 <= len(VIN) <= 22):
+            return {'status': 'error', 'message': 'VIN должен быть длиной от 4 до 22 символов'}, 400
 
         # Проверка типов для x и y (должны быть числа с плавающей точкой)
         try:
