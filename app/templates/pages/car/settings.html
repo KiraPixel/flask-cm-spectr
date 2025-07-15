@@ -64,9 +64,10 @@
         <div class="mb-3 d-flex align-items-end gap-2">
             <div class="flex-grow-1">
                 <label for="presetSelect" class="form-label fw-semibold">Выберите пресет</label>
-                <select id="presetSelect" class="form-select rounded-3">
+                <select id="presetSelect" class="form-select rounded-3" disabled>
+                    <option value="---">---</option>
                     <option value="new">Создать новый</option>
-                    <option value="remove">Удалить пресет с транспорта</option>
+                    <option value="remove" id="removePresetOption" style="display: none;">Удалить пресет с транспорта</option>
                     <!-- Другие пресеты будут загружены через JavaScript -->
                 </select>
             </div>
@@ -97,7 +98,6 @@
         </form>
     </div>
     <div id="settingsDiff" class="mt-4" style="display: none;">
-       -config.py
         <h5 class="fw-semibold mb-3">Разница с пресетом по умолчанию</h5>
         <div class="card border-0 shadow rounded-4">
             <div class="card-body py-3">
@@ -125,6 +125,14 @@
     // Загрузка текущих настроек, типов алертов и пресетов
     async function loadSettings() {
         const uNumber = document.getElementById('uNumber').value;
+        const presetSelect = document.getElementById('presetSelect');
+        const removePresetOption = document.getElementById('removePresetOption');
+        const applyPresetButton = document.getElementById('applyPresetButton');
+
+        // Показываем только --- во время загрузки
+        presetSelect.innerHTML = '<option value="---">---</option>';
+        presetSelect.disabled = true;
+
         try {
             // Загрузка типов алертов
             const alertTypesResponse = await fetch('/api/alerts_presets/alert_types');
@@ -151,6 +159,9 @@
             }
 
             const { default_preset, custom_preset } = settingsResult.data;
+
+            // Включаем select после загрузки
+            presetSelect.disabled = false;
 
             // Вычисление текущих настроек (enable_alert_list)
             let enable_alert_list = default_preset.enable_alert_types || [];
@@ -233,8 +244,9 @@
             if (presetsResult.status !== 'success') {
                 throw new Error('Ошибка загрузки пресетов: ' + presetsResult.message);
             }
-            const presetSelect = document.getElementById('presetSelect');
-            presetSelect.innerHTML = '<option value="new">Создать новый</option><option value="remove">Удалить пресет с транспорта</option>';
+            presetSelect.innerHTML = '<option value="---">---</option>' +
+                '<option value="new">Создать новый</option>' +
+                `<option value="remove" id="removePresetOption" ${custom_preset && custom_preset.personalized ? '' : 'style="display: none;"'}>Удалить пресет с транспорта</option>`;
             presetsResult.data.filter(preset => preset.personalized === 0).forEach(preset => {
                 const option = document.createElement('option');
                 option.value = preset.id;
@@ -242,7 +254,7 @@
                 if (custom_preset && !custom_preset.personalized && custom_preset.id === preset.id) {
                     option.selected = true;
                     document.getElementById('editSettingsForm').style.display = 'none';
-                    document.getElementById('applyPresetButton').style.display = 'inline-flex';
+                    applyPresetButton.style.display = 'inline-flex';
                 }
                 presetSelect.appendChild(option);
             });
@@ -254,11 +266,11 @@
                 presetSelect.appendChild(customOption);
                 document.getElementById('editSettingsForm').style.display = 'block';
                 document.getElementById('selectedPresetId').value = custom_preset.id;
-                document.getElementById('applyPresetButton').style.display = 'none';
-            } else if (presetSelect.value === 'new' || presetSelect.value === 'remove') {
-                document.getElementById('applyPresetButton').style.display = 'none';
+                applyPresetButton.style.display = 'none';
+            } else if (presetSelect.value === 'new' || presetSelect.value === 'remove' || presetSelect.value === '---') {
+                applyPresetButton.style.display = presetSelect.value === 'remove' ? 'inline-flex' : 'none';
             } else {
-                document.getElementById('applyPresetButton').style.display = 'inline-flex';
+                applyPresetButton.style.display = 'inline-flex';
             }
         } catch (error) {
             const errorDiv = document.getElementById('error');
@@ -343,11 +355,15 @@
         const applyPresetButton = document.getElementById('applyPresetButton');
         const uNumber = document.getElementById('uNumber').value;
 
+        // Делаем --- недоступным после выбора другого действия
+        const defaultOption = e.target.querySelector('option[value="---"]');
+        defaultOption.disabled = presetId !== '---';
+
         if (presetId === 'new') {
             editSettingsForm.style.display = 'block';
             editSettingsTitle.textContent = 'Создать персонализированный пресет';
-            document.getElementById('selectedPresetId').value = '';
             applyPresetButton.style.display = 'none';
+            document.getElementById('selectedPresetId').value = '';
             // Сбрасываем форму до значений текущих настроек
             const settingsResponse = await fetch('/api/alerts_presets/vehicle', {
                 method: 'POST',
@@ -373,29 +389,12 @@
             }
         } else if (presetId === 'remove') {
             editSettingsForm.style.display = 'none';
+            applyPresetButton.style.display = 'inline-flex';
+        } else if (presetId === '---') {
+            editSettingsForm.style.display = 'none';
             applyPresetButton.style.display = 'none';
-            try {
-                // Сбрасываем пресет транспорта на NULL
-                const setPresetResponse = await fetch(`/api/car/set_preset?uNumber=${encodeURIComponent(uNumber)}&alert_type_presets_id=null`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
-                const setPresetResult = await setPresetResponse.json();
-                if (setPresetResult.status !== 'success') {
-                    throw new Error('Ошибка при удалении пресета: ' + setPresetResult.message);
-                }
-                alert('Пресет успешно удален с транспорта');
-                loadSettings();
-            } catch (error) {
-                const errorDiv = document.getElementById('error');
-                errorDiv.textContent = 'Ошибка: ' + error.message;
-                errorDiv.style.display = 'block';
-            }
         } else {
             document.getElementById('selectedPresetId').value = presetId;
-            // Проверяем, является ли выбранный пресет персонализированным
             const presetsResponse = await fetch('/api/alerts_presets');
             const presetsResult = await presetsResponse.json();
             if (presetsResult.status === 'success') {
@@ -404,7 +403,6 @@
                     editSettingsForm.style.display = 'block';
                     editSettingsTitle.textContent = 'Редактировать установленный пресет';
                     applyPresetButton.style.display = 'none';
-                    // Заполняем форму данными пресета
                     const settingsResponse = await fetch('/api/alerts_presets/vehicle', {
                         method: 'POST',
                         headers: {
@@ -429,28 +427,62 @@
         }
     });
 
-    // Применение выбранного пресета
+    // Применение выбранного пресета или удаление
     document.getElementById('applyPresetButton').addEventListener('click', async () => {
         const presetId = document.getElementById('presetSelect').value;
         const uNumber = document.getElementById('uNumber').value;
 
-        if (presetId === 'new' || presetId === 'remove') {
+        if (presetId === '---' || presetId === 'new') {
             return;
         }
 
         try {
-            // Привязываем выбранный пресет к машине
-            const setPresetResponse = await fetch(`/api/car/set_preset?uNumber=${encodeURIComponent(uNumber)}&alert_type_presets_id=${presetId}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
+            if (presetId === 'remove') {
+                // Удаление кастомного пресета
+                const presetsResponse = await fetch('/api/alerts_presets');
+                const presetsResult = await presetsResponse.json();
+                if (presetsResult.status !== 'success') {
+                    throw new Error('Ошибка загрузки пресетов: ' + presetsResult.message);
                 }
-            });
-            const setPresetResult = await setPresetResponse.json();
-            if (setPresetResult.status !== 'success') {
-                throw new Error('Ошибка при установке пресета: ' + setPresetResult.message);
+                const customPreset = presetsResult.data.find(preset => preset.preset_name === `Custom_${uNumber}`);
+                if (customPreset) {
+                    const deleteResponse = await fetch(`/api/alerts_presets/${customPreset.id}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    const deleteResult = await deleteResponse.json();
+                    if (deleteResult.status !== 'success') {
+                        throw new Error('Ошибка при удалении пресета: ' + deleteResult.message);
+                    }
+                }
+                // Сбрасываем пресет транспорта на NULL
+                const setPresetResponse = await fetch(`/api/car/set_preset?uNumber=${encodeURIComponent(uNumber)}&alert_type_presets_id=null`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const setPresetResult = await setPresetResponse.json();
+                if (setPresetResult.status !== 'success') {
+                    throw new Error('Ошибка при сбросе пресета: ' + setPresetResult.message);
+                }
+                alert('Пресет успешно удален с транспорта');
+            } else {
+                // Привязываем выбранный пресет к машине
+                const setPresetResponse = await fetch(`/api/car/set_preset?uNumber=${encodeURIComponent(uNumber)}&alert_type_presets_id=${presetId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const setPresetResult = await setPresetResponse.json();
+                if (setPresetResult.status !== 'success') {
+                    throw new Error('Ошибка при установке пресета: ' + setPresetResult.message);
+                }
+                alert('Пресет успешно применен');
             }
-            alert('Пресет успешно применен');
             loadSettings();
         } catch (error) {
             const errorDiv = document.getElementById('error');
