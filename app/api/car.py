@@ -1,5 +1,7 @@
 import json
+from platform import system
 
+from dns.e164 import query
 from flask import session, jsonify, request
 from flask_restx import Namespace, Resource
 from ..utils import need_access, get_address_from_coords, storage_id_to_name
@@ -292,6 +294,8 @@ class CarsResource(Resource):
 class GetCarHistory(Resource):
 
     @car_ns.param('nm', 'Номер транспортного средства', _required=True)
+    @car_ns.param('monitoring_system', 'Cesar OR Wialon', _required=False)
+    @car_ns.param('block_number', 'UID для Виалона, PIN для Цезаря', _required=False)
     @car_ns.param('time_from', 'Время начала фильтрации (UNIX timestamp)', _required=True)
     @car_ns.param('time_to', 'Время окончания фильтрации (UNIX timestamp)', _required=True)
     @car_ns.response(200, 'Успешно')  # Указываем модель для ответа
@@ -303,6 +307,12 @@ class GetCarHistory(Resource):
         nm = request.args.get('nm')
         time_from = request.args.get('time_from')
         time_to = request.args.get('time_to')
+        monitoring_system = request.args.get('monitoring_system')
+        block_number = request.args.get('block_number')
+
+        if monitoring_system is not None:
+            if block_number is None:
+                return {'error': 'Missing block_number'}
 
         if not nm or not time_from or not time_to:
             return {'error': 'Missing required parameters: nm, time_from, time_to'}, 400
@@ -315,12 +325,13 @@ class GetCarHistory(Resource):
 
         try:
             # Выполняем запрос к базе данных
-            history_entries = db.session.query(CashHistoryWialon).filter(
+            query = db.session.query(CashHistoryWialon).filter(
                 CashHistoryWialon.nm == nm,
                 CashHistoryWialon.last_time >= time_from_unix,
                 CashHistoryWialon.last_time <= time_to_unix
             ).order_by(CashHistoryWialon.last_time.asc()).all()
 
+            history_entries = query.all
             # Преобразуем объекты в словари
             result = [
                 {
@@ -332,6 +343,7 @@ class GetCarHistory(Resource):
                 }
                 for entry in history_entries
             ]
+
             return result
 
         except Exception as e:
