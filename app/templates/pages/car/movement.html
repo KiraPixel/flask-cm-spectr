@@ -1,25 +1,38 @@
 <div class="tab-pane fade" id="movement" role="tabpanel" aria-labelledby="movement-tab">
-    <div class="card border-0 shadow-sm rounded-3">
-        <div class="card-body">
-            <div class="row g-3">
-                <div class="col-md-5">
+    <div class="card border-0 shadow-sm rounded-3" style="min-height: 350px;">
+        <div class="card-body p-4">
+            <div class="row g-3" style="min-height: 220px;">
+                <div class="col-md-3">
                     <label for="dateFrom" class="form-label fw-bold">Дата и время от:</label>
                     <input type="datetime-local" class="form-control" id="dateFrom" required>
                 </div>
-                <div class="col-md-5">
+                <div class="col-md-3">
                     <label for="dateTo" class="form-label fw-bold">Дата и время до:</label>
                     <input type="datetime-local" class="form-control" id="dateTo" required>
                 </div>
-            </div>
-            <div class="row g-3 mt-3">
-                <div class="col-md-12 d-flex gap-2">
-                    <button class="btn btn-primary" id="applyBtn">
-                        <i class="bi bi-check me-1"></i>Применить
+                <div class="col-md-12"></div>
+                <div class="col-md-3" id="monitoringSystemContainer">
+                    <label for="monitoringSystem" class="form-label fw-bold">Система мониторинга:</label>
+                    <select class="form-control" id="monitoringSystem" name="monitoring_system">
+                        <option value="" selected>Все</option>
+                        <option value="Wialon">Wialon</option>
+                        <option value="Cesar">Cesar</option>
+                    </select>
+                </div>
+                <div class="col-md-3" id="blockNumberContainer">
+                    <label for="blockNumber" class="form-label fw-bold">Номер блока:</label>
+                    <select class="form-control" id="blockNumber" name="block_number" disabled>
+                        <option value="" selected>Все</option>
+                    </select>
+                </div>
+                <div class="col-md-12 d-flex gap-3 mt-4">
+                    <button class="btn btn-primary px-4" id="applyBtn">
+                        <i class="bi bi-check-lg me-2"></i>Применить
                     </button>
-                    <button class="btn btn-outline-secondary" id="clearBtn">
-                        <i class="bi bi-x me-1"></i>Очистить
+                    <button class="btn btn-outline-secondary px-4" id="clearBtn">
+                        <i class="bi bi-x-lg me-2"></i>Очистить
                     </button>
-                    <div id="spinner" class="spinner-border text-primary" style="display: none;" role="status">
+                    <div id="spinner" class="spinner-border text-primary" style="display: none; align-self: center;" role="status">
                         <span class="visually-hidden">Загрузка...</span>
                     </div>
                 </div>
@@ -32,14 +45,92 @@
     console.log('Movement script loaded');
     window.addEventListener('carDataLoaded', function() {
         console.log('carDataLoaded event received in Movement');
+        console.log('window.carData:', window.carData);
         const lotNumber = document.getElementById('lotNumber').textContent.trim();
         let historyData = [];
+
+        function initializeDropdowns() {
+            const monitoringSystem = document.getElementById('monitoringSystem');
+            const blockNumber = document.getElementById('blockNumber');
+            const monitoringSystemContainer = document.getElementById('monitoringSystemContainer');
+            const blockNumberContainer = document.getElementById('blockNumberContainer');
+
+            blockNumber.innerHTML = '<option value="" selected>Все</option>';
+
+            const monitoring = window.carData.monitoring || [];
+            const hasWialon = monitoring.some(item => item.type === 'wialon' && item.uid);
+            const hasCesar = monitoring.some(item => item.type === 'cesar' && item.pin);
+
+            if (!hasWialon && !hasCesar) {
+                monitoringSystemContainer.classList.add('d-none');
+                blockNumberContainer.classList.add('d-none');
+                return;
+            }
+
+            monitoringSystemContainer.classList.remove('d-none');
+            blockNumberContainer.classList.remove('d-none');
+
+            monitoringSystem.querySelector('option[value="Wialon"]').disabled = !hasWialon;
+            monitoringSystem.querySelector('option[value="Cesar"]').disabled = !hasCesar;
+
+            if (hasWialon) {
+                monitoringSystem.value = 'Wialon';
+            } else if (hasCesar) {
+                monitoringSystem.value = 'Cesar';
+            } else {
+                monitoringSystem.value = '';
+            }
+
+            updateBlockNumbers();
+
+            monitoringSystem.addEventListener('change', updateBlockNumbers);
+        }
+
+        function updateBlockNumbers() {
+            const monitoringSystem = document.getElementById('monitoringSystem').value;
+            const blockNumber = document.getElementById('blockNumber');
+            blockNumber.innerHTML = '<option value="" selected>Все</option>';
+
+            const monitoring = window.carData.monitoring || [];
+            let blocks = [];
+
+            if (monitoringSystem === 'Wialon') {
+                blocks = monitoring
+                    .filter(item => item.type === 'wialon' && item.uid)
+                    .map(item => item.uid);
+            } else if (monitoringSystem === 'Cesar') {
+                blocks = monitoring
+                    .filter(item => item.type === 'cesar' && item.pin)
+                    .map(item => item.pin);
+            } else {
+                blocks = [
+                    ...monitoring.filter(item => item.type === 'wialon' && item.uid).map(item => item.uid),
+                    ...monitoring.filter(item => item.type === 'cesar' && item.pin).map(item => item.pin)
+                ];
+                blocks = [...new Set(blocks)];
+            }
+
+            blocks.forEach(block => {
+                const option = document.createElement('option');
+                option.value = block;
+                option.textContent = block;
+                blockNumber.appendChild(option);
+            });
+
+            blockNumber.disabled = blocks.length === 0;
+
+            if (blocks.length > 0) {
+                blockNumber.value = blocks[0];
+            }
+        }
 
         document.getElementById('applyBtn').addEventListener('click', function() {
             const spinner = document.getElementById('spinner');
             spinner.style.display = 'inline-block';
             const dateFrom = new Date(document.getElementById('dateFrom').value).getTime() / 1000;
             const dateTo = new Date(document.getElementById('dateTo').value).getTime() / 1000;
+            const monitoringSystem = document.getElementById('monitoringSystem').value || null;
+            const blockNumber = document.getElementById('blockNumber').value || null;
 
             if (isNaN(dateFrom) || isNaN(dateTo) || dateFrom >= dateTo) {
                 alert('Пожалуйста, выберите корректные даты и время.');
@@ -47,7 +138,15 @@
                 return;
             }
 
-            fetch(`/api/car/get_history?nm=${encodeURIComponent(lotNumber)}&time_from=${dateFrom}&time_to=${dateTo}`)
+            let query = `/api/car/get_history?nm=${encodeURIComponent(lotNumber)}&time_from=${dateFrom}&time_to=${dateTo}`;
+            if (monitoringSystem) {
+                query += `&monitoring_system=${encodeURIComponent(monitoringSystem)}`;
+            }
+            if (blockNumber) {
+                query += `&block_number=${encodeURIComponent(blockNumber)}`;
+            }
+
+            fetch(query)
                 .then(response => response.json())
                 .then(data => {
                     spinner.style.display = 'none';
@@ -68,6 +167,11 @@
             window.MapController.clearRoute();
             document.getElementById('dateFrom').value = '';
             document.getElementById('dateTo').value = '';
+            const monitoring = window.carData.monitoring || [];
+            const hasWialon = monitoring.some(item => item.type === 'wialon' && item.uid);
+            const hasCesar = monitoring.some(item => item.type === 'cesar' && item.pin);
+            document.getElementById('monitoringSystem').value = hasWialon ? 'Wialon' : (hasCesar ? 'Cesar' : '');
+            updateBlockNumbers();
             historyData = [];
             const hasCoords = window.carData.rent?.x && window.carData.rent?.y;
             if (!hasCoords && window.myMap.geoObjects.getLength() > 0) {
@@ -117,5 +221,17 @@
                 window.MapController.addRouteObject(line);
             }
         }
+
+        initializeDropdowns();
     });
 </script>
+
+<style>
+    .form-control:focus {
+        box-shadow: 0 0 8px rgba(13, 110, 253, 0.3);
+    }
+    .btn-primary:hover, .btn-outline-secondary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+</style>

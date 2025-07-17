@@ -6,7 +6,7 @@ from flask import session, jsonify, request
 from flask_restx import Namespace, Resource
 from ..utils import need_access, get_address_from_coords, storage_id_to_name
 from ..models import User, CashWialon, Alert, TransferTasks, db, Transport, Storage, TransportModel, CashCesar, \
-    AlertType, Comments, CashHistoryWialon, AlertTypePresets
+    AlertType, Comments, CashHistoryWialon, AlertTypePresets, CashHistoryCesar
 from modules.my_time import one_hours_ago_unix, forty_eight_hours_ago_unix, now_unix_time, online_check, \
     unix_to_moscow_time, online_check_cesar
 import requests
@@ -310,9 +310,9 @@ class GetCarHistory(Resource):
         monitoring_system = request.args.get('monitoring_system')
         block_number = request.args.get('block_number')
 
-        if monitoring_system is not None:
-            if block_number is None:
-                return {'error': 'Missing block_number'}
+        valid_systems = {None, 'Wialon', 'Cesar'}
+        if monitoring_system not in valid_systems:
+            return {'error': f'Invalid monitoring_system value: {monitoring_system}. Valid values: {valid_systems}'}, 400
 
         if not nm or not time_from or not time_to:
             return {'error': 'Missing required parameters: nm, time_from, time_to'}, 400
@@ -324,25 +324,55 @@ class GetCarHistory(Resource):
             return {'error': f'Invalid timestamp format: {str(e)}'}, 400
 
         try:
-            # Выполняем запрос к базе данных
-            query = db.session.query(CashHistoryWialon).filter(
+            result = []
+
+            wialon_query = db.session.query(CashHistoryWialon).filter(
                 CashHistoryWialon.nm == nm,
                 CashHistoryWialon.last_time >= time_from_unix,
                 CashHistoryWialon.last_time <= time_to_unix
-            ).order_by(CashHistoryWialon.last_time.asc()).all()
+            )
 
-            history_entries = query.all
-            # Преобразуем объекты в словари
-            result = [
-                {
-                    'uid': entry.uid,
-                    'nm': entry.nm,
-                    'pos_x': entry.pos_x,
-                    'pos_y': entry.pos_y,
-                    'last_time': entry.last_time
-                }
-                for entry in history_entries
-            ]
+            cesar_query = db.session.query(CashHistoryCesar).filter(
+                CashHistoryCesar.nm == nm,
+                CashHistoryCesar.last_time >= time_from_unix,
+                CashHistoryCesar.last_time <= time_to_unix
+            )
+
+            if monitoring_system == 'Wialon' or monitoring_system is None:
+                if block_number is not None:
+                    wialon_query = wialon_query.filter(CashHistoryWialon.uid == block_number)
+
+                wialon_entries = wialon_query.all()
+                result = [
+                    {
+                        'uid': entry.uid,
+                        'nm': entry.nm,
+                        'pos_x': entry.pos_x,
+                        'pos_y': entry.pos_y,
+                        'last_time': entry.last_time,
+                        'source': 'wialon'
+                    }
+                    for entry in wialon_entries
+                ]
+
+            if monitoring_system == 'Cesar' or monitoring_system is None:
+                if block_number is not None:
+                    cesar_query = cesar_query.filter(CashHistoryCesar.pin == block_number)
+
+                cesar_entries = cesar_query.all()
+                result += [
+                    {
+                        'uid': entry.pin,
+                        'nm': entry.nm,
+                        'pos_y': entry.pos_x,
+                        'pos_x': entry.pos_y,
+                        'last_time': entry.last_time,
+                        'source': 'cesar'
+                    }
+                    for entry in cesar_entries
+                ]
+
+            result.sort(key=lambda x: x['last_time'])
 
             return result
 
