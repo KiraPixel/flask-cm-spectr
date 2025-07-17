@@ -7,3 +7,4 @@ start.bat
 app/config.json
 app/config_jira.json
 *.json
+.DS_Store
