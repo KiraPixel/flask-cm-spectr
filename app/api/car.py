@@ -4,7 +4,8 @@ from platform import system
 from dns.e164 import query
 from flask import session, jsonify, request
 from flask_restx import Namespace, Resource
-from ..utils import need_access, get_address_from_coords, storage_id_to_name
+from ..utils import need_access, get_address_from_coords, storage_id_to_name, check_access_to_transport, \
+    get_all_access_transport
 from ..models import User, CashWialon, Alert, TransferTasks, db, Transport, Storage, TransportModel, CashCesar, \
     AlertType, Comments, CashHistoryWialon, AlertTypePresets, CashHistoryCesar
 from modules.my_time import one_hours_ago_unix, forty_eight_hours_ago_unix, now_unix_time, online_check, \
@@ -25,7 +26,6 @@ class GetCarInfo(Resource):
     def get(self, lot_number):
         try:
             user = User.query.filter_by(username=session['username']).first_or_404()
-            # Получение информации о транспорте
             car = db.session.query(Transport).filter(Transport.uNumber == lot_number).first()
             if not car:
                 return "Car not found", 404
@@ -40,20 +40,8 @@ class GetCarInfo(Resource):
             if not transport_model:
                 return {"error": "Transport model not found for the specified car"}, 404
 
-            if user.role <= -1:
-                storage = db.session.query(Storage).filter(Storage.ID == car.storage_id).first()
-                user_access_managers = json.loads(user.access_managers)
-                user_access_regions = json.loads(user.access_regions)
-                access_value = 0
-
-                if storage.region in user_access_regions:
-                    access_value = 1
-
-                if car.manager in user_access_managers:
-                    access_value = 1
-
-                if access_value == 0:
-                    return "Not access", 403
+            if not check_access_to_transport(user.username, car.uNumber):
+                return {"error": "You don't have access to this car"}, 403
 
             # Получение информации из Wialon
             wialon = db.session.query(CashWialon).filter(CashWialon.nm.like(car.uNumber)).all()
@@ -228,9 +216,10 @@ class CarsResource(Resource):
         }
 
         user = User.query.filter_by(username=session['username']).first_or_404()
+        allowed_uNumbers = get_all_access_transport(user.username)
 
-        user_access_managers = json.loads(user.access_managers)
-        user_access_regions = json.loads(user.access_regions)
+        if not allowed_uNumbers:
+            return {'message': 'No data found.'}, 404
 
         query = db.session.query(Transport, Storage, TransportModel).join(
             Storage, Transport.storage_id == Storage.ID).join(
@@ -241,13 +230,7 @@ class CarsResource(Resource):
         if filters['region']:
             query = query.filter(Storage.region.like(f'%{filters["region"]}%'))
 
-        if user.role <= -1:
-            if not user_access_managers and not user_access_regions:
-                return {'message': 'No data found.'}, 404
-            if user_access_managers:
-                query = query.filter(Transport.manager.in_(user_access_managers))
-            if user_access_regions:
-                query = query.filter(Storage.region.in_(user_access_regions))
+        query = query.filter(Transport.uNumber.in_(allowed_uNumbers))
 
         data_db = query.all()
 

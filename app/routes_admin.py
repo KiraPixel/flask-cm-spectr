@@ -24,7 +24,8 @@ def admin_panel():
             password = hash_password.generator_password()
             h_password = hash_password.hash_password(password)
             new_user = User(username=username, email=email, password=h_password, role=-1,
-                            last_activity="1999-12-02 00:00:00", access_managers="[]", access_regions="[]")
+                            last_activity="1999-12-02 00:00:00",
+                            transport_access='{"itn": [], "region": [], "manager": [], "uNumber": []}')
             db.session.add(new_user)
             db.session.commit()
             mail_content = f'{new_user}|{password}'

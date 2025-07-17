@@ -2,7 +2,8 @@ from functools import wraps
 from symtable import Class
 
 from flask import session, flash, redirect, url_for, render_template, request
-from .models import db, User, Storage, Coord, AlertType
+from sqlalchemy import or_
+from .models import db, User, Storage, Coord, AlertType, Transport
 from modules import my_time, location_module
 import datetime
 
@@ -59,6 +60,78 @@ def need_access(required_role):
         return decorated_function
 
     return decorator
+
+
+def normalize_transport_access(transport_access):
+    transport_access = transport_access or {}
+    uNumbers = transport_access.get('uNumber', [])
+    manager = transport_access.get('manager', '')
+    region = transport_access.get('region', '')
+    if isinstance(manager, list):
+        manager = manager[0] if manager else ''
+    if isinstance(region, list):
+        region = region[0] if region else ''
+    return uNumbers, manager, region
+
+
+def check_access_to_transport(username, uNumber):
+    user = User.query.filter_by(username=username).first_or_404()
+    if user.role == 1:
+        return True
+
+    transport = db.session.query(Transport).filter(Transport.uNumber == uNumber).first()
+    if not transport:
+        return False
+
+    storage = db.session.query(Storage).filter_by(ID=transport.storage_id).first()
+    if not storage:
+        storage = db.session.query(Storage).filter_by(ID=0).first()
+        if not storage:
+            return False
+
+    uNumbers, manager, region = normalize_transport_access(user.transport_access)
+
+    check = (
+            uNumber in uNumbers or
+            transport.manager == manager or
+            storage.region == region
+    )
+
+    return check
+
+
+def get_all_access_transport(username):
+    user = User.query.filter_by(username=username).first_or_404()
+    if user.role == 1:
+        return [transport.uNumber for transport in Transport.query.all()]
+
+    uNumbers, manager, region = normalize_transport_access(user.transport_access)
+
+    query = Transport.query.join(Storage, Transport.storage_id == Storage.ID)
+    query = query.filter(
+        or_(
+            Transport.uNumber.in_(uNumbers if uNumbers else ['']),
+            Transport.manager == manager,
+            Storage.region == region
+        )
+    )
+
+    allowed_uNumbers = [transport.uNumber for transport in query.all()]
+
+    if not allowed_uNumbers:
+        storage = db.session.query(Storage).filter_by(ID=0).first()
+        if storage and storage.region == region:
+            transports = Transport.query.filter_by(storage_id=0).filter(
+                or_(
+                    Transport.uNumber.in_(uNumbers if uNumbers else ['']),
+                    Transport.manager == manager
+                )
+            ).all()
+            allowed_uNumbers.extend([t.uNumber for t in transports])
+
+    print(allowed_uNumbers)
+    return allowed_uNumbers
+
 
 
 def get_address_from_coords(x, y):
