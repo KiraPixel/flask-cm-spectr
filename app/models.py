@@ -15,8 +15,6 @@ class User(db.Model):
     password_activated_date = db.Column(db.DateTime, nullable=True, default='1999-12-02 00:00:00')
     email = db.Column(db.String, nullable=False)
     transport_access = db.Column(db.JSON)
-    access_managers = db.Column(db.JSON)
-    access_regions = db.Column(db.JSON)
     cesar_access = db.Column(db.Integer, nullable=True, default=0)
     api_token = db.Column(db.String, nullable=True)
 

@@ -177,12 +177,6 @@ def set_access(user_id):
     regions = [region[0] for region in unique_regions]
 
     if request.method == 'POST':
-        access_managers = request.form.get('access_managers')
-        access_regions = request.form.get('access_regions')
-
-        # Сохраняем доступы
-        user.access_managers = access_managers
-        user.access_regions = access_regions
         db.session.commit()
 
         flash('Доступы обновлены', 'success')

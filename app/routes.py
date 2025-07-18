@@ -9,8 +9,9 @@ from flask import Blueprint, render_template, request, redirect, url_for, sessio
 from modules.my_time import online_check
 from .models import db, User, Transport, TransportModel, Storage, CashWialon, CashCesar, Alert, Comments, TransferTasks, \
     IgnoredStorage, AlertType
-from .utils import need_access, get_all_access_transport
+from .utils import need_access
 from modules import report_generator, my_time, hash_password
+from .utils.transport_acccess import get_all_access_transport
 
 # Создаем Blueprint для основных маршрутов приложения
 bp = Blueprint('main', __name__)
