@@ -1,9 +1,6 @@
-import json
 from functools import wraps
-from symtable import Class
 
-from flask import session, flash, redirect, url_for, render_template, request
-from sqlalchemy import or_, and_
+from flask import session, flash, redirect, url_for, request
 from ..models import db, User, Storage, Coord, AlertType, Transport
 from modules import my_time, location_module
 import datetime
