@@ -59,7 +59,6 @@ def need_access(required_role):
 
     return decorator
 
-
 def get_address_from_coords(x, y):
     if not x or not y or x == 0 or y == 0:
         return "Convert error"

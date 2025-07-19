@@ -1,5 +1,5 @@
 from flask_restx import Namespace, Resource
-from ..models import User, CashWialon, Alert, TransferTasks, db
+from ..models import User, CashWialon, Alert, TransferTasks, db, SystemSettings
 from modules.my_time import one_hours_ago_unix, forty_eight_hours_ago_unix, now_unix_time
 
 health_ns = Namespace('health', description='System health check')
@@ -9,10 +9,12 @@ health_ns = Namespace('health', description='System health check')
 class HealthCheck(Resource):
     def get(self):
         """Проверка состояния системы"""
+        actual_settings = None
         try:
             db.session.query(User).first()
             status_db = 1
             db_error = None
+            actual_settings = SystemSettings.query.first()
         except Exception as e:
             print(e)
             status_db = 0
@@ -26,6 +28,9 @@ class HealthCheck(Resource):
             else:
                 cashing_module = 0
                 last_wialon_time = "No data"
+            if actual_settings is not None:
+                if not actual_settings.enable_db_cashing:
+                    cashing_module = 0
         except Exception:
             cashing_module = 0
             last_wialon_time = "No data"
@@ -38,6 +43,9 @@ class HealthCheck(Resource):
             else:
                 voperator = 0
                 last_alert_time = "No data"
+            if actual_settings is not None:
+                if not actual_settings.enable_voperator:
+                    voperator = 0
         except Exception:
             voperator = 0
             last_alert_time = "No data"
@@ -50,6 +58,9 @@ class HealthCheck(Resource):
             else:
                 xml_parser = 0
                 last_parser_time = "No data"
+            if actual_settings is not None:
+                if not actual_settings.enable_xml_parser:
+                    xml_parser = 0
         except Exception:
             xml_parser = 0
             last_parser_time = "No data"

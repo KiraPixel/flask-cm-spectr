@@ -3,7 +3,7 @@ from platform import system
 
 from dns.e164 import query
 from flask import session, jsonify, request
-from flask_restx import Namespace, Resource
+from flask_restx import Namespace, Resource, fields
 from ..utils import need_access, get_address_from_coords, storage_id_to_name
 from ..models import User, CashWialon, Alert, TransferTasks, db, Transport, Storage, TransportModel, CashCesar, \
     AlertType, Comments, CashHistoryWialon, AlertTypePresets, CashHistoryCesar
@@ -14,7 +14,6 @@ import requests
 from ..utils.transport_acccess import check_access_to_transport, get_all_access_transport
 
 car_ns = Namespace('car', description='Car info')
-
 
 @car_ns.route('/get_info/<lot_number>')
 class GetCarInfo(Resource):

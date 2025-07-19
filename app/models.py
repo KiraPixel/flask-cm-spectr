@@ -15,11 +15,20 @@ class User(db.Model):
     password_activated_date = db.Column(db.DateTime, nullable=True, default='1999-12-02 00:00:00')
     email = db.Column(db.String, nullable=False)
     transport_access = db.Column(db.JSON)
+    functionality_roles = db.Column(db.JSON)
     cesar_access = db.Column(db.Integer, nullable=True, default=0)
     api_token = db.Column(db.String, nullable=True)
 
     def __repr__(self):
         return '<User %r>' % self.username
+
+
+class UserFunctionalityAccess(db.Model):
+    __tablename__ = 'user_functionality_roles'
+    id = db.Column(db.Integer, primary_key=True)
+    role_name = db.Column(db.String(100), nullable=False)
+    role_localization = db.Column(db.String(100), nullable=False)
+    category = db.Column(db.String(100), nullable=False)
 
 
 class Reports(db.Model):
@@ -204,6 +213,7 @@ class IgnoredStorage(db.Model):
     pos_x = db.Column(db.Float, nullable=False)
     pos_y = db.Column(db.Float, nullable=False)
     radius = db.Column(db.Integer, nullable=False)
+    address = db.Column(db.Text, nullable=True)
 
 
 class ParserTasks(db.Model):
