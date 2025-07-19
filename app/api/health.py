@@ -1,6 +1,6 @@
 from flask_restx import Namespace, Resource
 from ..models import User, CashWialon, Alert, TransferTasks, db, SystemSettings
-from modules.my_time import one_hours_ago_unix, forty_eight_hours_ago_unix, now_unix_time
+from modules.my_time import one_hours_ago_unix, forty_eight_hours_ago_unix
 
 health_ns = Namespace('health', description='System health check')
 

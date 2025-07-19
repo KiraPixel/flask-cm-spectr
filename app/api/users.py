@@ -3,7 +3,7 @@ from operator import and_
 import bleach
 from flask import request, jsonify, session
 from flask_restx import Namespace, Resource, fields
-from ..models import Comments, db, Alert, User, Transport, Storage
+from ..models import Comments, db, Alert, User
 from ..utils import need_access
 from modules import hash_password
 from modules.my_time import now_unix_time

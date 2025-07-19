@@ -3,8 +3,7 @@ import uuid
 from flask import session, abort, jsonify, request
 from flask_restx import Namespace, Resource
 from ..utils import need_access, is_valid_api_key, get_api_key_by_username
-from ..models import User, CashWialon, Alert, TransferTasks, db
-from modules.my_time import one_hours_ago_unix, forty_eight_hours_ago_unix, now_unix_time
+from ..models import User, db
 
 api_key_ns = Namespace('key', description='API key')
 
