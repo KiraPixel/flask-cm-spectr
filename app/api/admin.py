@@ -103,7 +103,8 @@ class AddUser(Resource):
             password=h_password,
             role=-1,
             last_activity="1999-12-02 00:00:00",
-            transport_access='"[]"'
+            transport_access='"[]"',
+            functionality_roles='"[]"'
         )
         db.session.add(new_user)
         db.session.commit()
