@@ -1,13 +1,9 @@
-import json
-from platform import system
-
-from dns.e164 import query
 from flask import session, jsonify, request
 from flask_restx import Namespace, Resource
 from ..utils import need_access, get_address_from_coords, storage_id_to_name
 from ..models import User, CashWialon, Alert, TransferTasks, db, Transport, Storage, TransportModel, CashCesar, \
     AlertType, Comments, CashHistoryWialon, AlertTypePresets, CashHistoryCesar
-from modules.my_time import unix_to_moscow_time, online_check_cesar
+from modules.my_time import unix_to_moscow_time, online_check_cesar, online_check
 
 from ..utils.transport_acccess import check_access_to_transport, get_all_access_transport
 
