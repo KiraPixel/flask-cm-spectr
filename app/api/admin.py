@@ -1,11 +1,8 @@
-import json
-
-from flask import request, jsonify, session
+from flask import request
 from flask_restx import Namespace, Resource, fields
 from ..utils import need_access, get_address_from_coords
-from ..utils.transport_acccess import check_access_to_transport, get_all_access_transport, \
-    validate_transport_access_rules, normalize_transport_access
-from ..models import db, User, IgnoredStorage, Transport, Storage, SystemSettings
+from ..utils.transport_acccess import validate_transport_access_rules
+from ..models import db, User, IgnoredStorage, Transport, Storage
 from modules import mail_sender, hash_password
 
 admin_ns = Namespace('admin', description='Общие админские операции')
@@ -106,7 +103,7 @@ class AddUser(Resource):
             password=h_password,
             role=-1,
             last_activity="1999-12-02 00:00:00",
-            transport_access='{"itn": [], "region": [], "manager": [], "uNumber": []}'
+            transport_access='"[]"'
         )
         db.session.add(new_user)
         db.session.commit()
