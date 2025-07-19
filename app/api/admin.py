@@ -1,4 +1,6 @@
-from flask import request, jsonify, session, json
+import json
+
+from flask import request, jsonify, session
 from flask_restx import Namespace, Resource, fields
 from ..utils import need_access, get_address_from_coords
 from ..utils.transport_acccess import check_access_to_transport, get_all_access_transport, \
@@ -18,7 +20,8 @@ user_model = admin_users_ns.model('User', {
     'role': fields.Integer(description='Роль пользователя: 0 (обычный пользователь), 1 (администратор)'),
     'cesar_access': fields.Integer(description='Доступ к системе Цезарь: 0 (нет доступа), 1 (есть доступ)'),
     'transport_access': fields.String(description='Фильтра для доступов к транспортам)'),
-    'functionality_roles': fields.String(description='Функциональный роли')
+    'functionality_roles': fields.String(description='Функциональный роли'),
+    'last_activity': fields.String(description='Последний вход пользователя')
 }, description='Данные пользователя')
 
 # Модель для склада
@@ -178,12 +181,19 @@ class SetTransportAccess(Resource):
     @need_access(1)
     def put(self, user_id):
         args = set_transport_access_parser.parse_args()
-        user = User.query.get_or_404(user_id)
-        is_valid, errors = validate_transport_access_rules(args['transport_access'])
+        transport_access = args['transport_access']
+        print(transport_access)
+
+        is_valid, errors = validate_transport_access_rules(transport_access)
         if not is_valid:
             return {'status': 'error', 'message': 'Неверные правила доступа', 'errors': errors}, 400
-        # Используем ensure_ascii=False для сохранения кириллицы
-        user.transport_access = json.dumps(normalize_transport_access(args['transport_access']), ensure_ascii=False)
+
+        # Normalize the transport access data
+
+
+        # Save the normalized data as a JSON string
+        user = User.query.get_or_404(user_id)
+        user.transport_access = transport_access
         db.session.commit()
         return {'status': 'transport_access_updated'}, 200
 

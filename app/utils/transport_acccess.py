@@ -1,26 +1,33 @@
+import ast
 import json
 from sqlalchemy import or_, and_
 from app.models import User, Transport, db, Storage
 
 
-
 def normalize_transport_access(transport_access):
     """Нормализует правила доступа к транспорту из JSON или списка в список словарей."""
-    if not transport_access:
-        return []
     if isinstance(transport_access, str):
         try:
+            # Пробуем разобрать как JSON
             transport_access = json.loads(transport_access)
         except json.JSONDecodeError:
-            return []
-    return (
-        transport_access
-        if isinstance(transport_access, list) and all(isinstance(rule, dict) for rule in transport_access)
-        else []
-    )
+            try:
+                # Если JSON не сработал, пробуем как Python-объект
+                transport_access = ast.literal_eval(transport_access)
+            except (ValueError, SyntaxError) as e:
+                print(f"Ошибка разбора строки: {e}")
+                return []
+    if not isinstance(transport_access, list):
+        return []
 
+    if not all(isinstance(rule, dict) for rule in transport_access):
+        print(f"Не все элементы списка являются словарями: {[type(rule) for rule in transport_access]}")
+        return []
+
+    return transport_access
 
 def validate_transport_access_rules(rules):
+    """Проверяет валидность правил доступа к транспорту."""
     errors = []
     rules = normalize_transport_access(rules)
     if not rules:
@@ -50,8 +57,8 @@ def validate_transport_access_rules(rules):
 
     return not errors, errors
 
-
 def _get_current_value(transport, storage, param, u_number):
+    """Получает текущее значение для параметра."""
     return (
         u_number if param == "uNumber"
         else transport.manager if param == "manager"
@@ -59,44 +66,12 @@ def _get_current_value(transport, storage, param, u_number):
         else None
     )
 
-
 def check_access_to_transport(username, u_number):
     """Проверяет, есть ли у пользователя доступ к транспорту."""
-    user = User.query.filter_by(username=username).first_or_404()
-    if user.role == 1:
+    if u_number in get_all_access_transport(username):
         return True
-    transport = db.session.query(Transport).filter(Transport.uNumber == u_number).first()
-    if not transport:
+    else:
         return False
-    storage = (
-            db.session.query(Storage)
-            .filter_by(ID=transport.storage_id)
-            .first() or
-            db.session.query(Storage).filter_by(ID=0).first()
-    )
-    if not storage:
-        return False
-    rules = normalize_transport_access(user.transport_access)
-    if not rules:
-        return False
-    has_all_rule = any(rule["type"] == "ALL" for rule in rules)
-    or_met, and_met = False, True
-    or_exist, and_exist = False, False
-    for rule in rules:
-        if rule["type"] == "ALL":
-            continue
-        param, value, rule_type = rule["param"], rule["value"], rule["type"]
-        current_value = _get_current_value(transport, storage, param, u_number)
-        if rule_type == "OR":
-            or_exist = True
-            or_met |= current_value == value
-        elif rule_type == "AND":
-            and_exist = True
-            and_met &= current_value == value
-        elif rule_type == "AND NOT" and current_value == value:
-            return False
-    return has_all_rule or (not or_exist or or_met) and (not and_exist or and_met)
-
 
 def _build_rule_conditions(rules):
     """Группирует правила по типу и параметру для построения SQL-запроса."""
@@ -113,7 +88,6 @@ def _build_rule_conditions(rules):
         param, value, rule_type = rule["param"], rule["value"], rule["type"]
         conditions[rule_type][param].append(value)
     return conditions, has_all_rule
-
 
 def _build_sql_filters(conditions, has_all_rule):
     """Строит SQL-фильтры для условий OR, AND и AND NOT."""
@@ -155,8 +129,7 @@ def _build_sql_filters(conditions, has_all_rule):
     if and_filters:
         filters.append(and_(*and_filters))
 
-    return filters if filters else [False]  # Запретить все, если нет условий
-
+    return filters if filters else [False]
 
 def get_all_access_transport(username):
     """Получает все uNumber транспорта, доступные пользователю."""
@@ -173,4 +146,3 @@ def get_all_access_transport(username):
     filters = _build_sql_filters(conditions, has_all_rule)
 
     return list(set(t.uNumber for t in query.filter(and_(*filters)).all()))
-

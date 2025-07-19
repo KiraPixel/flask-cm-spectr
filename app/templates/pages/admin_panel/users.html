@@ -1,91 +1,173 @@
 <div class="tab-pane fade show active" id="users" role="tabpanel" aria-labelledby="users-tab">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-semibold fs-4">Пользователи</h2>
-        <button class="btn btn-primary rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#addUserModal">
-            <i class="bi bi-person-plus me-2"></i>Пригласить пользователя
-        </button>
-    </div>
-    <div id="usersContainer" class="row g-4"></div>
-</div>
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold fs-3">Пользователи</h2>
+            <button class="btn btn-primary rounded-pill px-4 py-2" data-bs-toggle="modal" data-bs-target="#inviteUserModal">
+                <i class="bi bi-person-plus me-2"></i>Пригласить пользователя
+            </button>
+        </div>
 
-
-<!-- Модальное окно для создания нового пользователя -->
-<div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content rounded-4">
-            <div class="modal-header border-0 pb-2">
-                <h5 class="modal-title fw-bold" id="addUserModalLabel">Пригласить пользователя</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
-            </div>
-            <div class="modal-body">
-                <form id="addUserForm">
-                    <div class="mb-4">
-                        <label for="addUsername" class="form-label fw-semibold">Имя пользователя</label>
-                        <input type="text" class="form-control rounded-3" id="addUsername" name="username" placeholder="Введите имя" required>
-                    </div>
-                    <div class="mb-4">
-                        <label for="addEmail" class="form-label fw-semibold">Email</label>
-                        <input type="email" class="form-control rounded-3" id="addEmail" name="email" placeholder="Введите email" required>
-                    </div>
-                    <div class="d-flex justify-content-end">
-                        <button type="submit" class="btn btn-primary rounded-pill px-4"><i class="bi bi-save me-2"></i>Пригласить</button>
-                    </div>
-                </form>
+        <!-- Поиск пользователей -->
+        <div class="mb-4">
+            <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input type="text" class="form-control rounded-3" id="userSearch" placeholder="Поиск по имени или email...">
             </div>
         </div>
-    </div>
-</div>
 
-<!-- Модальное окно для редактирования пользователя -->
-<div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content rounded-4">
-            <div class="modal-header border-0 pb-2">
-                <h5 class="modal-title fw-bold" id="editUserModalLabel">Редактировать пользователя</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
-            </div>
-            <div class="modal-body">
-                <form id="editUserForm">
-                    <input type="hidden" id="editUserId" name="user_id">
-                    <div class="mb-4">
-                        <label for="editUsername" class="form-label fw-semibold">Имя пользователя</label>
-                        <input type="text" class="form-control rounded-3" id="editUsername" name="username" placeholder="Введите имя" required>
-                    </div>
-                    <div class="mb-4">
-                        <label for="editEmail" class="form-label fw-semibold">Email</label>
-                        <input type="email" class="form-control rounded-3" id="editEmail" name="email" placeholder="Введите email" required>
-                    </div>
-                    <div class="mb-4">
-                        <label for="editRole" class="form-label fw-semibold">Роль</label>
-                        <select class="form-select rounded-3" id="editRole" name="role" required>
-                            <option value="1">Администратор</option>
-                            <option value="0">Пользователь</option>
-                            <option value="-1">Ограниченный доступ</option>
-                        </select>
-                    </div>
-                    <div class="d-flex justify-content-end">
-                        <button type="submit" class="btn btn-primary rounded-pill px-4"><i class="bi bi-save me-2"></i>Сохранить изменения</button>
-                    </div>
-                </form>
+        <!-- Таблица пользователей -->
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <table class="table table-hover">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4">Имя пользователя</th>
+                            <th>Email</th>
+                            <th>Последний вход</th>
+                            <th class="pe-4">Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody">
+                        <!-- Данные пользователей загружаются через JS -->
+                    </tbody>
+                </table>
             </div>
         </div>
-    </div>
-</div>
 
-<!-- Модальное окно для подтверждения сброса пароля -->
-<div class="modal fade" id="confirmResetPassModal" tabindex="-1" aria-labelledby="confirmResetPassLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content rounded-4">
-            <div class="modal-header border-0 pb-2">
-                <h5 class="modal-title fw-bold" id="confirmResetPassLabel">Подтверждение сброса пароля</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+        <!-- Модальное окно для приглашения пользователя -->
+        <div class="modal fade" id="inviteUserModal" tabindex="-1" aria-labelledby="inviteUserModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content rounded-4">
+                    <div class="modal-header border-0 pb-2">
+                        <h5 class="modal-title fw-bold" id="inviteUserModalLabel">Пригласить пользователя</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="inviteUserForm">
+                            <div class="mb-3">
+                                <label for="username" class="form-label fw-semibold">Имя пользователя</label>
+                                <input type="text" class="form-control rounded-3" id="username" name="username" placeholder="Введите имя пользователя" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="email" class="form-label fw-semibold">Email</label>
+                                <input type="email" class="form-control rounded-3" id="email" name="email" placeholder="Введите email" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary rounded-pill w-100">Пригласить</button>
+                        </form>
+                    </div>
+                </div>
             </div>
-            <div class="modal-body">
-                Вы уверены, что хотите сбросить пароль для этого пользователя?
+        </div>
+
+        <!-- Модальное окно для редактирования пользователя -->
+        <div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content rounded-4">
+                    <div class="modal-header border-0 pb-2">
+                        <h5 class="modal-title fw-bold" id="editUserModalLabel">Редактировать пользователя</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="editUserForm">
+                            <div class="mb-3">
+                                <label for="editUsername" class="form-label fw-semibold">Имя пользователя</label>
+                                <input type="text" class="form-control rounded-3" id="editUsername" name="username" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="editEmail" class="form-label fw-semibold">Email</label>
+                                <input type="email" class="form-control rounded-3" id="editEmail" name="email" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="editRole" class="form-label fw-semibold">Роль</label>
+                                <select class="form-select rounded-3" id="editRole" name="role">
+                                    <option value="1">Администратор</option>
+                                    <option value="-1">Пользователь</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary rounded-pill w-100">Сохранить изменения</button>
+                        </form>
+                    </div>
+                </div>
             </div>
-            <div class="modal-footer border-0">
-                <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Отмена</button>
-                <button type="button" class="btn btn-warning rounded-pill px-4" id="confirmResetPassBtn">Сбросить пароль</button>
+        </div>
+
+        <!-- Модальное окно для подтверждения сброса пароля -->
+        <div class="modal fade" id="resetPasswordModal" tabindex="-1" aria-labelledby="resetPasswordModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content rounded-4">
+                    <div class="modal-header border-0 pb-2">
+                        <h5 class="modal-title fw-bold" id="resetPasswordModalLabel">Подтверждение сброса пароля</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Вы уверены, что хотите сбросить пароль для этого пользователя?</p>
+                    </div>
+                    <div class="modal-footer border-0">
+                        <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">Отмена</button>
+                        <button type="button" class="btn btn-danger rounded-pill" id="confirmResetPassword">Сбросить пароль</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Модальное окно для управления доступами -->
+        <div class="modal fade" id="userTransportAccessModal" tabindex="-1" aria-labelledby="userTransportAccessModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-xl modal-dialog-centered">
+                <div class="modal-content rounded-4">
+                    <div class="modal-header border-0 pb-2">
+                        <h5 class="modal-title fw-bold" id="userTransportAccessModalLabel">Настройка доступа к транспорту</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="text-muted mb-4">Настройте правила доступа по регионам, менеджерам или номерам транспорта. Выберите тип правила (И, ИЛИ, И НЕ, ВСЕ) и значение.</p>
+                        <div id="accessRulesContainer" class="mb-3"></div>
+                        <button type="button" class="btn btn-outline-primary rounded-pill" id="addAccessRule">
+                            <i class="bi bi-plus-circle me-2"></i>Добавить правило
+                        </button>
+                        <form id="transportAccessForm" class="d-none">
+                            <input type="hidden" id="transportAccessRules" name="transport_access">
+                        </form>
+                        <div id="accessRuleTemplate" class="d-none">
+                            <div class="rule-row mb-3 p-3 bg-body-secondary rounded shadow-sm">
+                                <div class="row align-items-end">
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-semibold">Тип правила</label>
+                                        <select class="form-select rounded-3 rule-type">
+                                            <option value="OR">ИЛИ</option>
+                                            <option value="AND">И</option>
+                                            <option value="AND NOT">И НЕ</option>
+                                            <option value="ALL">ВСЕ</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-semibold">Параметр</label>
+                                        <select class="form-select rounded-3 rule-param">
+                                            <option value="region">Регион</option>
+                                            <option value="manager">Менеджер</option>
+                                            <option value="uNumber">Номер транспорта</option>
+                                            <option value="ALL">ВСЕ</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-5 position-relative">
+                                        <label class="form-label fw-semibold">Значение</label>
+                                        <input type="text" class="form-control rounded-3 rule-value" placeholder="Выберите значение...">
+                                        <div class="autocomplete-suggestions position-absolute w-100 bg-white border rounded shadow-sm d-none" style="z-index: 1000; top: 100%; max-height: 200px; overflow-y: auto;"></div>
+                                        <small class="invalid-value-icon text-danger d-none mt-1"><i class="bi bi-exclamation-circle me-1"></i>Значение недоступно</small>
+                                    </div>
+                                    <div class="col-md-1">
+                                        <button type="button" class="btn btn-outline-danger btn-sm rounded-circle remove-rule">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0">
+                        <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">Отмена</button>
+                        <button type="button" class="btn btn-primary rounded-pill" id="saveTransportAccess">Сохранить</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -93,213 +175,400 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    const loading = document.getElementById('loading');
-    const errorDiv = document.getElementById('error');
+    // Функция для показа уведомлений
+    const showAlert = (message, type) => {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed bottom-0 start-50 translate-middle-x mb-4 shadow`;
+        alertDiv.style.zIndex = '1050';
+        alertDiv.style.width = '90%';
+        alertDiv.style.maxWidth = '500px';
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Закрыть"></button>
+        `;
+        document.body.appendChild(alertDiv);
+        setTimeout(() => alertDiv.remove(), 3000);
+    };
 
-    // Загрузка пользователей
+    // Загрузка списка пользователей
     window.loadUsers = async function() {
-        loading.style.display = 'block';
         try {
-            const response = await fetch('/api/admin/users', {
+            const response = await fetch('/api/admin/users/', {
+                method: 'GET',
                 headers: { 'Content-Type': 'application/json' },
-                redirect: 'follow'
+                credentials: 'same-origin'
             });
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            const data = await response.json();
-            loading.style.display = 'none';
-            errorDiv.style.display = 'none';
-            if (!Array.isArray(data)) {
-                window.showToast('Ошибка при загрузке пользователей: неверный формат данных', 'danger');
-                return;
-            }
-            const container = document.getElementById('usersContainer');
-            if (!container) {
-                window.showToast('Контейнер для пользователей не найден', 'danger');
-                return;
-            }
-            container.innerHTML = '';
-            data.forEach(user => {
-                const card = document.createElement('div');
-                card.className = 'col-md-6 col-lg-4';
-                card.innerHTML = `
-                    <div class="card border-0 shadow h-100 rounded-4">
-                        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center rounded-top-4 py-3">
-                            <h5 class="mb-0 fw-semibold">${user.username}</h5>
-                            <div>
-                                <button class="btn btn-sm btn-outline-light edit-access rounded-circle" data-id="${user.id}" data-username="${user.username}"><i class="bi bi-person-check"></i></button>
-                                <button class="btn btn-sm btn-outline-light edit-user rounded-circle ms-2" data-id="${user.id}" data-username="${user.username}" data-email="${user.email}" data-role="${user.role}"><i class="bi bi-pencil"></i></button>
-                                <button class="btn btn-sm btn-outline-light reset-pass-btn rounded-circle ms-2" data-id="${user.id}"><i class="bi bi-key"></i></button>
-                                <button class="btn btn-sm btn-outline-light delete-user rounded-circle ms-2" data-id="${user.id}"><i class="bi bi-trash"></i></button>
-                            </div>
-                        </div>
-                        <div class="card-body py-3 d-flex flex-wrap gap-2">
-                            <div class="d-flex align-items-center me-3 mb-2">
-                                <i class="bi bi-envelope-fill me-2 text-primary"></i>
-                                <span class="badge bg-primary-subtle text-primary rounded-pill">${user.email}</span>
-                            </div>
-                            <div class="d-flex align-items-center me-3 mb-2">
-                                <i class="bi bi-person-fill me-2 text-primary"></i>
-                                <span class="badge bg-primary-subtle text-primary rounded-pill">${user.role === 1 ? 'Администратор' : user.role === 0 ? 'Пользователь' : 'Ограниченный доступ'}</span>
-                            </div>
-                            <div class="d-flex align-items-center me-3 mb-2">
-                                <i class="bi bi-shield-lock-fill me-2 text-primary"></i>
-                                <button class="btn btn-sm ${user.cesar_access === 1 ? 'btn-success-subtle text-success' : 'btn-danger-subtle text-danger'} rounded-pill" onclick="window.setCesarAccess(${user.id}, ${user.cesar_access === 1 ? 0 : 1})">
-                                    ${user.cesar_access === 1 ? 'Доступ к Цезарю: Да' : 'Доступ к Цезарю: Нет'}
+            if (!response.ok) throw new Error('Ошибка загрузки пользователей');
+            const users = await response.json();
+            const tbody = document.getElementById('usersTableBody');
+            tbody.innerHTML = '';
+            users.forEach(user => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="ps-4">${user.role === 1 ? '<i class="bi bi-star-fill me-2 text-warning"></i>' : ''}${user.username}</td>
+                        <td>${user.email}</td>
+                        <td>${user.last_activity}</td>
+                        <td class="pe-4">
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-sm btn-outline-primary rounded-circle" data-bs-toggle="modal" data-bs-target="#editUserModal" data-user-id="${user.id}" title="Редактировать" onclick="populateEditForm(${user.id}, '${user.username}', '${user.email}', ${user.role})">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger rounded-circle" data-bs-toggle="modal" data-bs-target="#resetPasswordModal" data-user-id="${user.id}" title="Сбросить пароль">
+                                    <i class="bi bi-key"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary rounded-circle" data-bs-toggle="modal" data-bs-target="#userTransportAccessModal" data-user-id="${user.id}" title="Настройка доступа">
+                                    <i class="bi bi-bus-front"></i>
+                                </button>
+                                <button class="btn btn-sm btn-info rounded-circle" disabled title="Функционал">
+                                    <i class="bi bi-gear"></i>
                                 </button>
                             </div>
-                        </div>
-                    </div>
+                        </td>
+                    </tr>
                 `;
-                container.appendChild(card);
-            });
-            document.querySelectorAll('.edit-user').forEach(button => {
-                button.addEventListener('click', () => {
-                    const userId = button.getAttribute('data-id');
-                    const username = button.getAttribute('data-username');
-                    const email = button.getAttribute('data-email');
-                    const role = button.getAttribute('data-role');
-                    document.getElementById('editUserId').value = userId;
-                    document.getElementById('editUsername').value = username;
-                    document.getElementById('editEmail').value = email;
-                    document.getElementById('editRole').value = role;
-                    bootstrap.Modal.getOrCreateInstance(document.getElementById('editUserModal')).show();
-                });
-            });
-            document.querySelectorAll('.reset-pass-btn').forEach(button => {
-                button.addEventListener('click', () => {
-                    document.getElementById('confirmResetPassBtn').setAttribute('data-id', button.getAttribute('data-id'));
-                    bootstrap.Modal.getOrCreateInstance(document.getElementById('confirmResetPassModal')).show();
-                });
-            });
-            document.querySelectorAll('.delete-user').forEach(button => {
-                button.addEventListener('click', () => window.deleteUser(button.getAttribute('data-id')));
             });
         } catch (error) {
-            loading.style.display = 'none';
-            window.showToast('Ошибка при загрузке пользователей: ' + error.message, 'danger');
+            console.error('Ошибка при загрузке пользователей:', error);
+            showAlert('Ошибка загрузки пользователей', 'danger');
         }
     };
 
-    // Функция для добавления пользователя
-    document.getElementById('addUserForm').addEventListener('submit', async (e) => {
+    // Поиск пользователей
+    document.getElementById('userSearch').addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const rows = document.querySelectorAll('#usersTableBody tr');
+        rows.forEach(row => {
+            const username = row.cells[0].textContent.toLowerCase();
+            const email = row.cells[1].textContent.toLowerCase();
+            row.style.display = (username.includes(searchTerm) || email.includes(searchTerm)) ? '' : 'none';
+        });
+    });
+
+    // Заполнение формы редактирования
+    window.populateEditForm = (id, username, email, role) => {
+        document.getElementById('editUserForm').dataset.userId = id;
+        document.getElementById('editUsername').value = username;
+        document.getElementById('editEmail').value = email;
+        document.getElementById('editRole').value = role;
+    };
+
+    // Обработка отправки формы приглашения
+    document.getElementById('inviteUserForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const formData = new FormData(document.getElementById('addUserForm'));
-        loading.style.display = 'block';
+        const formData = new FormData(e.target);
         try {
             const response = await fetch('/api/admin/users/add', {
                 method: 'POST',
-                body: formData
+                body: formData,
+                credentials: 'same-origin'
             });
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            const data = await response.json();
-            loading.style.display = 'none';
-            if (data.status === 'user_added') {
-                window.showToast('Пользователь успешно добавлен');
-                bootstrap.Modal.getInstance(document.getElementById('addUserModal')).hide();
+            if (!response.ok) throw new Error('Ошибка приглашения пользователя');
+            const result = await response.json();
+            if (result.status === 'user_added') {
+                bootstrap.Modal.getInstance(document.getElementById('inviteUserModal')).hide();
+                showAlert('Пользователь успешно приглашен', 'success');
                 window.loadUsers();
             } else {
-                window.showToast(data.message || 'Ошибка при добавлении пользователя', 'danger');
+                showAlert('Ошибка при приглашении пользователя', 'danger');
             }
         } catch (error) {
-            loading.style.display = 'none';
-            window.showToast('Ошибка при добавлении пользователя: ' + error.message, 'danger');
+            console.error('Ошибка:', error);
+            showAlert('Произошла ошибка', 'danger');
         }
     });
 
-    // Функция для редактирования пользователя
+    // Обработка отправки формы редактирования
     document.getElementById('editUserForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const formData = new FormData(document.getElementById('editUserForm'));
-        const userId = document.getElementById('editUserId').value;
-        loading.style.display = 'block';
+        const userId = e.target.dataset.userId;
+        const formData = new FormData(e.target);
         try {
             const response = await fetch(`/api/admin/users/edit/${userId}`, {
                 method: 'PUT',
-                body: formData
+                body: formData,
+                credentials: 'same-origin'
             });
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            const data = await response.json();
-            loading.style.display = 'none';
-            if (data.status === 'user_updated') {
-                window.showToast('Пользователь успешно обновлен');
+            if (!response.ok) throw new Error('Ошибка редактирования пользователя');
+            const result = await response.json();
+            if (result.status === 'user_updated') {
                 bootstrap.Modal.getInstance(document.getElementById('editUserModal')).hide();
+                showAlert('Пользователь успешно обновлен', 'success');
                 window.loadUsers();
             } else {
-                window.showToast(data.message || 'Ошибка при обновлении пользователя', 'danger');
+                showAlert('Ошибка при редактировании пользователя', 'danger');
             }
         } catch (error) {
-            loading.style.display = 'none';
-            window.showToast('Ошибка при обновлении пользователя: ' + error.message, 'danger');
+            console.error('Ошибка:', error);
+            showAlert('Произошла ошибка', 'danger');
         }
     });
 
-    // Функция для удаления пользователя
-    window.deleteUser = async function(userId) {
-        if (confirm('Вы уверены, что хотите удалить пользователя?')) {
-            loading.style.display = 'block';
-            try {
-                const response = await fetch(`/api/admin/users/delete/${userId}`, {
-                    method: 'DELETE'
-                });
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                const data = await response.json();
-                loading.style.display = 'none';
-                if (data.status === 'user_deleted') {
-                    window.showToast('Пользователь успешно удален');
-                    window.loadUsers();
-                } else {
-                    window.showToast(data.message || 'Ошибка при удалении пользователя', 'danger');
-                }
-            } catch (error) {
-                loading.style.display = 'none';
-                window.showToast('Ошибка при удалении пользователя: ' + error.message, 'danger');
-            }
-        }
-    };
-
-    // Функция для установки доступа к Цезарю
-    window.setCesarAccess = async function(userId, access) {
-        loading.style.display = 'block';
-        try {
-            const response = await fetch(`/api/admin/users/set_cesar_access/${userId}?access=${access}`, {
-                method: 'PUT'
-            });
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            const data = await response.json();
-            loading.style.display = 'none';
-            if (data.status === 'cesar_access_updated') {
-                window.showToast('Доступ к Цезарю обновлен');
-                window.loadUsers();
-            } else {
-                window.showToast(data.message || 'Ошибка при обновлении доступа', 'danger');
-            }
-        } catch (error) {
-            loading.style.display = 'none';
-            window.showToast('Ошибка при обновлении доступа: ' + error.message, 'danger');
-        }
-    };
-
-    // Функция для сброса пароля
-    document.getElementById('confirmResetPassBtn').addEventListener('click', async () => {
-        const userId = document.getElementById('confirmResetPassBtn').getAttribute('data-id');
-        loading.style.display = 'block';
+    // Обработка сброса пароля
+    document.getElementById('confirmResetPassword').addEventListener('click', async () => {
+        const userId = document.getElementById('resetPasswordModal').dataset.userId;
         try {
             const response = await fetch(`/api/admin/users/reset_pass/${userId}`, {
-                method: 'PUT'
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin'
             });
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            const data = await response.json();
-            loading.style.display = 'none';
-            if (data.status === 'password_reset') {
-                window.showToast('Пароль успешно сброшен');
-                bootstrap.Modal.getInstance(document.getElementById('confirmResetPassModal')).hide();
+            if (!response.ok) throw new Error('Ошибка сброса пароля');
+            const result = await response.json();
+            if (result.status === 'password_reset') {
+                bootstrap.Modal.getInstance(document.getElementById('resetPasswordModal')).hide();
+                showAlert('Пароль успешно сброшен', 'success');
+                window.loadUsers();
             } else {
-                window.showToast(data.message || 'Ошибка при сбросе пароля', 'danger');
+                showAlert('Ошибка при сбросе пароля', 'danger');
             }
         } catch (error) {
-            loading.style.display = 'none';
-            window.showToast('Ошибка при сбросе пароля: ' + error.message, 'danger');
+            console.error('Ошибка:', error);
+            showAlert('Произошла ошибка', 'danger');
         }
     });
+
+    // Привязка userId к модалу сброса пароля
+    document.getElementById('resetPasswordModal').addEventListener('show.bs.modal', (event) => {
+        const button = event.relatedTarget;
+        document.getElementById('resetPasswordModal').dataset.userId = button.dataset.userId;
+    });
+
+    // Управление доступами
+    let availableParams = { uNumber: [], manager: [], region: [] };
+
+    async function fetchAvailableParams() {
+        try {
+            const response = await fetch('/api/admin/users/get_transport_access_parameters', {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin'
+            });
+            if (!response.ok) throw new Error('Ошибка загрузки параметров');
+            availableParams = await response.json();
+        } catch (error) {
+            console.error('Ошибка при загрузке параметров:', error);
+            showAlert('Ошибка загрузки параметров доступа', 'danger');
+        }
+    }
+
+    document.getElementById('userTransportAccessModal').addEventListener('show.bs.modal', async (event) => {
+    const button = event.relatedTarget;
+    const userId = button.dataset.userId;
+    const accessRulesContainer = document.getElementById('accessRulesContainer');
+    accessRulesContainer.innerHTML = '';
+
+    try {
+        const response = await fetch(`/api/admin/users/?id=${userId}`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin'
+        });
+        if (!response.ok) throw new Error('Ошибка загрузки данных пользователя');
+        const [user] = await response.json();
+
+        let rules = [];
+        if (user.transport_access) {
+            // Replace single quotes with double quotes
+            const transportAccess = user.transport_access.replace(/'/g, '"');
+            try {
+                rules = JSON.parse(transportAccess);
+            } catch (parseError) {
+                console.error('Ошибка парсинга transport_access:', parseError, transportAccess);
+                showAlert('Неверный формат данных доступа', 'danger');
+                return;
+            }
+        }
+
+        if (!availableParams.uNumber.length) await fetchAvailableParams();
+
+        // Normalize rules
+        const normalizedRules = rules.map(rule => ({
+            type: rule.type || (rule.param === 'ALL' ? 'ALL' : rule.type || 'OR'),
+            param: rule.param || 'region',
+            value: rule.value || ''
+        }));
+
+        normalizedRules.forEach(rule => addAccessRule(rule));
+    } catch (error) {
+        console.error('Ошибка при загрузке правил:', error);
+        showAlert('Ошибка загрузки правил доступа', 'danger');
+    }
+
+    document.getElementById('userTransportAccessModal').dataset.userId = userId;
+});
+
+    document.getElementById('addAccessRule').addEventListener('click', () => {
+        addAccessRule();
+    });
+
+    function addAccessRule(rule = { type: 'OR', param: 'region', value: '' }) {
+    const accessRulesContainer = document.getElementById('accessRulesContainer');
+    const template = document.getElementById('accessRuleTemplate').cloneNode(true);
+    template.classList.remove('d-none');
+    template.removeAttribute('id');
+
+    const ruleRow = template.querySelector('.rule-row');
+    const typeSelect = ruleRow.querySelector('.rule-type');
+    const paramSelect = ruleRow.querySelector('.rule-param');
+    const valueInput = ruleRow.querySelector('.rule-value');
+    const suggestionsContainer = ruleRow.querySelector('.autocomplete-suggestions');
+    const invalidIcon = ruleRow.querySelector('.invalid-value-icon');
+
+    // Устанавливаем значения в новом порядке
+    typeSelect.value = rule.type || 'OR';
+    paramSelect.value = rule.type === 'ALL' ? 'ALL' : (rule.param || 'region');
+    valueInput.value = rule.type === 'ALL' ? 'ALL' : (rule.value || '');
+
+    // Отключаем поля при типе ALL
+    if (rule.type === 'ALL') {
+        paramSelect.value = 'ALL';
+        valueInput.value = 'ALL';
+        paramSelect.disabled = true;
+        valueInput.disabled = true;
+        suggestionsContainer.classList.add('d-none');
+    }
+
+    // Проверяем валидность значения
+    checkValueAvailability(valueInput, paramSelect.value, invalidIcon);
+
+    // Обработчик изменения типа правила
+    typeSelect.addEventListener('change', () => {
+        if (typeSelect.value === 'ALL') {
+            paramSelect.value = 'ALL';
+            valueInput.value = 'ALL';
+            paramSelect.disabled = true;
+            valueInput.disabled = true;
+            suggestionsContainer.classList.add('d-none');
+            invalidIcon.classList.add('d-none');
+        } else {
+            paramSelect.disabled = false;
+            valueInput.disabled = false;
+            paramSelect.value = 'region';
+            valueInput.value = '';
+            suggestionsContainer.classList.add('d-none');
+            checkValueAvailability(valueInput, paramSelect.value, invalidIcon);
+        }
+    });
+
+    // Обработчик изменения параметра
+    paramSelect.addEventListener('change', () => {
+        if (paramSelect.value !== 'ALL') {
+            valueInput.value = '';
+            suggestionsContainer.classList.add('d-none');
+            checkValueAvailability(valueInput, paramSelect.value, invalidIcon);
+        }
+    });
+
+    // Обработчик ввода в поле значения
+    valueInput.addEventListener('input', () => {
+        if (paramSelect.value !== 'ALL') {
+            updateSuggestions(paramSelect.value, suggestionsContainer, valueInput.value);
+            suggestionsContainer.classList.remove('d-none');
+            checkValueAvailability(valueInput, paramSelect.value, invalidIcon);
+        }
+    });
+
+    // Обработчик фокуса на поле значения
+    valueInput.addEventListener('focus', () => {
+        if (paramSelect.value !== 'ALL') {
+            updateSuggestions(paramSelect.value, suggestionsContainer, valueInput.value);
+            suggestionsContainer.classList.remove('d-none');
+        }
+    });
+
+    // Обработчик потери фокуса
+    valueInput.addEventListener('blur', () => {
+        setTimeout(() => {
+            suggestionsContainer.classList.add('d-none');
+        }, 200);
+    });
+
+    // Обработчик клика по подсказке
+    suggestionsContainer.addEventListener('click', (e) => {
+        if (e.target.classList.contains('suggestion-item')) {
+            valueInput.value = e.target.textContent;
+            suggestionsContainer.classList.add('d-none');
+            checkValueAvailability(valueInput, paramSelect.value, invalidIcon);
+        }
+    });
+
+    // Обработчик удаления правила
+    ruleRow.querySelector('.remove-rule').addEventListener('click', () => {
+        ruleRow.remove();
+    });
+
+    accessRulesContainer.appendChild(ruleRow);
+}
+
+    function updateSuggestions(param, suggestionsContainer, searchTerm = '') {
+        suggestionsContainer.innerHTML = '';
+        if (param === 'ALL') return;
+
+        const values = availableParams[param] || [];
+
+        // Фильтрация значений по подстроке (аналог LIKE '%ЗНАЧЕНИЕ%')
+        const filteredValues = values
+            .filter(value => value.toLowerCase().includes(searchTerm.toLowerCase()))
+            .slice(0, 10);
+
+        // Заполняем контейнер подсказок
+        filteredValues.forEach(value => {
+            const suggestionItem = document.createElement('div');
+            suggestionItem.className = 'suggestion-item p-2 cursor-pointer hover:bg-light';
+            suggestionItem.textContent = value;
+            suggestionsContainer.appendChild(suggestionItem);
+        });
+
+        // Показываем или скрываем контейнер подсказок
+        suggestionsContainer.classList.toggle('d-none', filteredValues.length === 0 || searchTerm === '');
+    }
+
+    function checkValueAvailability(input, param, invalidIcon) {
+        if (param === 'ALL') {
+            invalidIcon.classList.add('d-none');
+            return;
+        }
+        const value = input.value;
+        const isValid = !value || availableParams[param].includes(value);
+        invalidIcon.classList.toggle('d-none', isValid);
+    }
+
+    document.getElementById('saveTransportAccess').addEventListener('click', async () => {
+        const userId = document.getElementById('userTransportAccessModal').dataset.userId;
+        const rules = [];
+        const ruleRows = document.querySelectorAll('#accessRulesContainer .rule-row');
+
+        ruleRows.forEach(row => {
+            const type = row.querySelector('.rule-type').value;
+            const param = type === 'ALL' ? 'ALL' : row.querySelector('.rule-param').value;
+            const value = type === 'ALL' ? 'ALL' : row.querySelector('.rule-value').value;
+            if (value || type === 'ALL') {
+                rules.push({ type, param, value });
+            }
+        });
+
+        try {
+            const response = await fetch(`/api/admin/users/set_transport_access/${userId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ transport_access: rules }),
+                credentials: 'same-origin'
+            });
+            if (!response.ok) throw new Error('Ошибка сохранения правил');
+            const result = await response.json();
+            if (result.status === 'transport_access_updated') {
+                bootstrap.Modal.getInstance(document.getElementById('userTransportAccessModal')).hide();
+                showAlert('Правила доступа успешно обновлены', 'success');
+            } else {
+                showAlert('Ошибка при сохранении правил доступа', 'danger');
+            }
+        } catch (error) {
+            console.error('Ошибка при сохранении:', error);
+            showAlert('Произошла ошибка при сохранении правил', 'danger');
+        }
+    });
+
+    // Инициальная загрузка пользователей
+    window.loadUsers();
 });
 </script>
