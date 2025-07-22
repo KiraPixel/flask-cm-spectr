@@ -32,8 +32,8 @@
                 <li class="nav-item">
                     <a class="nav-link {% if request.endpoint == 'main.dashboard' %}active{% endif %}" href="/dashboard">Дашборд</a>
                 </li>
-                {% if 'reports' in g.role %}
                 {% endif %}
+                {% if 'reports' in g.role %}
                 <li class="nav-item">
                     <a class="nav-link {% if request.endpoint == 'main.reports' %}active{% endif %}" href="/rep">Отчёты</a>
                 </li>
