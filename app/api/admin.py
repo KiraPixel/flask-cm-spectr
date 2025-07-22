@@ -1,9 +1,11 @@
 from flask import request
 from flask_restx import Namespace, Resource, fields
 from ..utils import need_access, get_address_from_coords
+from ..utils.functionality_acccess import validate_functionality_roles
 from ..utils.transport_acccess import validate_transport_access_rules
-from ..models import db, User, IgnoredStorage, Transport, Storage
+from ..models import db, User, IgnoredStorage, Transport, Storage, FunctionalityAccess
 from modules import mail_sender, hash_password
+from ..utils.users import create_new_user
 
 admin_ns = Namespace('admin', description='Общие админские операции')
 admin_users_ns = Namespace('admin/users', description='Операции с пользователями')
@@ -57,12 +59,34 @@ storage_parser.add_argument('radius', type=int, required=True, help='Радиу�
 set_transport_access_parser = admin_users_ns.parser()
 set_transport_access_parser.add_argument('transport_access', type=str, required=True, help='Правила доступа в формате JSON', location='json')
 
-# Модель для возврата данных доступа
+# Модель для возврата данных доступа к тс
 access_transport_data_model = admin_users_ns.model('AccessTransportData', {
     'uNumber': fields.List(fields.String, description='Список доступных uNumber'),
     'manager': fields.List(fields.String, description='Список доступных manager'),
     'region': fields.List(fields.String, description='Список доступных region'),
 }, description='Данные доступа пользователя')
+
+
+# Парсер для входных данных
+set_functionality_roles_parser = admin_users_ns.parser()
+set_functionality_roles_model = admin_users_ns.model('SetFunctionalityRoles', {
+    'functionality_roles': fields.List(
+        fields.Integer,
+        required=False,
+        description='Список идентификаторов ролей функциональности (может быть null или пустым)',
+        nullable=True
+    )
+})
+
+# Модель для возврата данных доступа к функционалу
+access_functionality_data_model = admin_users_ns.model('FunctionalityAccess', {
+    'id': fields.Integer(readonly=True, description='Уникальный идентификатор доступа к функциональности'),
+    'name': fields.String(required=True, description='Название функциональности'),
+    'localization': fields.String(required=True, description='Локализация функциональности'),
+    'category': fields.String(required=True, description='Категория функциональности'),
+    'category_localization': fields.String(required=True, description='Локализация категории')
+})
+
 
 # Получение списка пользователей
 @admin_users_ns.route('/')
@@ -97,20 +121,14 @@ class AddUser(Resource):
         email = args['email']
         password = hash_password.generator_password()
         h_password = hash_password.hash_password(password)
-        new_user = User(
-            username=username,
-            email=email,
-            password=h_password,
-            role=-1,
-            last_activity="1999-12-02 00:00:00",
-            transport_access='"[]"',
-            functionality_roles='"[]"'
-        )
-        db.session.add(new_user)
-        db.session.commit()
-        mail_content = f'{new_user}|{password}'
-        mail_sender.send_email(email, "Приглашение в Центр Мониторинга ЛК-СПЕКТР", mail_content, html_template='new_user')
-        return {'status': 'user_added'}, 200
+
+        cnu = create_new_user(email, username, h_password)
+        if cnu:
+            mail_content = f'{username}|{password}'
+            mail_sender.send_email(email, "Приглашение в Центр Мониторинга ЛК-СПЕКТР", mail_content, html_template='new_user')
+            return {'status': 'user_added'}, 200
+        else:
+            return {'status': 'user_not_created'}, 404
 
 # Редактирование пользователя
 @admin_users_ns.route('/edit/<int:user_id>')
@@ -138,19 +156,6 @@ class DeleteUser(Resource):
         db.session.commit()
         return {'status': 'user_deleted'}, 200
 
-# Установка доступа к системе Цезарь
-@admin_users_ns.route('/set_cesar_access/<int:user_id>')
-class SetCesarAccess(Resource):
-    @need_access(1)
-    def put(self, user_id):
-        """Установить доступ пользователя к системе Цезарь (0 - нет доступа, 1 - есть доступ)"""
-        access = request.args.get('access', type=int)
-        if access not in [0, 1]:
-            return {'status': 'error', 'message': 'Недопустимое значение для доступа (должно быть 0 или 1)'}, 400
-        user = User.query.get_or_404(user_id)
-        user.cesar_access = access
-        db.session.commit()
-        return {'status': 'cesar_access_updated'}, 200
 
 @admin_users_ns.route('/get_transport_access_parameters')
 class GetTransportAccessData(Resource):
@@ -172,28 +177,53 @@ class GetTransportAccessData(Resource):
             'region': list(set(regions))
         }
 
-# Назначение доступов пользователю
+
 @admin_users_ns.route('/set_transport_access/<int:user_id>')
 class SetTransportAccess(Resource):
     @admin_users_ns.expect(set_transport_access_parser)
     @need_access(1)
     def put(self, user_id):
+        """Установить uNumber, manager и region для пользователя"""
         args = set_transport_access_parser.parse_args()
         transport_access = args['transport_access']
-        print(transport_access)
-
         is_valid, errors = validate_transport_access_rules(transport_access)
         if not is_valid:
             return {'status': 'error', 'message': 'Неверные правила доступа', 'errors': errors}, 400
-
-        # Normalize the transport access data
-
-
-        # Save the normalized data as a JSON string
         user = User.query.get_or_404(user_id)
         user.transport_access = transport_access
         db.session.commit()
         return {'status': 'transport_access_updated'}, 200
+
+
+@admin_users_ns.route('/get_functionality_access_parameters')
+class GetFunctionalityAccessData(Resource):
+    @admin_users_ns.marshal_with(access_functionality_data_model)
+    @need_access(1)
+    def get(self):
+        """Получить доступные для установки uNumber, manager и region"""
+        functionality = FunctionalityAccess.query.all()
+        return functionality
+
+
+@admin_users_ns.route('/set_functionality_roles/<int:user_id>')
+class SetFunctionalityRoles(Resource):
+    @admin_users_ns.expect(set_functionality_roles_model)
+    @need_access(1)
+    def put(self, user_id):
+        """Установить роли функциональности для пользователя"""
+        data = request.get_json()
+        functionality_roles = data.get('functionality_roles')
+
+        is_valid, errors, validated_roles = validate_functionality_roles(functionality_roles)
+        if not is_valid:
+            return {'status': 'error', 'message': 'Неверные роли функциональности', 'errors': errors}, 400
+
+        user = User.query.get_or_404(user_id)
+        user.functionality_roles = validated_roles
+        db.session.commit()
+
+        return {'status': 'functionality_roles_updated'}, 200
+
 
 # Сброс пароля
 @admin_users_ns.route('/reset_pass/<int:user_id>')

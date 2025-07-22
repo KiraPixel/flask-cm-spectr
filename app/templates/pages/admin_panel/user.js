@@ -40,10 +40,10 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <button class="btn btn-sm btn-outline-danger rounded-circle" data-bs-toggle="modal" data-bs-target="#resetPasswordModal" data-user-id="${user.id}" title="Сбросить пароль">
                                     <i class="bi bi-key"></i>
                                 </button>
-                                <button class="btn btn-sm btn-outline-secondary rounded-circle" data-bs-toggle="modal" data-bs-target="#userTransportAccessModal" data-user-id="${user.id}" title="Настройка доступа">
+                                <button class="btn btn-sm btn-outline-secondary rounded-circle" data-bs-toggle="modal" data-bs-target="#userTransportAccessModal" data-user-id="${user.id}" title="Настройка доступа к транспорту">
                                     <i class="bi bi-bus-front"></i>
                                 </button>
-                                <button class="btn btn-sm btn-info rounded-circle" disabled title="Функционал">
+                                <button class="btn btn-sm btn-outline-info rounded-circle" data-bs-toggle="modal" data-bs-target="#userFunctionalityRolesModal" data-user-id="${user.id}" title="Настройка ролей функциональности">
                                     <i class="bi bi-gear"></i>
                                 </button>
                             </div>
@@ -157,7 +157,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('resetPasswordModal').dataset.userId = button.dataset.userId;
     });
 
-    // Управление доступами
+    // Управление доступами к транспорту
     let availableParams = { uNumber: [], manager: [], region: [] };
 
     async function fetchAvailableParams() {
@@ -176,153 +176,153 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     document.getElementById('userTransportAccessModal').addEventListener('show.bs.modal', async (event) => {
-    const button = event.relatedTarget;
-    const userId = button.dataset.userId;
-    const accessRulesContainer = document.getElementById('accessRulesContainer');
-    accessRulesContainer.innerHTML = '';
+        const button = event.relatedTarget;
+        const userId = button.dataset.userId;
+        const accessRulesContainer = document.getElementById('accessRulesContainer');
+        accessRulesContainer.innerHTML = '';
 
-    try {
-        const response = await fetch(`/api/admin/users/?id=${userId}`, {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'same-origin'
-        });
-        if (!response.ok) throw new Error('Ошибка загрузки данных пользователя');
-        const [user] = await response.json();
+        try {
+            const response = await fetch(`/api/admin/users/?id=${userId}`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin'
+            });
+            if (!response.ok) throw new Error('Ошибка загрузки данных пользователя');
+            const [user] = await response.json();
 
-        let rules = [];
-        if (user.transport_access) {
-            // Replace single quotes with double quotes
-            const transportAccess = user.transport_access.replace(/'/g, '"');
-            try {
-                rules = JSON.parse(transportAccess);
-            } catch (parseError) {
-                console.error('Ошибка парсинга transport_access:', parseError, transportAccess);
-                showAlert('Неверный формат данных доступа', 'danger');
-                return;
+            let rules = [];
+            if (user.transport_access) {
+                // Replace single quotes with double quotes
+                const transportAccess = user.transport_access.replace(/'/g, '"');
+                try {
+                    rules = JSON.parse(transportAccess);
+                } catch (parseError) {
+                    console.error('Ошибка парсинга transport_access:', parseError, transportAccess);
+                    showAlert('Неверный формат данных доступа', 'danger');
+                    return;
+                }
             }
+
+            if (!availableParams.uNumber.length) await fetchAvailableParams();
+
+            // Normalize rules
+            const normalizedRules = rules.map(rule => ({
+                type: rule.type || (rule.param === 'ALL' ? 'ALL' : rule.type || 'OR'),
+                param: rule.param || 'region',
+                value: rule.value || ''
+            }));
+
+            normalizedRules.forEach(rule => addAccessRule(rule));
+        } catch (error) {
+            console.error('Ошибка при загрузке правил:', error);
+            showAlert('Ошибка загрузки правил доступа', 'danger');
         }
 
-        if (!availableParams.uNumber.length) await fetchAvailableParams();
-
-        // Normalize rules
-        const normalizedRules = rules.map(rule => ({
-            type: rule.type || (rule.param === 'ALL' ? 'ALL' : rule.type || 'OR'),
-            param: rule.param || 'region',
-            value: rule.value || ''
-        }));
-
-        normalizedRules.forEach(rule => addAccessRule(rule));
-    } catch (error) {
-        console.error('Ошибка при загрузке правил:', error);
-        showAlert('Ошибка загрузки правил доступа', 'danger');
-    }
-
-    document.getElementById('userTransportAccessModal').dataset.userId = userId;
-});
+        document.getElementById('userTransportAccessModal').dataset.userId = userId;
+    });
 
     document.getElementById('addAccessRule').addEventListener('click', () => {
         addAccessRule();
     });
 
     function addAccessRule(rule = { type: 'OR', param: 'region', value: '' }) {
-    const accessRulesContainer = document.getElementById('accessRulesContainer');
-    const template = document.getElementById('accessRuleTemplate').cloneNode(true);
-    template.classList.remove('d-none');
-    template.removeAttribute('id');
+        const accessRulesContainer = document.getElementById('accessRulesContainer');
+        const template = document.getElementById('accessRuleTemplate').cloneNode(true);
+        template.classList.remove('d-none');
+        template.removeAttribute('id');
 
-    const ruleRow = template.querySelector('.rule-row');
-    const typeSelect = ruleRow.querySelector('.rule-type');
-    const paramSelect = ruleRow.querySelector('.rule-param');
-    const valueInput = ruleRow.querySelector('.rule-value');
-    const suggestionsContainer = ruleRow.querySelector('.autocomplete-suggestions');
-    const invalidIcon = ruleRow.querySelector('.invalid-value-icon');
+        const ruleRow = template.querySelector('.rule-row');
+        const typeSelect = ruleRow.querySelector('.rule-type');
+        const paramSelect = ruleRow.querySelector('.rule-param');
+        const valueInput = ruleRow.querySelector('.rule-value');
+        const suggestionsContainer = ruleRow.querySelector('.autocomplete-suggestions');
+        const invalidIcon = ruleRow.querySelector('.invalid-value-icon');
 
-    // Устанавливаем значения в новом порядке
-    typeSelect.value = rule.type || 'OR';
-    paramSelect.value = rule.type === 'ALL' ? 'ALL' : (rule.param || 'region');
-    valueInput.value = rule.type === 'ALL' ? 'ALL' : (rule.value || '');
+        // Устанавливаем значения в новом порядке
+        typeSelect.value = rule.type || 'OR';
+        paramSelect.value = rule.type === 'ALL' ? 'ALL' : (rule.param || 'region');
+        valueInput.value = rule.type === 'ALL' ? 'ALL' : (rule.value || '');
 
-    // Отключаем поля при типе ALL
-    if (rule.type === 'ALL') {
-        paramSelect.value = 'ALL';
-        valueInput.value = 'ALL';
-        paramSelect.disabled = true;
-        valueInput.disabled = true;
-        suggestionsContainer.classList.add('d-none');
-    }
-
-    // Проверяем валидность значения
-    checkValueAvailability(valueInput, paramSelect.value, invalidIcon);
-
-    // Обработчик изменения типа правила
-    typeSelect.addEventListener('change', () => {
-        if (typeSelect.value === 'ALL') {
+        // Отключаем поля при типе ALL
+        if (rule.type === 'ALL') {
             paramSelect.value = 'ALL';
             valueInput.value = 'ALL';
             paramSelect.disabled = true;
             valueInput.disabled = true;
             suggestionsContainer.classList.add('d-none');
-            invalidIcon.classList.add('d-none');
-        } else {
-            paramSelect.disabled = false;
-            valueInput.disabled = false;
-            paramSelect.value = 'region';
-            valueInput.value = '';
-            suggestionsContainer.classList.add('d-none');
-            checkValueAvailability(valueInput, paramSelect.value, invalidIcon);
         }
-    });
 
-    // Обработчик изменения параметра
-    paramSelect.addEventListener('change', () => {
-        if (paramSelect.value !== 'ALL') {
-            valueInput.value = '';
-            suggestionsContainer.classList.add('d-none');
-            checkValueAvailability(valueInput, paramSelect.value, invalidIcon);
-        }
-    });
+        // Проверяем валидность значения
+        checkValueAvailability(valueInput, paramSelect.value, invalidIcon);
 
-    // Обработчик ввода в поле значения
-    valueInput.addEventListener('input', () => {
-        if (paramSelect.value !== 'ALL') {
-            updateSuggestions(paramSelect.value, suggestionsContainer, valueInput.value);
-            suggestionsContainer.classList.remove('d-none');
-            checkValueAvailability(valueInput, paramSelect.value, invalidIcon);
-        }
-    });
+        // Обработчик изменения типа правила
+        typeSelect.addEventListener('change', () => {
+            if (typeSelect.value === 'ALL') {
+                paramSelect.value = 'ALL';
+                valueInput.value = 'ALL';
+                paramSelect.disabled = true;
+                valueInput.disabled = true;
+                suggestionsContainer.classList.add('d-none');
+                invalidIcon.classList.add('d-none');
+            } else {
+                paramSelect.disabled = false;
+                valueInput.disabled = false;
+                paramSelect.value = 'region';
+                valueInput.value = '';
+                suggestionsContainer.classList.add('d-none');
+                checkValueAvailability(valueInput, paramSelect.value, invalidIcon);
+            }
+        });
 
-    // Обработчик фокуса на поле значения
-    valueInput.addEventListener('focus', () => {
-        if (paramSelect.value !== 'ALL') {
-            updateSuggestions(paramSelect.value, suggestionsContainer, valueInput.value);
-            suggestionsContainer.classList.remove('d-none');
-        }
-    });
+        // Обработчик изменения параметра
+        paramSelect.addEventListener('change', () => {
+            if (paramSelect.value !== 'ALL') {
+                valueInput.value = '';
+                suggestionsContainer.classList.add('d-none');
+                checkValueAvailability(valueInput, paramSelect.value, invalidIcon);
+            }
+        });
 
-    // Обработчик потери фокуса
-    valueInput.addEventListener('blur', () => {
-        setTimeout(() => {
-            suggestionsContainer.classList.add('d-none');
-        }, 200);
-    });
+        // Обработчик ввода в поле значения
+        valueInput.addEventListener('input', () => {
+            if (paramSelect.value !== 'ALL') {
+                updateSuggestions(paramSelect.value, suggestionsContainer, valueInput.value);
+                suggestionsContainer.classList.remove('d-none');
+                checkValueAvailability(valueInput, paramSelect.value, invalidIcon);
+            }
+        });
 
-    // Обработчик клика по подсказке
-    suggestionsContainer.addEventListener('click', (e) => {
-        if (e.target.classList.contains('suggestion-item')) {
-            valueInput.value = e.target.textContent;
-            suggestionsContainer.classList.add('d-none');
-            checkValueAvailability(valueInput, paramSelect.value, invalidIcon);
-        }
-    });
+        // Обработчик фокуса на поле значения
+        valueInput.addEventListener('focus', () => {
+            if (paramSelect.value !== 'ALL') {
+                updateSuggestions(paramSelect.value, suggestionsContainer, valueInput.value);
+                suggestionsContainer.classList.remove('d-none');
+            }
+        });
 
-    // Обработчик удаления правила
-    ruleRow.querySelector('.remove-rule').addEventListener('click', () => {
-        ruleRow.remove();
-    });
+        // Обработчик потери фокуса
+        valueInput.addEventListener('blur', () => {
+            setTimeout(() => {
+                suggestionsContainer.classList.add('d-none');
+            }, 200);
+        });
 
-    accessRulesContainer.appendChild(ruleRow);
-}
+        // Обработчик клика по подсказке
+        suggestionsContainer.addEventListener('click', (e) => {
+            if (e.target.classList.contains('suggestion-item')) {
+                valueInput.value = e.target.textContent;
+                suggestionsContainer.classList.add('d-none');
+                checkValueAvailability(valueInput, paramSelect.value, invalidIcon);
+            }
+        });
+
+        // Обработчик удаления правила
+        ruleRow.querySelector('.remove-rule').addEventListener('click', () => {
+            ruleRow.remove();
+        });
+
+        accessRulesContainer.appendChild(ruleRow);
+    }
 
     function updateSuggestions(param, suggestionsContainer, searchTerm = '') {
         suggestionsContainer.innerHTML = '';
@@ -389,6 +389,128 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error('Ошибка при сохранении:', error);
             showAlert('Произошла ошибка при сохранении правил', 'danger');
+        }
+    });
+
+    // Управление ролями функциональности
+    let availableFunctionalityRoles = [];
+
+    async function fetchAvailableFunctionalityRoles() {
+        try {
+            const response = await fetch('/api/admin/users/get_functionality_access_parameters', {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin'
+            });
+            if (!response.ok) throw new Error('Ошибка загрузки ролей функциональности');
+            availableFunctionalityRoles = await response.json();
+        } catch (error) {
+            console.error('Ошибка при загрузке ролей функциональности:', error);
+            showAlert('Ошибка загрузки ролей функциональности', 'danger');
+        }
+    }
+
+    document.getElementById('userFunctionalityRolesModal').addEventListener('show.bs.modal', async (event) => {
+        const button = event.relatedTarget;
+        const userId = button.dataset.userId;
+        const rolesContainer = document.getElementById('functionalityRolesContainer');
+        rolesContainer.innerHTML = '';
+
+        try {
+            const response = await fetch(`/api/admin/users/?id=${userId}`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin'
+            });
+            if (!response.ok) throw new Error('Ошибка загрузки данных пользователя');
+            const [user] = await response.json();
+
+            let roles = [];
+            if (user.functionality_roles) {
+                try {
+                    roles = user.functionality_roles;
+                    if (typeof roles === 'string') {
+                        roles = JSON.parse(roles.replace(/'/g, '"'));
+                    }
+                } catch (parseError) {
+                    console.error('Ошибка парсинга functionality_roles:', parseError, user.functionality_roles);
+                    showAlert('Неверный формат данных ролей функциональности', 'danger');
+                    return;
+                }
+            }
+
+            if (!availableFunctionalityRoles.length) await fetchAvailableFunctionalityRoles();
+
+            // Группировка ролей по категориям
+            const rolesByCategory = availableFunctionalityRoles.reduce((acc, role) => {
+                if (!acc[role.category_localization]) {
+                    acc[role.category_localization] = [];
+                }
+                acc[role.category_localization].push(role);
+                return acc;
+            }, {});
+
+            // Сортировка категорий и ролей
+            const sortedCategories = Object.keys(rolesByCategory).sort();
+            sortedCategories.forEach(category => {
+                const categoryDiv = document.createElement('div');
+                categoryDiv.className = 'mb-4';
+                categoryDiv.innerHTML = `<h6 class="fw-bold mb-3">${category}</h6>`;
+
+                const rolesList = document.createElement('div');
+                rolesList.className = 'list-group';
+
+                rolesByCategory[category]
+                    .sort((a, b) => a.localization.localeCompare(b.localization))
+                    .forEach(role => {
+                        const isChecked = roles.includes(role.id) ? 'checked' : '';
+                        rolesList.innerHTML += `
+                            <label class="list-group-item d-flex align-items-center">
+                                <input type="checkbox" class="form-check-input me-2 functionality-role-checkbox" value="${role.id}" ${isChecked}>
+                                ${role.localization}
+                            </label>
+                        `;
+                    });
+
+                categoryDiv.appendChild(rolesList);
+                rolesContainer.appendChild(categoryDiv);
+            });
+
+        } catch (error) {
+            console.error('Ошибка при загрузке ролей:', error);
+            showAlert('Ошибка загрузки ролей функциональности', 'danger');
+        }
+
+        document.getElementById('userFunctionalityRolesModal').dataset.userId = userId;
+    });
+
+    document.getElementById('saveFunctionalityRoles').addEventListener('click', async () => {
+        const userId = document.getElementById('userFunctionalityRolesModal').dataset.userId;
+        const roles = [];
+        const checkboxes = document.querySelectorAll('#functionalityRolesContainer .functionality-role-checkbox:checked');
+
+        checkboxes.forEach(checkbox => {
+            roles.push(parseInt(checkbox.value));
+        });
+
+        try {
+            const response = await fetch(`/api/admin/users/set_functionality_roles/${userId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ functionality_roles: roles.length ? roles : null }),
+                credentials: 'same-origin'
+            });
+            if (!response.ok) throw new Error('Ошибка сохранения ролей');
+            const result = await response.json();
+            if (result.status === 'functionality_roles_updated') {
+                bootstrap.Modal.getInstance(document.getElementById('userFunctionalityRolesModal')).hide();
+                showAlert('Роли функциональности успешно обновлены', 'success');
+            } else {
+                showAlert('Ошибка при сохранении ролей функциональности', 'danger');
+            }
+        } catch (error) {
+            console.error('Ошибка при сохранении:', error);
+            showAlert('Произошла ошибка при сохранении ролей', 'danger');
         }
     });
 

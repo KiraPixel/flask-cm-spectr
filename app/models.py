@@ -23,14 +23,6 @@ class User(db.Model):
         return '<User %r>' % self.username
 
 
-class UserFunctionalityAccess(db.Model):
-    __tablename__ = 'user_functionality_roles'
-    id = db.Column(db.Integer, primary_key=True)
-    role_name = db.Column(db.String(100), nullable=False)
-    role_localization = db.Column(db.String(100), nullable=False)
-    category = db.Column(db.String(100), nullable=False)
-
-
 class Reports(db.Model):
     __tablename__ = 'reports'
 
@@ -247,6 +239,15 @@ class SystemSettings(db.Model):
     enable_voperator = db.Column(db.Integer)
     enable_xml_parser = db.Column(db.Integer)
     enable_db_cashing = db.Column(db.Integer)
+
+
+class FunctionalityAccess(db.Model):
+    __tablename__ = 'user_functionality_access'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100))
+    localization = db.Column(db.String(100))
+    category = db.Column(db.String(100))
+    category_localization = db.Column(db.String(100))
 
 
 def insert_mailing_record_sqlalchemy(target, subject, content, html_template=None, attachment_name=None, attachment_content=None):

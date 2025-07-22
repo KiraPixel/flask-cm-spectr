@@ -110,7 +110,7 @@
             </div>
         </div>
 
-        <!-- Модальное окно для управления доступами -->
+        <!-- Модальное окно для управления доступами к транспорту -->
         <div class="modal fade" id="userTransportAccessModal" tabindex="-1" aria-labelledby="userTransportAccessModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-xl modal-dialog-centered">
                 <div class="modal-content rounded-4">
@@ -166,6 +166,29 @@
                     <div class="modal-footer border-0">
                         <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">Отмена</button>
                         <button type="button" class="btn btn-primary rounded-pill" id="saveTransportAccess">Сохранить</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Модальное окно для управления ролями функциональности -->
+        <div class="modal fade" id="userFunctionalityRolesModal" tabindex="-1" aria-labelledby="userFunctionalityRolesModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content rounded-4">
+                    <div class="modal-header border-0 pb-2">
+                        <h5 class="modal-title fw-bold" id="userFunctionalityRolesModalLabel">Настройка ролей функциональности</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="text-muted mb-4">Выберите роли функциональности для пользователя, отметив нужные галочки. Роли сгруппированы по категориям.</p>
+                        <div id="functionalityRolesContainer" class="mb-3"></div>
+                        <form id="functionalityRolesForm" class="d-none">
+                            <input type="hidden" id="functionalityRoles" name="functionality_roles">
+                        </form>
+                    </div>
+                    <div class="modal-footer border-0">
+                        <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">Отмена</button>
+                        <button type="button" class="btn btn-primary rounded-pill" id="saveFunctionalityRoles">Сохранить</button>
                     </div>
                 </div>
             </div>
