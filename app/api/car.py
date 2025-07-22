@@ -39,24 +39,25 @@ class GetCarInfo(Resource):
                 return {"error": "You don't have access to this car"}, 403
 
             # Получение информации из Wialon
-            wialon = db.session.query(CashWialon).filter(CashWialon.nm.like(car.uNumber)).all()
-            monitoring_json_response = {"monitoring": []}
-            if wialon:
-                for item in wialon:
-                    monitoring_json_block = {
-                        "type": 'wialon',
-                        "online": online_check(item.last_time),
-                        "uid": item.uid,
-                        "unit_id": item.id,
-                        "pos_x": item.pos_y,
-                        "pos_y": item.pos_x,
-                        "address": str(get_address_from_coords(item.pos_y, item.pos_x)),
-                        "last_time": unix_to_moscow_time(item.last_time),
-                        "wialon_cmd": item.cmd,
-                        "wialon_sensors_list": item.sens,
-                        "wialon_satellite_count": item.gps,
-                    }
-                    monitoring_json_response["monitoring"].append(monitoring_json_block)
+            if has_role_access(user.username, 'wialon'):
+                wialon = db.session.query(CashWialon).filter(CashWialon.nm.like(car.uNumber)).all()
+                monitoring_json_response = {"monitoring": []}
+                if wialon:
+                    for item in wialon:
+                        monitoring_json_block = {
+                            "type": 'wialon',
+                            "online": online_check(item.last_time),
+                            "uid": item.uid,
+                            "unit_id": item.id,
+                            "pos_x": item.pos_y,
+                            "pos_y": item.pos_x,
+                            "address": str(get_address_from_coords(item.pos_y, item.pos_x)),
+                            "last_time": unix_to_moscow_time(item.last_time),
+                            "wialon_cmd": item.cmd,
+                            "wialon_sensors_list": item.sens,
+                            "wialon_satellite_count": item.gps,
+                        }
+                        monitoring_json_response["monitoring"].append(monitoring_json_block)
 
             # Получение информации из Cesar Position
             if has_role_access(user.username, 'csp'):
