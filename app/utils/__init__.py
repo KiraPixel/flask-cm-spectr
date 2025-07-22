@@ -51,12 +51,7 @@ def need_access(required_role):
 
 
             # Проверяем роль пользователя
-            if required_role == -2 or required_role == -1 or required_role == 0 or required_role == 1 :
-                # Заглушка для старой системы
-                if user.role < required_role:
-                    flash('Недостаточно прав для доступа', 'warning')
-                    return redirect(url_for('main.home'))  # Редирект, если прав недостаточно
-            elif required_role not in get_user_roles(user):
+            if required_role not in get_user_roles(user):
                 # Новая система ролирования
                 if required_role != 'login':
                     flash('Недостаточно прав для доступа', 'warning')
