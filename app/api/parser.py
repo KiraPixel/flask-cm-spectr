@@ -28,7 +28,7 @@ class AddNewCar(Resource):
     @parser_ns.response(200, 'Успешно добавлено')
     @parser_ns.response(400, 'Неверный запрос (например, отсутствуют параметры)')
     @parser_ns.response(500, 'Ошибка при выполнении запроса к базе данных')
-    @need_access(1)
+    @need_access('admin_panel')
     def post(self):
         """Добавление нового автомобиля"""
         data = request.json

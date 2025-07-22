@@ -43,7 +43,7 @@ class AlertsPresets(Resource):
     @alerts_presets_ns.doc(description="Получение всех пресетов оповещений")
     @alerts_presets_ns.response(200, 'Успешно')
     @alerts_presets_ns.response(500, 'Ошибка базы данных')
-    @need_access(1)
+    @need_access('admin_panel')
     def get(self):
         """Получение всех пресетов оповещений"""
         try:
@@ -68,7 +68,7 @@ class AlertsPresets(Resource):
     @alerts_presets_ns.response(200, 'Пресет успешно создан')
     @alerts_presets_ns.response(400, 'Неверный запрос')
     @alerts_presets_ns.response(500, 'Ошибка базы данных')
-    @need_access(1)
+    @need_access('admin_panel')
     def post(self):
         """Создание нового пресета оповещений"""
         data = request.json
@@ -123,7 +123,7 @@ class AlertsPresetsWithVehicleCount(Resource):
     @alerts_presets_ns.doc(description="Получение всех пресетов с количеством техники")
     @alerts_presets_ns.response(200, 'Успешно')
     @alerts_presets_ns.response(500, 'Ошибка базы данных')
-    @need_access(1)
+    @need_access('admin_panel')
     def get(self):
         """Получение всех пресетов с их настройками и количеством транспорта"""
         try:
@@ -167,7 +167,7 @@ class AlertPreset(Resource):
     @alerts_presets_ns.response(200, 'Успешно')
     @alerts_presets_ns.response(404, 'Пресет не найден')
     @alerts_presets_ns.response(500, 'Ошибка базы данных')
-    @need_access(1)
+    @need_access('admin_panel')
     def get(self, preset_id):
         """Получение пресета по ID"""
         try:
@@ -199,7 +199,7 @@ class AlertPreset(Resource):
     @alerts_presets_ns.response(403, 'Пресет не редактируемый')
     @alerts_presets_ns.response(404, 'Пресет не найден')
     @alerts_presets_ns.response(500, 'Ошибка базы данных')
-    @need_access(1)
+    @need_access('admin_panel')
     def put(self, preset_id):
         """Обновление пресета"""
         try:
@@ -269,7 +269,7 @@ class VehiclePreset(Resource):
     @alerts_presets_ns.response(200, 'Успешно')
     @alerts_presets_ns.response(404, 'Транспорт не найден')
     @alerts_presets_ns.response(500, 'Ошибка базы данных')
-    @need_access(1)
+    @need_access('admin_panel')
     def post(self):
         """Получение пресета транспорта и пресета по умолчанию по uNumber"""
         try:
@@ -328,7 +328,7 @@ class AlertTypes(Resource):
     @alerts_presets_ns.doc(description="Получение всех типов алертов")
     @alerts_presets_ns.response(200, 'Успешно')
     @alerts_presets_ns.response(500, 'Ошибка базы данных')
-    @need_access(1)
+    @need_access('admin_panel')
     def get(self):
         """Получение всех типов алертов"""
         try:
@@ -350,7 +350,7 @@ class AlertTypeById(Resource):
     @alerts_presets_ns.response(200, 'Успешно')
     @alerts_presets_ns.response(404, 'Тип алерта не найден')
     @alerts_presets_ns.response(500, 'Ошибка базы данных')
-    @need_access(1)
+    @need_access('admin_panel')
     def get(self, alert_un):
         """Получение типа алерта по alert_un"""
         try:
@@ -379,7 +379,7 @@ class VehiclesByPreset(Resource):
     @alerts_presets_ns.response(400, 'Неверный запрос')
     @alerts_presets_ns.response(404, 'Пресет не найден')
     @alerts_presets_ns.response(500, 'Ошибка базы данных')
-    @need_access(1)
+    @need_access('admin_panel')
     def post(self):
         """Получение списка uNumber транспорта и их количества для указанного ID пресета"""
         try:

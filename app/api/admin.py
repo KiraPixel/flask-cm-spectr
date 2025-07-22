@@ -92,7 +92,7 @@ access_functionality_data_model = admin_users_ns.model('FunctionalityAccess', {
 class UsersList(Resource):
     @admin_users_ns.expect(user_parser)
     @admin_users_ns.marshal_with(user_model, as_list=True)
-    @need_access(1)
+    @need_access('admin_panel')
     def get(self):
         """Получить список всех пользователей или одного, если передан ID"""
         args = user_parser.parse_args()
@@ -112,7 +112,7 @@ class UsersList(Resource):
 @admin_users_ns.route('/add')
 class AddUser(Resource):
     @admin_users_ns.expect(add_user_parser)
-    @need_access(1)
+    @need_access('admin_panel')
     def post(self):
         """Добавить нового пользователя"""
         args = add_user_parser.parse_args()
@@ -133,7 +133,7 @@ class AddUser(Resource):
 @admin_users_ns.route('/edit/<int:user_id>')
 class EditUser(Resource):
     @admin_users_ns.expect(edit_user_parser)
-    @need_access(1)
+    @need_access('admin_panel')
     def put(self, user_id):
         """Редактировать данные пользователя"""
         args = edit_user_parser.parse_args()
@@ -147,7 +147,7 @@ class EditUser(Resource):
 # Удаление пользователя
 @admin_users_ns.route('/delete/<int:user_id>')
 class DeleteUser(Resource):
-    @need_access(1)
+    @need_access('admin_panel')
     def delete(self, user_id):
         """Удалить пользователя"""
         user = User.query.get_or_404(user_id)
@@ -159,7 +159,7 @@ class DeleteUser(Resource):
 @admin_users_ns.route('/get_transport_access_parameters')
 class GetTransportAccessData(Resource):
     @admin_users_ns.marshal_with(access_transport_data_model)
-    @need_access(1)
+    @need_access('admin_panel')
     def get(self):
         """Получить доступные для установки uNumber, manager и region"""
         default_storage = Storage.query.filter_by(ID=0).first()
@@ -180,7 +180,7 @@ class GetTransportAccessData(Resource):
 @admin_users_ns.route('/set_transport_access/<int:user_id>')
 class SetTransportAccess(Resource):
     @admin_users_ns.expect(set_transport_access_parser)
-    @need_access(1)
+    @need_access('admin_panel')
     def put(self, user_id):
         """Установить uNumber, manager и region для пользователя"""
         args = set_transport_access_parser.parse_args()
@@ -197,7 +197,7 @@ class SetTransportAccess(Resource):
 @admin_users_ns.route('/get_functionality_access_parameters')
 class GetFunctionalityAccessData(Resource):
     @admin_users_ns.marshal_with(access_functionality_data_model)
-    @need_access(1)
+    @need_access('admin_panel')
     def get(self):
         """Получить доступные для установки uNumber, manager и region"""
         functionality = FunctionalityAccess.query.all()
@@ -207,7 +207,7 @@ class GetFunctionalityAccessData(Resource):
 @admin_users_ns.route('/set_functionality_roles/<int:user_id>')
 class SetFunctionalityRoles(Resource):
     @admin_users_ns.expect(set_functionality_roles_model)
-    @need_access(1)
+    @need_access('admin_panel')
     def put(self, user_id):
         """Установить роли функциональности для пользователя"""
         data = request.get_json()
@@ -227,7 +227,7 @@ class SetFunctionalityRoles(Resource):
 # Сброс пароля
 @admin_users_ns.route('/reset_pass/<int:user_id>')
 class ResetPass(Resource):
-    @need_access(1)
+    @need_access('admin_panel')
     def put(self, user_id):
         """Сбросить пароль пользователя и отправить новый по email"""
         user = User.query.get_or_404(user_id)
@@ -241,7 +241,7 @@ class ResetPass(Resource):
 @admin_storages_ns.route('/')
 class StoragesList(Resource):
     @admin_storages_ns.marshal_list_with(storage_model)
-    @need_access(1)
+    @need_access('admin_panel')
     def get(self):
         """Получить список всех складов"""
         storages = IgnoredStorage.query.all()
@@ -251,7 +251,7 @@ class StoragesList(Resource):
 @admin_storages_ns.route('/add')
 class AddStorage(Resource):
     @admin_storages_ns.expect(storage_parser)
-    @need_access(1)
+    @need_access('admin_panel')
     def post(self):
         """Добавить новый склад"""
         args = storage_parser.parse_args()
@@ -269,7 +269,7 @@ class AddStorage(Resource):
 @admin_storages_ns.route('/edit/<int:storage_id>')
 class EditStorage(Resource):
     @admin_storages_ns.expect(storage_parser)
-    @need_access(1)
+    @need_access('admin_panel')
     def put(self, storage_id):
         """Обновить данные склада"""
         args = storage_parser.parse_args()
@@ -285,7 +285,7 @@ class EditStorage(Resource):
 # Удаление склада
 @admin_storages_ns.route('/delete/<int:storage_id>')
 class DeleteStorage(Resource):
-    @need_access(1)
+    @need_access('admin_panel')
     def delete(self, storage_id):
         """Удалить склад по ID"""
         storage = IgnoredStorage.query.get_or_404(storage_id)

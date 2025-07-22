@@ -21,7 +21,7 @@ status_model = settings_ns.model('StatusModel', {
 @settings_ns.route('/system_settings')
 class SystemSettingsAPI(Resource):
     @settings_ns.marshal_with(system_settings_model)
-    @need_access(1)
+    @need_access('admin_panel')
     def get(self):
         """Получить текущие системные настройки"""
         settings = SystemSettings.query.first()
@@ -29,7 +29,7 @@ class SystemSettingsAPI(Resource):
 
 class ChangeVOperatorStatus(Resource):
     @settings_ns.expect(status_model)
-    @need_access(1)
+    @need_access('admin_panel')
     def post(self):
         data = request.json
         status = data.get('status')
@@ -45,7 +45,7 @@ class ChangeVOperatorStatus(Resource):
 
 class ChangeXMLParserStatus(Resource):
     @settings_ns.expect(status_model)
-    @need_access(1)
+    @need_access('admin_panel')
     def post(self):
         data = request.json
         status = data.get('status')
@@ -62,7 +62,7 @@ class ChangeXMLParserStatus(Resource):
 
 class ChangeDBCashingStatus(Resource):
     @settings_ns.expect(status_model)
-    @need_access(1)
+    @need_access('admin_panel')
     def post(self):
         data = request.json
         status = data.get('status')

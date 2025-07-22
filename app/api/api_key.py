@@ -10,7 +10,7 @@ api_key_ns = Namespace('key', description='API key')
 
 @api_key_ns.route('/generate-api-key')
 class GenerateApiKey(Resource):
-    @need_access(-1)
+    @need_access('login')
     def get(self):
         # Получаем данные пользователя из сессии
         user = session.get('username')
@@ -62,7 +62,7 @@ class AuthorizeApiKey(Resource):
 
 @api_key_ns.route('/get-api-key')
 class GetApiKey(Resource):
-    @need_access(0)
+    @need_access(1)
     def get(self):
         # Получаем username из сессии
         username = session.get('username')

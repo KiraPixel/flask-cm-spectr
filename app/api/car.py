@@ -17,7 +17,7 @@ class GetCarInfo(Resource):
     })
     @car_ns.response(200, 'Успешно')
     @car_ns.response(404, 'Лот не был найден')
-    @need_access(-1)
+    @need_access('login')
     def get(self, lot_number):
         try:
             user = User.query.filter_by(username=session['username']).first_or_404()
@@ -230,7 +230,7 @@ class CarsResource(Resource):
     @car_ns.param('region', 'Регион', type=str)
     @car_ns.response(200, 'Успешно')
     @car_ns.response(404, 'Данные не найдены')
-    @need_access(-1)
+    @need_access('login')
     def get(self):
         """Получение списка автомобилей с фильтрами"""
         filters = {
@@ -307,7 +307,7 @@ class GetCarHistory(Resource):
     @car_ns.response(200, 'Успешно')  # Указываем модель для ответа
     @car_ns.response(400, 'Неверный запрос (например, отсутствуют параметры)')
     @car_ns.response(500, 'Ошибка при выполнении запроса к базе данных')
-    @need_access(-1)
+    @need_access('car_movement')
     def get(self):
         """Получение истории автомобиля по номеру и времени"""
         nm = request.args.get('nm')
@@ -395,7 +395,7 @@ class SetPreset(Resource):
     @car_ns.response(400, 'Неверный запрос (например, отсутствует uNumber или неверный alert_type_presets_id)')
     @car_ns.response(404, 'Транспорт или пресет не найден')
     @car_ns.response(500, 'Ошибка при выполнении запроса к базе данных')
-    @need_access(-1)
+    @need_access('car_settings')
     def put(self):
         """Установка или удаление пресета для транспорта по uNumber"""
         uNumber = request.args.get('uNumber')

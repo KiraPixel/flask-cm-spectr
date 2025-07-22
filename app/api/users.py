@@ -36,7 +36,7 @@ change_pass_parser.add_argument('password', type=str, required=True, help='Но�
 @user_ns.route('/add_comment')
 class AddComment(Resource):
     @user_ns.expect(add_comment_parser)
-    @need_access(-1)
+    @need_access('car_comments')
     def post(self):
         """Добавить новый комментарий к автомобилю"""
         text = request.form.get('text', '').strip()
@@ -59,7 +59,7 @@ class AddComment(Resource):
 @user_ns.route('/edit_comment')
 class EditComment(Resource):
     @user_ns.expect(edit_comment_parser)
-    @need_access(-1)
+    @need_access('car_comments')
     def post(self):
         """Редактировать или удалить существующий комментарий"""
         comment_id = request.form.get('comment_id')
@@ -91,7 +91,7 @@ class EditComment(Resource):
 @user_ns.route('/edit_alert_comment')
 class EditAlertComment(Resource):
     @user_ns.expect(edit_comment_model, validate=True)
-    @need_access(-1)
+    @need_access('voperator')
     def post(self):
         """Редактировать комментарий к алерту"""
         data = request.json
@@ -119,7 +119,7 @@ class EditAlertComment(Resource):
 @user_ns.route('/change_pass')
 class ChangePass(Resource):
     @user_ns.expect(change_pass_parser)
-    @need_access(-1)
+    @need_access('login')
     def put(self):
         """Сменить пароль текущего пользователя"""
         args = change_pass_parser.parse_args()
