@@ -4,7 +4,7 @@ from ..utils import need_access, get_address_from_coords, storage_id_to_name
 from ..models import User, CashWialon, Alert, TransferTasks, db, Transport, Storage, TransportModel, CashCesar, \
     AlertType, Comments, CashHistoryWialon, AlertTypePresets, CashHistoryCesar
 from modules.my_time import unix_to_moscow_time, online_check_cesar, online_check
-from ..utils.functionality_acccess import has_role_access
+from ..utils.functionality_acccess import has_role_access, get_user_roles
 
 from ..utils.transport_acccess import check_access_to_transport, get_all_access_transport
 
@@ -21,7 +21,9 @@ class GetCarInfo(Resource):
     def get(self, lot_number):
         try:
             user = User.query.filter_by(username=session['username']).first_or_404()
+            user_role = get_user_roles(user)
             car = db.session.query(Transport).filter(Transport.uNumber == lot_number).first()
+            result = {}
             if not car:
                 return "Car not found", 404
 
@@ -38,10 +40,11 @@ class GetCarInfo(Resource):
             if not check_access_to_transport(user.username, car.uNumber):
                 return {"error": "You don't have access to this car"}, 403
 
+            # Мониторинг
+            monitoring_json_response = {"monitoring": []}
             # Получение информации из Wialon
-            if has_role_access(user.username, 'wialon'):
+            if 'wialon' in user_role:
                 wialon = db.session.query(CashWialon).filter(CashWialon.nm.like(car.uNumber)).all()
-                monitoring_json_response = {"monitoring": []}
                 if wialon:
                     for item in wialon:
                         monitoring_json_block = {
@@ -60,7 +63,7 @@ class GetCarInfo(Resource):
                         monitoring_json_response["monitoring"].append(monitoring_json_block)
 
             # Получение информации из Cesar Position
-            if has_role_access(user.username, 'csp'):
+            if 'csp' in user_role:
                 cesar = db.session.query(CashCesar).filter(CashCesar.object_name.like(car.uNumber)).all()
                 for item in cesar:
                     monitoring_json_block = {
@@ -77,110 +80,134 @@ class GetCarInfo(Resource):
 
             #Получение алертов
             alerts_json_response = {"alert": []}
-            alerts = db.session.query(Alert).filter(Alert.uNumber == car.uNumber).order_by(
-                Alert.date.desc()).all()
-            for item in alerts:
-                result = db.session.query(AlertType).filter(AlertType.alert_un == item.type).first()
-                localization = result.localization if result else item.type
-                alerts_json_append = {
-                    "id": item.id,
-                    "status": item.status,
-                    "type": item.type,
-                    "localization": localization,
-                    "data": item.data,
-                    "datetime": unix_to_moscow_time(item.date),
-                    "comment": item.comment,
-                    "comment_editor": item.comment_editor,
-                    "comment_date_time": item.date_time_edit,
-                    "comment_date_time_msk": unix_to_moscow_time(item.date_time_edit)
-                }
-                alerts_json_response["alert"].append(alerts_json_append)
+            if 'car_alerts' in user_role:
+                alerts = db.session.query(Alert).filter(Alert.uNumber == car.uNumber).order_by(
+                    Alert.date.desc()).all()
+                for item in alerts:
+                    alert_result = db.session.query(AlertType).filter(AlertType.alert_un == item.type).first()
+                    localization = alert_result.localization if alert_result else item.type
+                    alerts_json_append = {
+                        "id": item.id,
+                        "status": item.status,
+                        "type": item.type,
+                        "localization": localization,
+                        "data": item.data,
+                        "datetime": unix_to_moscow_time(item.date),
+                        "comment": item.comment,
+                        "comment_editor": item.comment_editor,
+                        "comment_date_time": item.date_time_edit,
+                        "comment_date_time_msk": unix_to_moscow_time(item.date_time_edit)
+                    }
+                    alerts_json_response["alert"].append(alerts_json_append)
 
             # Получение комментов
             comments_json_response = {"comments": []}
-            comments = db.session.query(Comments).filter(Comments.uNumber == car.uNumber).order_by(Comments.datetime_unix.desc()).all()
-            for item in comments:
-                comments_json_append = {
-                    "id": item.comment_id,
-                    "author": item.author,
-                    "text": item.text,
-                    "datetime": unix_to_moscow_time(item.datetime_unix)
-                }
-                comments_json_response["comments"].append(comments_json_append)
+            if 'car_comments' in user_role:
+                comments = db.session.query(Comments).filter(Comments.uNumber == car.uNumber).order_by(Comments.datetime_unix.desc()).all()
+                for item in comments:
+                    comments_json_append = {
+                        "id": item.comment_id,
+                        "author": item.author,
+                        "text": item.text,
+                        "datetime": unix_to_moscow_time(item.datetime_unix)
+                    }
+                    comments_json_response["comments"].append(comments_json_append)
 
             #Получение переходов
             transfers_json_response = {"transfers": []}
-            transfers = db.session.query(TransferTasks).filter(TransferTasks.uNumber == car.uNumber).order_by(
-                TransferTasks.date.desc()).all()
-            for transfer in transfers:
-                # Определяем тип изменения
-                if transfer.old_storage != transfer.new_storage:
-                    transfer_type = "Перемещение по складу"
-                    old_value = storage_id_to_name(transfer.old_storage) or "—"
-                    new_value = storage_id_to_name(transfer.new_storage) or "—"
-                elif transfer.old_manager != transfer.new_manager:
-                    transfer_type = "Изменение менеджера"
-                    old_value = transfer.old_manager or "—"
-                    new_value = transfer.new_manager or "—"
-                elif transfer.old_client != transfer.new_client:
-                    transfer_type = "Изменение клиента"
-                    old_value = transfer.old_client or "—"
-                    new_value = transfer.new_client or "—"
-                else:
-                    transfer_type = "Неизвестный тип"
-                    old_value = "—"
-                    new_value = "—"
+            if 'car_transfers' in user_role:
+                transfers = db.session.query(TransferTasks).filter(TransferTasks.uNumber == car.uNumber).order_by(
+                    TransferTasks.date.desc()).all()
+                for transfer in transfers:
+                    # Определяем тип изменения
+                    if transfer.old_storage != transfer.new_storage:
+                        transfer_type = "Перемещение по складу"
+                        old_value = storage_id_to_name(transfer.old_storage) or "—"
+                        new_value = storage_id_to_name(transfer.new_storage) or "—"
+                    elif transfer.old_manager != transfer.new_manager:
+                        transfer_type = "Изменение менеджера"
+                        old_value = transfer.old_manager or "—"
+                        new_value = transfer.new_manager or "—"
+                    elif transfer.old_client != transfer.new_client:
+                        transfer_type = "Изменение клиента"
+                        old_value = transfer.old_client or "—"
+                        new_value = transfer.new_client or "—"
+                    else:
+                        transfer_type = "Неизвестный тип"
+                        old_value = "—"
+                        new_value = "—"
 
-                # Добавляем данные о передаче в список
-                transfers_json_response["transfers"].append({
-                    "date": unix_to_moscow_time(transfer.date),
-                    "type": transfer_type,
-                    "old_value": old_value,
-                    "new_value": new_value
-                })
+                    # Добавляем данные о передаче в список
+                    transfers_json_response["transfers"].append({
+                        "date": unix_to_moscow_time(transfer.date),
+                        "type": transfer_type,
+                        "old_value": old_value,
+                        "new_value": new_value
+                    })
 
-            # Формирование результата
-            result = {
-                "transport": {
-                    "lot_number": car.uNumber,
-                    "storage_id": car.storage_id,
-                    "model_id": car.model_id,
-                    "manufacture_year": car.manufacture_year,
-                    "vin": car.vin
-                },
-                "storage": {
-                    "1c_id": storage.ID,
-                    "name": storage.name,
-                    "type": storage.type,
-                    "region": storage.region,
-                    "address": storage.address,
-                    "organization": storage.organization
-                },
-                "transport_model": {
-                    "1c_id": transport_model.id,
-                    "type": transport_model.type,
-                    "name": transport_model.name,
-                    "lift_type": transport_model.lift_type,
-                    "engine": transport_model.engine,
-                    "country": transport_model.country,
-                    "machine_type": transport_model.machine_type,
-                    "brand": transport_model.brand,
-                    "model": transport_model.model
-                },
-                "rent": {
-                    "x": car.x,
-                    "y": car.y,
-                    "address": str(get_address_from_coords(car.x, car.y)),
-                    "customer": car.customer,
-                    "customer_contact": car.customer_contact,
-                    "manager": car.manager
-                },
-                "car_setting:": {
-                    "virtual_operator": car.alert_preset
+            info_transport = {"transport": []}
+            if 'car_info_model' in user_role:
+                info_transport = {
+                    "transport": {
+                        "lot_number": car.uNumber,
+                        "storage_id": car.storage_id,
+                        "model_id": car.model_id,
+                        "manufacture_year": car.manufacture_year,
+                        "vin": car.vin
+                    }
                 }
-            }
+            info_storage = {"storage": []}
+            if 'car_info_storage' in user_role:
+                info_storage = {
+                    "storage": {
+                        "1c_id": storage.ID,
+                        "name": storage.name,
+                        "type": storage.type,
+                        "region": storage.region,
+                        "address": storage.address,
+                        "organization": storage.organization
+                    }
+                }
+            info_transport_model = {"transport_model": []}
+            if 'car_info_model' in user_role:
+                info_transport_model = {
+                    "transport_model": {
+                        "1c_id": transport_model.id,
+                        "type": transport_model.type,
+                        "name": transport_model.name,
+                        "lift_type": transport_model.lift_type,
+                        "engine": transport_model.engine,
+                        "country": transport_model.country,
+                        "machine_type": transport_model.machine_type,
+                        "brand": transport_model.brand,
+                        "model": transport_model.model
+                    }
+                }
+            info_rent = {"rent": []}
+            if 'car_info_rent' in user_role:
+                info_rent = {
+                    "rent": {
+                        "x": car.x,
+                        "y": car.y,
+                        "address": str(get_address_from_coords(car.x, car.y)),
+                        "customer": car.customer,
+                        "customer_contact": car.customer_contact,
+                        "manager": car.manager
+                    }
+                }
+            info_setting = {"car_setting": []}
+            if 'car_settings' in user_role:
+                info_setting = {
+                    "car_setting:": {
+                        "virtual_operator": car.alert_preset
+                    }
+                }
 
-            # Добавляем данные из monitoring_json_response и alerts_json_append к результату
+            result.update(info_storage)
+            result.update(info_rent)
+            result.update(info_transport_model)
+            result.update(info_setting)
+            result.update(info_transport)
             result.update(monitoring_json_response)
             result.update(alerts_json_response)
             result.update(comments_json_response)

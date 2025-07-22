@@ -1,6 +1,8 @@
 from functools import wraps
 
 from flask import session, flash, redirect, url_for, request
+
+from .functionality_acccess import get_user_roles
 from ..models import db, User, Storage, Coord, AlertType, Transport
 from modules import my_time, location_module
 import datetime
@@ -47,10 +49,19 @@ def need_access(required_role):
                 user.password_activated_date = msk_time.strftime('%Y-%m-%d %H:%M')
             db.session.commit()  # Сохраняем данные о времени последней активности
 
+
             # Проверяем роль пользователя
-            if user.role < required_role:
-                flash('Недостаточно прав для доступа', 'warning')
-                return redirect(url_for('main.home'))  # Редирект, если прав недостаточно
+            if required_role == -2 or required_role == -1 or required_role == 0 or required_role == 1 :
+                # Заглушка для старой системы
+                if user.role < required_role:
+                    flash('Недостаточно прав для доступа', 'warning')
+                    return redirect(url_for('main.home'))  # Редирект, если прав недостаточно
+            elif required_role not in get_user_roles(user):
+                # Новая система ролирования
+                if required_role != 'login':
+                    flash('Недостаточно прав для доступа', 'warning')
+                    return redirect(url_for('main.home'))  # Редирект, если прав недостаточно
+
 
             # Если все проверки пройдены, вызываем основную функцию
             return f(*args, **kwargs)

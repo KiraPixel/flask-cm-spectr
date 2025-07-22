@@ -18,7 +18,7 @@ def set_user():
 
 
 @us_bp.route('/')
-@need_access(-2)
+@need_access('login')
 def index():
     user = User.query.filter_by(username=session['username']).first_or_404()
     reports = Reports.query.filter_by(username=session['username']).order_by(Reports.id.desc()).all()
@@ -26,7 +26,7 @@ def index():
 
 
 @us_bp.route('/email', methods=['GET', 'POST'])
-@need_access(-2)
+@need_access('login')
 def change_email():
     if request.method == 'POST':
         new_email = request.form.get('email')
@@ -40,7 +40,7 @@ def change_email():
 
 
 @us_bp.route('/pass', methods=['GET', 'POST'])
-@need_access(-2)
+@need_access('login')
 def change_password():
     if request.method == 'POST':
         new_password = request.form.get('new_password')

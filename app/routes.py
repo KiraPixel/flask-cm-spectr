@@ -31,7 +31,7 @@ def set_user():
 
 # Главная страница
 @bp.route('/', endpoint='home')
-@need_access(-2)
+@need_access('login')
 def home():
     # Получаем параметры фильтра из запроса
     filters = {
@@ -132,7 +132,7 @@ def home():
 
 # Страница состояния
 @bp.route('/virtual_operator')
-@need_access(0)
+@need_access('voperator')
 def virtual_operator():
     distance = db.session.query(Alert).join(AlertType, Alert.type==AlertType.alert_un).filter(Alert.status == 0, Alert.type.in_(['distance', 'gps'])).order_by(Alert.date.desc()).all()
     no_docs_cord = db.session.query(Alert).join(AlertType, Alert.type == AlertType.alert_un).filter(Alert.status == 0, Alert.type == 'no_docs_cords').order_by(Alert.date.desc()).all()
@@ -157,7 +157,7 @@ def virtual_operator():
 
 # Дашборды
 @bp.route('/dashboard')
-@need_access(0)
+@need_access('dashboard')
 def dashboard():
     cesar_access = has_role_access(g.user.username, 'csp')
 
@@ -204,7 +204,7 @@ def dashboard():
 
 # Страница отчетов
 @bp.route('/rep')
-@need_access(0)
+@need_access('reports')
 def reports():
     user = User.query.filter_by(username=session['username']).first_or_404()
     categories = [
@@ -283,7 +283,7 @@ def login():
 
 # Выход из системы
 @bp.route('/logout')
-@need_access(-2)
+@need_access('login')
 def logout():
     session.pop('username', None)
     flash('Вы вышли из системы', 'info')
@@ -291,7 +291,7 @@ def logout():
 
 
 @bp.route('/car/<string:car_id>')
-@need_access(-1)
+@need_access('login')
 def car(car_id):
     text = car_id.replace(' ', '')
     if re.match(r'^[A-Z]+\d{5}$', text):
@@ -308,7 +308,7 @@ def car(car_id):
 
 # Скачивание отчета
 @bp.route('/send_report', endpoint="send_report")
-@need_access(0)
+@need_access('report')
 def send_report():
     report_name = request.args.get('report')
     print(f"Received report name: {report_name}")
@@ -333,19 +333,19 @@ def send_report():
 
 
 @bp.route('/maps/')
-@need_access(-1)
+@need_access('map')
 def maps():
     return render_template('pages/maps/page.html')
 
 
 @bp.route('/admin', methods=['GET'])
-@need_access(1)
+@need_access('admin_panel')
 def admin_panel():
     return render_template('pages/admin_panel/page.html')
 
 
 @bp.route('/admin/parser', methods=['GET'])
-@need_access(1)
+@need_access('parser')
 def parser_page():
     tasks_with_error_all = ParserTasks.query.filter(
         ParserTasks.task_completed == 0,

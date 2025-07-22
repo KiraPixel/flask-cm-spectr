@@ -8,7 +8,7 @@ from .utils import need_access
 sbi = Blueprint('sbi', __name__)
 
 @sbi.route('/')
-@need_access(1)
+@need_access('sbi')
 def index():
     # Данные для круговой диаграммы (общий подсчет техники по регионам)
     region_query = db.session.query(
