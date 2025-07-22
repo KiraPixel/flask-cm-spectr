@@ -4,6 +4,7 @@ from ..utils import need_access, get_address_from_coords, storage_id_to_name
 from ..models import User, CashWialon, Alert, TransferTasks, db, Transport, Storage, TransportModel, CashCesar, \
     AlertType, Comments, CashHistoryWialon, AlertTypePresets, CashHistoryCesar
 from modules.my_time import unix_to_moscow_time, online_check_cesar, online_check
+from ..utils.functionality_acccess import has_role_access
 
 from ..utils.transport_acccess import check_access_to_transport, get_all_access_transport
 
@@ -58,7 +59,7 @@ class GetCarInfo(Resource):
                     monitoring_json_response["monitoring"].append(monitoring_json_block)
 
             # Получение информации из Cesar Position
-            if user.cesar_access == 1:
+            if has_role_access(user.username, 'csp'):
                 cesar = db.session.query(CashCesar).filter(CashCesar.object_name.like(car.uNumber)).all()
                 for item in cesar:
                     monitoring_json_block = {
@@ -250,7 +251,7 @@ class CarsResource(Resource):
                     "last_time": wialon.last_time
                 })
 
-        if user.cesar_access == 1:
+        if has_role_access(user.username, 'csp'):
             for cesar in cesar_cars:
                 u_number = cesar.object_name or "Без ТС"
                 if u_number in result_dict:

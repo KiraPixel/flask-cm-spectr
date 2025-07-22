@@ -61,26 +61,22 @@ def get_user_roles(username):
 
 def has_role_access(username, rolename):
     try:
+        if not isinstance(username, str) or not isinstance(rolename, str) or not username.strip() or not rolename.strip():
+            return False
+
         user = User.query.filter_by(username=username).first()
         if not user:
             return False
 
         functionality_roles = user.functionality_roles
-        if not functionality_roles:
+        if not functionality_roles or not isinstance(functionality_roles, list):
             return False
-
-        try:
-            role_ids = json.loads(functionality_roles)
-            if not isinstance(role_ids, list):
-                return False
-        except json.JSONDecodeError:
-            return False
-
         role = FunctionalityAccess.query.filter_by(name=rolename).first()
         if not role:
             return False
 
-        return role.id in role_ids
+        return True
 
-    except SQLAlchemyError:
+    except SQLAlchemyError as e:
+        print(e)
         return False

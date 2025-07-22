@@ -17,7 +17,6 @@ user_model = admin_users_ns.model('User', {
     'username': fields.String(description='Имя пользователя (логин)'),
     'email': fields.String(description='Электронная почта пользователя'),
     'role': fields.Integer(description='Роль пользователя: 0 (обычный пользователь), 1 (администратор)'),
-    'cesar_access': fields.Integer(description='Доступ к системе Цезарь: 0 (нет доступа), 1 (есть доступ)'),
     'transport_access': fields.String(description='Фильтра для доступов к транспортам)'),
     'functionality_roles': fields.String(description='Функциональный роли'),
     'last_activity': fields.String(description='Последний вход пользователя')

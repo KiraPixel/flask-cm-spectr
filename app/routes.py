@@ -12,6 +12,7 @@ from .models import db, User, Transport, TransportModel, Storage, CashWialon, Ca
     IgnoredStorage, AlertType, ParserTasks
 from .utils import need_access
 from modules import report_generator, my_time, hash_password
+from .utils.functionality_acccess import has_role_access
 from .utils.transport_acccess import get_all_access_transport
 
 # Создаем Blueprint для основных маршрутов приложения
@@ -157,6 +158,8 @@ def virtual_operator():
 @bp.route('/dashboard')
 @need_access(0)
 def dashboard():
+    cesar_access = has_role_access(g.user.username, 'csp')
+
     # Wialon
     online_count = db.session.query(CashWialon).filter(CashWialon.last_time >= my_time.five_minutes_ago_unix()).count()
     offline_count = db.session.query(CashWialon).filter(CashWialon.last_time < my_time.five_minutes_ago_unix()).count()
@@ -195,7 +198,7 @@ def dashboard():
         'last_cesar': last_cesar
     }
 
-    return render_template('pages/dashboard/page.html', wialon=wialon, connections=connections, cesar=cesar, distance=distance)
+    return render_template('pages/dashboard/page.html', wialon=wialon, connections=connections, cesar=cesar, distance=distance, cesar_access=cesar_access)
 
 
 # Страница отчетов
@@ -251,7 +254,7 @@ def reports():
         },
     ]
 
-    if user.cesar_access == 0:
+    if not has_role_access(user.username, 'csp'):
         categories = [category for category in categories if category['id'] != 'cesar']
 
     return render_template('pages/reports/page.html', categories=categories)

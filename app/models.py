@@ -16,7 +16,6 @@ class User(db.Model):
     email = db.Column(db.String, nullable=False)
     transport_access = db.Column(db.JSON)
     functionality_roles = db.Column(db.JSON)
-    cesar_access = db.Column(db.Integer, nullable=True, default=0)
     api_token = db.Column(db.String, nullable=True)
 
     def __repr__(self):
