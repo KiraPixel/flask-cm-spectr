@@ -62,7 +62,7 @@ class AuthorizeApiKey(Resource):
 
 @api_key_ns.route('/get-api-key')
 class GetApiKey(Resource):
-    @need_access(1)
+    @need_access('admin_panel')
     def get(self):
         # Получаем username из сессии
         username = session.get('username')
