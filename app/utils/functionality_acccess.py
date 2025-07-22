@@ -1,8 +1,9 @@
 import json
 
+from sqlalchemy import and_, func
 from sqlalchemy.exc import SQLAlchemyError
 
-from app.models import FunctionalityAccess, User
+from app.models import FunctionalityAccess, User, db
 
 
 def validate_functionality_roles(roles):
@@ -34,49 +35,39 @@ def validate_functionality_roles(roles):
     return len(errors) == 0, errors, validated_roles
 
 
-def get_user_roles(username):
+def get_user_roles(user: User):
     try:
-        user = User.query.filter_by(username=username).first()
-        if not user:
-            return []
-
         functionality_roles = user.functionality_roles
         if not functionality_roles:
             return []
-
-        try:
-            role_ids = json.loads(functionality_roles)
-            if not isinstance(role_ids, list):
-                return []
-        except json.JSONDecodeError:
-            return []
-
-        roles = FunctionalityAccess.query.filter(FunctionalityAccess.id.in_(role_ids)).all()
+        roles = FunctionalityAccess.query.filter(FunctionalityAccess.id.in_(functionality_roles)).all()
         role_names = [role.name for role in roles if role.name]
         return role_names
 
-    except SQLAlchemyError:
+    except Exception as e:
+        print(f"Error: {e}")
         return []
 
 
 def has_role_access(username, rolename):
     try:
-        if not isinstance(username, str) or not isinstance(rolename, str) or not username.strip() or not rolename.strip():
+        if not isinstance(username, str) or not isinstance(rolename,str) or not username.strip() or not rolename.strip():
             return False
 
         user = User.query.filter_by(username=username).first()
         if not user:
             return False
-
-        functionality_roles = user.functionality_roles
-        if not functionality_roles or not isinstance(functionality_roles, list):
-            return False
-        role = FunctionalityAccess.query.filter_by(name=rolename).first()
-        if not role:
+        elif user.role == 1:
+            return True
+        elif user.functionality_roles is None:
             return False
 
-        return True
+        user_roles = get_user_roles(user)
+        if rolename in user_roles:
+            return True
 
-    except SQLAlchemyError as e:
-        print(e)
+        return False
+
+    except Exception as e:
+        print(f"Error: {e}")
         return False
