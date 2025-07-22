@@ -2,13 +2,19 @@ from flask import Blueprint, request, render_template, redirect, url_for, sessio
 from .utils import need_access
 from .models import db, User, Reports
 from modules import hash_password
+from .utils.functionality_acccess import get_user_roles
 
 us_bp = Blueprint('user_profile', __name__)
 
 
 @us_bp.before_request
 def set_user():
-    g.user = User.query.filter_by(username=session['username']).first()
+    username = session.get('username')
+    if username:
+        g.user = User.query.filter_by(username=username).first()
+        g.role = get_user_roles(g.user)
+    else:
+        g.user = None
 
 
 @us_bp.route('/')

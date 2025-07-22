@@ -12,7 +12,7 @@ from .models import db, User, Transport, TransportModel, Storage, CashWialon, Ca
     IgnoredStorage, AlertType, ParserTasks
 from .utils import need_access
 from modules import report_generator, my_time, hash_password
-from .utils.functionality_acccess import has_role_access
+from .utils.functionality_acccess import has_role_access, get_user_roles
 from .utils.transport_acccess import get_all_access_transport
 
 # Создаем Blueprint для основных маршрутов приложения
@@ -24,6 +24,7 @@ def set_user():
     username = session.get('username')
     if username:
         g.user = User.query.filter_by(username=username).first()
+        g.role = get_user_roles(g.user)
     else:
         g.user = None
 
