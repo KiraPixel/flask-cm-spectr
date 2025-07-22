@@ -37,6 +37,11 @@ def validate_functionality_roles(roles):
 
 def get_user_roles(user: User):
     try:
+        if user.role == 1:
+            roles = FunctionalityAccess.query.all()
+            role_names = [role.name for role in roles if role.name]
+            return role_names
+
         functionality_roles = user.functionality_roles
         if not functionality_roles:
             return []
