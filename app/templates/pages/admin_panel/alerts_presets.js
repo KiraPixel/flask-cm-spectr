@@ -2,7 +2,28 @@ document.addEventListener('DOMContentLoaded', () => {
     const loading = document.getElementById('loading');
     const errorDiv = document.getElementById('error');
 
-    // Загрузка пресетов оповещений с эндпоинтом /api/alerts_presets/with_vehicle_count
+    // Загрузка типов алертов
+    async function loadAlertTypes() {
+        try {
+            const response = await fetch('/api/alerts_presets/alert_types', {
+                headers: { 'Content-Type': 'application/json' }
+            });
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const result = await response.json();
+            if (result.status === 'success') {
+                window.alertTypes = result.data.map(type => ({
+                    alert_un: type.alert_un,
+                    localization: type.localization
+                }));
+            } else {
+                window.showToast('Ошибка загрузки типов алертов: ' + result.message, 'danger');
+            }
+        } catch (error) {
+            window.showToast('Ошибка при загрузке типов алертов: ' + error.message, 'danger');
+        }
+    }
+
+    // Загрузка пресетов оповещений
     window.loadPresets = async function() {
         loading.style.display = 'block';
         try {
@@ -11,6 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             const result = await response.json();
+            console.log('API response:', result.data); // Для отладки
             loading.style.display = 'none';
             if (result.status !== 'success') {
                 errorDiv.textContent = result.message || 'Ошибка при загрузке пресетов';
@@ -23,20 +45,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             container.innerHTML = '';
-            // Сохраняем типы алертов для последующего использования
-            window.alertTypes = [];
             const filteredPresets = result.data.filter(preset => preset.personalized !== 1);
             for (const preset of filteredPresets) {
-                // Собираем все уникальные типы алертов из enable_alert_types и disable_alert_types
-                const alertTypes = [...preset.enable_alert_types, ...preset.disable_alert_types];
-                alertTypes.forEach(type => {
-                    if (!window.alertTypes.some(t => t.alert_un === type.alert_un)) {
-                        window.alertTypes.push({
-                            alert_un: type.alert_un,
-                            localization: type.localization
-                        });
-                    }
-                });
                 const card = document.createElement('div');
                 card.className = 'col-md-6 col-lg-4';
                 card.innerHTML = `
@@ -44,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center rounded-top-4 py-3">
                             <h5 class="mb-0 fw-semibold">${preset.preset_name}</h5>
                             <div>
-                                ${preset.editable ? `<button class="btn btn-sm btn-outline-light edit-preset rounded-circle ms-2" data-id="${preset.id}" data-preset_name="${preset.preset_name}" data-enable_alert_types='${JSON.stringify(preset.enable_alert_types.map(t => t.alert_un))}' data-disable_alert_types='${JSON.stringify(preset.disable_alert_types.map(t => t.alert_un))}' data-wialon_danger_distance="${preset.wialon_danger_distance}" data-wialon_danger_hours_not_work="${preset.wialon_danger_hours_not_work}" data-active="${preset.active}" data-editable="${preset.editable}" data-personalized="${preset.personalized}"><i class="bi bi-pencil"></i></button>` : ''}
+                                ${preset.editable ? `<button class="btn btn-sm btn-outline-light edit-preset rounded-circle ms-2" data-id="${preset.id}" data-preset_name="${preset.preset_name}" data-enable_alert_types='${JSON.stringify(preset.enable_alert_types)}' data-disable_alert_types='${JSON.stringify(preset.disable_alert_types)}' data-wialon_danger_distance="${preset.wialon_danger_distance}" data-wialon_danger_hours_not_work="${preset.wialon_danger_hours_not_work}" data-active="${preset.active}" data-editable="${preset.editable}" data-personalized="${preset.personalized}"><i class="bi bi-pencil"></i></button>` : ''}
                                 <button class="btn btn-sm btn-outline-light delete-preset rounded-circle ms-2" data-id="${preset.id}"><i class="bi bi-trash"></i></button>
                             </div>
                         </div>
@@ -124,6 +134,10 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         window.alertTypes.forEach(type => {
+            if (!type.alert_un || !type.localization) {
+                console.warn('Некорректный тип алерта:', type);
+                return;
+            }
             const item = document.createElement('div');
             item.className = 'list-group-item d-flex justify-content-between align-items-center rounded-3 mb-2 p-3 border';
             item.innerHTML = `
@@ -240,4 +254,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('personalized').value = '0';
         window.populateAlertTypeControls();
     });
+
+    // Инициализация
+    loadAlertTypes().then(() => window.loadPresets());
 });
