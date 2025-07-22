@@ -7,7 +7,7 @@ def create_new_user(email, username, h_password):
             username=username,
             email=email,
             password=h_password,
-            role=-1,
+            role=0,
             last_activity="1999-12-02 00:00:00",
             transport_access='"[]"',
             functionality_roles='"[]"'
