@@ -1,4 +1,4 @@
-from flask import session, jsonify, request
+from flask import session, jsonify, request, g
 from flask_restx import Namespace, Resource
 from ..utils import need_access, get_address_from_coords, storage_id_to_name
 from ..models import User, CashWialon, Alert, TransferTasks, db, Transport, Storage, TransportModel, CashCesar, \
@@ -20,7 +20,7 @@ class GetCarInfo(Resource):
     @need_access('login')
     def get(self, lot_number):
         try:
-            user = User.query.filter_by(username=session['username']).first_or_404()
+            user = g.user
             user_role = get_user_roles(user)
             car = db.session.query(Transport).filter(Transport.uNumber == lot_number).first()
             result = {}
@@ -238,7 +238,7 @@ class CarsResource(Resource):
             'region': request.args.get('region', '')
         }
 
-        user = User.query.filter_by(username=session['username']).first_or_404()
+        user = g.user
         allowed_uNumbers = get_all_access_transport(user.username)
 
         if not allowed_uNumbers:

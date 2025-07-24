@@ -1,27 +1,28 @@
+import logging
+
 from flask import Blueprint, request, render_template, redirect, url_for, session, flash, g
 from .utils import need_access
 from .models import db, User, Reports
 from modules import hash_password
-from .utils.functionality_acccess import get_user_roles
 
+# Создаем Blueprint
 us_bp = Blueprint('user_profile', __name__)
-
+# Описываем основной логгер
+logger = logging.getLogger('flask_cm_spectr')
 
 @us_bp.before_request
-def set_user():
-    username = session.get('username')
-    if username:
-        g.user = User.query.filter_by(username=username).first()
-        g.role = get_user_roles(g.user)
-    else:
-        g.user = None
+def before_request():
+    logger.debug(
+        'Request: User=%s, Method=%s, URL=%s',
+        g.user, request.method, request.url,
+    )
 
 
 @us_bp.route('/')
 @need_access('login')
 def index():
-    user = User.query.filter_by(username=session['username']).first_or_404()
-    reports = Reports.query.filter_by(username=session['username']).order_by(Reports.id.desc()).all()
+    user = g.user
+    reports = Reports.query.filter_by(username=user.username).order_by(Reports.id.desc()).all()
     return(render_template('pages/user_profile/page.html', user=user, reports=reports))
 
 
@@ -30,7 +31,7 @@ def index():
 def change_email():
     if request.method == 'POST':
         new_email = request.form.get('email')
-        user = User.query.filter_by(username=session['username']).first_or_404()
+        user = g.user
         user.email = new_email
         db.session.commit()
         flash('Email успешно изменен.', 'success')
@@ -46,7 +47,7 @@ def change_password():
         new_password = request.form.get('new_password')
         new_password = hash_password.hash_password(new_password)
 
-        user = User.query.filter_by(username=session['username']).first_or_404()
+        user = g.user
         user.password = new_password
         db.session.commit()
         flash('Пароль успешно изменен.', 'success')

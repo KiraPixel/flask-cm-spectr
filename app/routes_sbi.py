@@ -1,4 +1,6 @@
-from flask import Blueprint, request, render_template, jsonify
+import logging
+
+from flask import Blueprint, request, render_template, jsonify, g
 from .models import db, Transport, Storage, TransportModel
 import json
 from sqlalchemy import func
@@ -6,6 +8,16 @@ from .utils import need_access
 
 
 sbi = Blueprint('sbi', __name__)
+# Описываем основной логгер
+logger = logging.getLogger('flask_cm_spectr')
+
+@sbi.before_request
+def before_request():
+    logger.debug(
+        'Request: User=%s, Method=%s, URL=%s',
+        g.user, request.method, request.url,
+    )
+
 
 @sbi.route('/')
 @need_access('sbi')
