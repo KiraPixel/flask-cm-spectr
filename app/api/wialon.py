@@ -1,7 +1,7 @@
 
 import os
 
-from flask import jsonify, request, session
+from flask import jsonify, request, session, g
 from flask_restx import Namespace, Resource
 
 
@@ -27,7 +27,7 @@ class WialonExecCmd(Resource):
     @need_access('car_command')
     def get(self, unit_id, command_name):
         """Выполнение команды на устройстве через Wialon"""
-        username = session.get('username')
+        username = g.user.username
 
         response_data, status_code = wialon_api.execute_command(username, unit_id,command_name)
 

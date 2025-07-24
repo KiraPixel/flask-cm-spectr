@@ -1,6 +1,6 @@
 import uuid
 
-from flask import session, abort, jsonify, request
+from flask import session, abort, jsonify, request, g
 from flask_restx import Namespace, Resource
 from ..utils import need_access, is_valid_api_key, get_api_key_by_username
 from ..models import User, db
@@ -26,7 +26,7 @@ class GenerateApiKey(Resource):
         while User.query.filter_by(api_token=new_api_key).first():
             new_api_key = generate_unique_api_key()  # Генерируем новый ключ, если такой уже существует
 
-        user = User.query.filter_by(username=session['username']).first_or_404()
+        user = g.user
 
         user.api_token = new_api_key
         db.session.commit()
@@ -51,11 +51,13 @@ class AuthorizeApiKey(Resource):
             abort(400, message="API key is required")
 
         # Проверка корректности ключа
-        if is_valid_api_key(api_key):
-            user = User.query.filter_by(api_token=api_key).first()
-            session.permanent = True
+        user_for_api_key = is_valid_api_key(api_key)
+        if user_for_api_key:
+            user = user_for_api_key
+            g.user = user
             session['username'] = user.username
-            return jsonify({'message': 'OK'})
+            session.permanent = True
+            return jsonify({'message': 'OK'}, 200)
         else:
             abort(401, message="Invalid API key")
 

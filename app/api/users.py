@@ -1,7 +1,7 @@
 from operator import and_
 
 import bleach
-from flask import request, jsonify, session
+from flask import request, jsonify, session, g
 from flask_restx import Namespace, Resource, fields
 from ..models import Comments, db, Alert, User
 from ..utils import need_access
@@ -124,7 +124,7 @@ class ChangePass(Resource):
         """Сменить пароль текущего пользователя"""
         args = change_pass_parser.parse_args()
         password = args['password']
-        user = User.query.filter_by(username=session['username']).first_or_404()
+        user = g.user
         user.password = hash_password.hash_password(password)
         db.session.commit()
         return {'status': 'password_changed'}, 200

@@ -1,6 +1,6 @@
 from functools import wraps
 
-from flask import session, flash, redirect, url_for, request
+from flask import session, flash, redirect, url_for, request, g
 
 from .functionality_acccess import get_user_roles
 from ..models import db, User, Storage, Coord, AlertType, Transport
@@ -17,18 +17,16 @@ def need_access(required_role):
 
             if api_key:
                 # Находим пользователя по API-ключу
-                if not is_valid_api_key(api_key):
-                    return 401
-                user = User.query.filter_by(api_token=api_key).first()
+                user_for_api_key = is_valid_api_key(api_key)
 
-                if user:
-                    # Если пользователь найден, записываем его в сессию
-                    session.permanent = True
-                    session['username'] = user.username
-                else:
-                    # Если пользователя с таким ключом нет, возвращаем ошибку
-                    flash('Неверный API-ключ', 'danger')
-                    return redirect(url_for('main.home'))  # Редирект на главную страницу
+                if not user_for_api_key:
+                    return 'invalid api key', 401
+
+                # Если пользователь найден, записываем его в сессию
+                user = user_for_api_key
+                g.user = user
+                session['username'] = user.username
+                session.permanent = True
 
             # Проверка, есть ли в сессии 'username'
             if 'username' not in session:
@@ -36,7 +34,7 @@ def need_access(required_role):
                 return redirect(url_for('main.login'))  # Редирект на страницу авторизации
 
             # Получаем пользователя из базы данных
-            user = User.query.filter_by(username=session['username']).first_or_404()
+            user = g.user
 
             # Устанавливаем текущее время для активности пользователя
             msk_time = datetime.datetime.fromtimestamp(my_time.now_unix_time(),
@@ -54,15 +52,15 @@ def need_access(required_role):
             if required_role not in get_user_roles(user):
                 # Новая система ролирования
                 if required_role != 'login':
+                    if api_key:
+                        return 'not accessed', 401
                     flash('Недостаточно прав для доступа', 'warning')
                     return redirect(url_for('main.home'))  # Редирект, если прав недостаточно
 
 
             # Если все проверки пройдены, вызываем основную функцию
             return f(*args, **kwargs)
-
         return decorated_function
-
     return decorator
 
 def get_address_from_coords(x, y):
@@ -119,8 +117,8 @@ def is_valid_api_key(api_key):
     """
     user = User.query.filter_by(api_token=api_key).first()
     if user:
-        return True
-    return False
+        return user
+    return None
 
 
 def get_api_key_by_username(username):
