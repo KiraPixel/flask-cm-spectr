@@ -5,15 +5,31 @@ from ..utils import need_access
 
 settings_ns = Namespace('settings', description='System settings')
 
+# Модель для системных настроек
+system_settings_model = settings_ns.model('SystemSettings', {
+    'enable_voperator': fields.Integer(description='Включение/выключение voperator: 0 (выключено), 1 (включено)'),
+    'enable_xml_parser': fields.Integer(description='Включение/выключение XML-парсера: 0 (выключено), 1 (включено)'),
+    'enable_db_cashing': fields.Integer(description='Включение/выключение кэширования базы данных: 0 (выключено), 1 (включено)')
+}, description='Системные настройки приложения')
 
 # Модель для входных данных
 status_model = settings_ns.model('StatusModel', {
     'status': fields.Integer(required=True, description='Status value (0 or 1)', example=1)
 })
 
+# Получение системных настроек
+@settings_ns.route('/system_settings')
+class SystemSettingsAPI(Resource):
+    @settings_ns.marshal_with(system_settings_model)
+    @need_access('admin_panel')
+    def get(self):
+        """Получить текущие системные настройки"""
+        settings = SystemSettings.query.first()
+        return settings
+
 class ChangeVOperatorStatus(Resource):
     @settings_ns.expect(status_model)
-    @need_access(1)
+    @need_access('admin_panel')
     def post(self):
         data = request.json
         status = data.get('status')
@@ -29,7 +45,7 @@ class ChangeVOperatorStatus(Resource):
 
 class ChangeXMLParserStatus(Resource):
     @settings_ns.expect(status_model)
-    @need_access(1)
+    @need_access('admin_panel')
     def post(self):
         data = request.json
         status = data.get('status')
@@ -46,7 +62,7 @@ class ChangeXMLParserStatus(Resource):
 
 class ChangeDBCashingStatus(Resource):
     @settings_ns.expect(status_model)
-    @need_access(1)
+    @need_access('admin_panel')
     def post(self):
         data = request.json
         status = data.get('status')

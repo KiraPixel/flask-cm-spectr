@@ -1,0 +1,199 @@
+<div class="tab-pane fade show active" id="users" role="tabpanel" aria-labelledby="users-tab">
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold fs-3">Пользователи</h2>
+            <button class="btn btn-primary rounded-pill px-4 py-2" data-bs-toggle="modal" data-bs-target="#inviteUserModal">
+                <i class="bi bi-person-plus me-2"></i>Пригласить пользователя
+            </button>
+        </div>
+
+        <!-- Поиск пользователей -->
+        <div class="mb-4">
+            <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input type="text" class="form-control rounded-3" id="userSearch" placeholder="Поиск по имени или email...">
+            </div>
+        </div>
+
+        <!-- Таблица пользователей -->
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <table class="table table-hover">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4">Имя пользователя</th>
+                            <th>Email</th>
+                            <th>Последний вход</th>
+                            <th class="pe-4">Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody">
+                        <!-- Данные пользователей загружаются через JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Модальное окно для приглашения пользователя -->
+        <div class="modal fade" id="inviteUserModal" tabindex="-1" aria-labelledby="inviteUserModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content rounded-4">
+                    <div class="modal-header border-0 pb-2">
+                        <h5 class="modal-title fw-bold" id="inviteUserModalLabel">Пригласить пользователя</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="inviteUserForm">
+                            <div class="mb-3">
+                                <label for="username" class="form-label fw-semibold">Имя пользователя</label>
+                                <input type="text" class="form-control rounded-3" id="username" name="username" placeholder="Введите имя пользователя" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="email" class="form-label fw-semibold">Email</label>
+                                <input type="email" class="form-control rounded-3" id="email" name="email" placeholder="Введите email" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary rounded-pill w-100">Пригласить</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Модальное окно для редактирования пользователя -->
+        <div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content rounded-4">
+                    <div class="modal-header border-0 pb-2">
+                        <h5 class="modal-title fw-bold" id="editUserModalLabel">Редактировать пользователя</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="editUserForm">
+                            <div class="mb-3">
+                                <label for="editUsername" class="form-label fw-semibold">Имя пользователя</label>
+                                <input type="text" class="form-control rounded-3" id="editUsername" name="username" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="editEmail" class="form-label fw-semibold">Email</label>
+                                <input type="email" class="form-control rounded-3" id="editEmail" name="email" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="editRole" class="form-label fw-semibold">Роль</label>
+                                <select class="form-select rounded-3" id="editRole" name="role">
+                                    <option value="1">Администратор</option>
+                                    <option value="0">Пользователь</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary rounded-pill w-100">Сохранить изменения</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Модальное окно для подтверждения сброса пароля -->
+        <div class="modal fade" id="resetPasswordModal" tabindex="-1" aria-labelledby="resetPasswordModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content rounded-4">
+                    <div class="modal-header border-0 pb-2">
+                        <h5 class="modal-title fw-bold" id="resetPasswordModalLabel">Подтверждение сброса пароля</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Вы уверены, что хотите сбросить пароль для этого пользователя?</p>
+                    </div>
+                    <div class="modal-footer border-0">
+                        <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">Отмена</button>
+                        <button type="button" class="btn btn-danger rounded-pill" id="confirmResetPassword">Сбросить пароль</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Модальное окно для управления доступами к транспорту -->
+        <div class="modal fade" id="userTransportAccessModal" tabindex="-1" aria-labelledby="userTransportAccessModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-xl modal-dialog-centered">
+                <div class="modal-content rounded-4">
+                    <div class="modal-header border-0 pb-2">
+                        <h5 class="modal-title fw-bold" id="userTransportAccessModalLabel">Настройка доступа к транспорту</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="text-muted mb-4">Настройте правила доступа по регионам, менеджерам или номерам транспорта. Выберите тип правила (И, ИЛИ, И НЕ, ВСЕ) и значение.</p>
+                        <div id="accessRulesContainer" class="mb-3"></div>
+                        <button type="button" class="btn btn-outline-primary rounded-pill" id="addAccessRule">
+                            <i class="bi bi-plus-circle me-2"></i>Добавить правило
+                        </button>
+                        <form id="transportAccessForm" class="d-none">
+                            <input type="hidden" id="transportAccessRules" name="transport_access">
+                        </form>
+                        <div id="accessRuleTemplate" class="d-none">
+                            <div class="rule-row mb-3 p-3 bg-body-secondary rounded shadow-sm">
+                                <div class="row align-items-end">
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-semibold">Тип правила</label>
+                                        <select class="form-select rounded-3 rule-type">
+                                            <option value="OR">ИЛИ</option>
+                                            <option value="AND">И</option>
+                                            <option value="AND NOT">И НЕ</option>
+                                            <option value="ALL">ВСЕ</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-semibold">Параметр</label>
+                                        <select class="form-select rounded-3 rule-param">
+                                            <option value="region">Регион</option>
+                                            <option value="manager">Менеджер</option>
+                                            <option value="uNumber">Номер транспорта</option>
+                                            <option value="ALL">ВСЕ</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-5 position-relative">
+                                        <label class="form-label fw-semibold">Значение</label>
+                                        <input type="text" class="form-control rounded-3 rule-value" placeholder="Выберите значение...">
+                                        <div class="autocomplete-suggestions position-absolute w-100 bg-white border rounded shadow-sm d-none" style="z-index: 1000; top: 100%; max-height: 200px; overflow-y: auto;"></div>
+                                        <small class="invalid-value-icon text-danger d-none mt-1"><i class="bi bi-exclamation-circle me-1"></i>Значение недоступно</small>
+                                    </div>
+                                    <div class="col-md-1">
+                                        <button type="button" class="btn btn-outline-danger btn-sm rounded-circle remove-rule">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0">
+                        <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">Отмена</button>
+                        <button type="button" class="btn btn-primary rounded-pill" id="saveTransportAccess">Сохранить</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Модальное окно для управления ролями функциональности -->
+        <div class="modal fade" id="userFunctionalityRolesModal" tabindex="-1" aria-labelledby="userFunctionalityRolesModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content rounded-4">
+                    <div class="modal-header border-0 pb-2">
+                        <h5 class="modal-title fw-bold" id="userFunctionalityRolesModalLabel">Настройка ролей функциональности</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="text-muted mb-4">Выберите роли функциональности для пользователя, отметив нужные галочки. Роли сгруппированы по категориям.</p>
+                        <div id="functionalityRolesContainer" class="mb-3"></div>
+                        <form id="functionalityRolesForm" class="d-none">
+                            <input type="hidden" id="functionalityRoles" name="functionality_roles">
+                        </form>
+                    </div>
+                    <div class="modal-footer border-0">
+                        <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">Отмена</button>
+                        <button type="button" class="btn btn-primary rounded-pill" id="saveFunctionalityRoles">Сохранить</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>{% include 'pages/admin_panel/user.js' %}</script>

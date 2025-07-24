@@ -1,28 +1,47 @@
-from symtable import Class
+from operator import and_
 
 import bleach
 from flask import request, jsonify, session
 from flask_restx import Namespace, Resource, fields
-
-from app.models import Comments, db, Alert
-from app.utils import need_access
+from ..models import Comments, db, Alert, User
+from ..utils import need_access
+from modules import hash_password
 from modules.my_time import now_unix_time
 
-user_ns = Namespace('users', description='user staff')
+user_ns = Namespace('users', description='Операции с пользователями')
 
+# Парсер для добавления комментария
 add_comment_parser = user_ns.parser()
-add_comment_parser.add_argument('text', type=str, required=True, help='Текст комментария', location='form')
-add_comment_parser.add_argument('uNumber', type=str, required=True, help='Уникальный номер авто', location='form')
+add_comment_parser.add_argument('text', type=str, required=True, help='Текст комментария (максимум 500 символов)', location='form')
+add_comment_parser.add_argument('uNumber', type=str, required=True, help='Уникальный номер автомобиля', location='form')
 
+# Парсер для редактирования комментария
+edit_comment_parser = user_ns.parser()
+edit_comment_parser.add_argument('comment_id', type=int, required=True, help='ID комментария', location='form')
+edit_comment_parser.add_argument('text', type=str, required=False, help='Текст комментария (максимум 500 символов)', location='form')
+edit_comment_parser.add_argument('action', type=str, required=False, help='Действие: "delete" для удаления комментария', location='form')
+
+# Парсер для редактирования комментария к алерту
+edit_comment_model = user_ns.model('EditAlertComment', {
+    'comment_id': fields.Integer(required=True, description='ID алерта'),
+    'comment': fields.String(required=True, description='Текст комментария (максимум 500 символов)')
+}, description='Данные для редактирования комментария к алерту')
+
+# Парсер для смены пароля
+change_pass_parser = user_ns.parser()
+change_pass_parser.add_argument('password', type=str, required=True, help='Новый пароль пользователя', location='form')
+
+
+# Добавление комментария
 @user_ns.route('/add_comment')
 class AddComment(Resource):
     @user_ns.expect(add_comment_parser)
-    @need_access(-1)
+    @need_access('car_comments')
     def post(self):
+        """Добавить новый комментарий к автомобилю"""
         text = request.form.get('text', '').strip()
         uNumber = request.form.get('uNumber')
         author = session.get('username')
-        print(text, uNumber, author)
         if not text or not uNumber or not author:
             return jsonify({'status': 'comment_deny'})
 
@@ -36,17 +55,13 @@ class AddComment(Resource):
 
         return jsonify({'status': 'comment_ok'})
 
-
-edit_comment_parser = user_ns.parser()
-edit_comment_parser.add_argument('comment_id', type=int, required=True, location='form')
-edit_comment_parser.add_argument('text', type=str, required=False, help='Текст комментария', location='form')
-edit_comment_parser.add_argument('action', type=str, required=False, help='Передать delete для удаления', location='form')
-
+# Редактирование или удаление комментария
 @user_ns.route('/edit_comment')
 class EditComment(Resource):
     @user_ns.expect(edit_comment_parser)
-    @need_access(-1)
+    @need_access('car_comments')
     def post(self):
+        """Редактировать или удалить существующий комментарий"""
         comment_id = request.form.get('comment_id')
         action = request.form.get('action')
         author = session.get('username')
@@ -55,18 +70,15 @@ class EditComment(Resource):
         if not comment_id or not author:
             return jsonify({'status': 'edit_deny'})
 
-        # Находим комментарий по ID и проверяем, что автор совпадает
         comment = Comments.query.get(comment_id)
         if not comment or comment.author != author:
             return jsonify({'status': 'edit_deny'})
 
-        # Если действие "удалить", обновляем uNumber
         if action == 'delete':
             comment.uNumber = f"{comment.uNumber}_removed"
             db.session.commit()
             return jsonify({'status': 'edit_ok'})
 
-        # Для редактирования текста
         if not text or len(text) > 500:
             return jsonify({'status': 'edit_deny'})
 
@@ -75,16 +87,13 @@ class EditComment(Resource):
 
         return jsonify({'status': 'edit_ok'})
 
-edit_comment_model = user_ns.model('EditAlertComment', {
-    'comment_id': fields.String(required=True, description='ID алерта'),
-    'comment': fields.String(required=True, description='Текст комментария')
-})
-
+# Редактирование комментария к алерту
 @user_ns.route('/edit_alert_comment')
 class EditAlertComment(Resource):
     @user_ns.expect(edit_comment_model, validate=True)
-    @need_access(-1)
+    @need_access('voperator')
     def post(self):
+        """Редактировать комментарий к алерту"""
         data = request.json
         report_id = data.get('comment_id')
         new_comment = data.get('comment')
@@ -95,7 +104,6 @@ class EditAlertComment(Resource):
 
         report = Alert.query.get(report_id)
 
-        # Для редактирования текста
         text = new_comment.strip()
         if not text or len(text) > 500:
             return jsonify({'status': 'edit_deny'})
@@ -106,3 +114,17 @@ class EditAlertComment(Resource):
         db.session.commit()
 
         return jsonify({'status': 'edit_ok'})
+
+# Смена пароля текущим пользователем
+@user_ns.route('/change_pass')
+class ChangePass(Resource):
+    @user_ns.expect(change_pass_parser)
+    @need_access('login')
+    def put(self):
+        """Сменить пароль текущего пользователя"""
+        args = change_pass_parser.parse_args()
+        password = args['password']
+        user = User.query.filter_by(username=session['username']).first_or_404()
+        user.password = hash_password.hash_password(password)
+        db.session.commit()
+        return {'status': 'password_changed'}, 200

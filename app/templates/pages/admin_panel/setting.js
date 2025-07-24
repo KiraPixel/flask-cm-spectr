@@ -1,0 +1,195 @@
+document.addEventListener('DOMContentLoaded', () => {
+    const loading = document.getElementById('loading');
+    const errorDiv = document.getElementById('error');
+    const container = document.getElementById('settingsContainer');
+
+    // Функция для показа уведомлений через Bootstrap alert
+    const showAlert = (message, type) => {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed bottom-0 start-50 translate-middle-x mb-4 shadow`;
+        alertDiv.style.zIndex = '1050';
+        alertDiv.style.width = '90%';
+        alertDiv.style.maxWidth = '500px';
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Закрыть"></button>
+        `;
+        document.body.appendChild(alertDiv);
+        setTimeout(() => {
+            alertDiv.remove();
+        }, 3000);
+    };
+
+    // Форматирование времени
+    const formatTime = (timestamp) => {
+        if (timestamp === 'No data' || !timestamp) return 'Нет данных';
+        try {
+            const date = new Date(parseInt(timestamp) * 1000);
+            return date.toLocaleString('ru-RU', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+        } catch {
+            return 'Неверный формат времени';
+        }
+    };
+
+    // Загрузка системных настроек и статуса
+    window.loadSettings = async function() {
+        if (!container || !loading || !errorDiv) {
+            console.error('Необходимые элементы не найдены');
+            showAlert('Ошибка инициализации интерфейса', 'danger');
+            return;
+        }
+
+        loading.style.display = 'block';
+        errorDiv.style.display = 'none';
+        container.innerHTML = ''; // Очистка контейнера перед загрузкой
+
+        try {
+            // Запрос настроек
+            const settingsResponse = await fetch('/api/settings/system_settings', {
+                headers: { 'Content-Type': 'application/json' },
+                redirect: 'follow',
+                credentials: 'same-origin'
+            });
+            if (!settingsResponse.ok) {
+                throw new Error(`HTTP error! status: ${settingsResponse.status}`);
+            }
+            const settingsData = await settingsResponse.json();
+            if (!settingsData || typeof settingsData !== 'object' || !('enable_voperator' in settingsData)) {
+                throw new Error('Неверный формат данных настроек');
+            }
+
+            // Запрос статуса
+            const healthResponse = await fetch('/api/health', {
+                headers: { 'Content-Type': 'application/json' },
+                redirect: 'follow',
+                credentials: 'same-origin'
+            });
+            if (!healthResponse.ok) {
+                throw new Error(`HTTP error! status: ${healthResponse.status}`);
+            }
+            const healthData = await healthResponse.json();
+            if (!healthData || typeof healthData !== 'object') {
+                throw new Error('Неверный формат данных статуса');
+            }
+
+            const modules = [
+                {
+                    name: 'Виртуальный оператор',
+                    status: settingsData.enable_voperator,
+                    url: '/api/settings/change_voperator_status',
+                    icon: 'bi-robot',
+                    health: healthData.voperator_module || { status: 0, last_time: 'No data' }
+                },
+                {
+                    name: '1С парсер',
+                    status: settingsData.enable_xml_parser,
+                    url: '/api/settings/change_xmlparser_status',
+                    icon: 'bi-file-code',
+                    health: healthData.xml_parser_module || { status: 0, last_time: 'No data' }
+                },
+                {
+                    name: 'ДБ кэшинг',
+                    status: settingsData.enable_db_cashing,
+                    url: '/api/settings/change_dbcashing_status',
+                    icon: 'bi-database',
+                    health: healthData.cashing_module || { status: 0, last_time: 'No data' }
+                }
+            ];
+
+            modules.forEach(module => {
+                const card = document.createElement('div');
+                card.className = 'col-md-6 col-lg-4';
+                card.innerHTML = `
+                    <div class="card border-0 shadow-sm h-100 rounded-4 overflow-hidden transition-all">
+                        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center rounded-top-4 py-3 px-4">
+                            <h5 class="mb-0 fw-semibold"><i class="bi ${module.icon} me-2"></i>${module.name}</h5>
+                            <button class="btn btn-sm ${module.status === 1 ? 'btn-danger' : 'btn-success'} rounded-pill px-3 py-1 module-btn transition-all" data-status="${module.status}" data-module="${module.name}" data-url="${module.url}">
+                                ${module.status === 1 ? 'Выключить' : 'Включить'}
+                            </button>
+                        </div>
+                        <div class="card-body py-4 px-4">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="bi bi-power me-2 ${module.status === 1 ? 'text-success' : 'text-danger'} fs-5"></i>
+                                <span class="badge ${module.status === 1 ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'} rounded-pill px-3 py-2 me-2">${module.status === 1 ? 'Включено' : 'Выключено'}</span>
+                                <i class="bi bi-heart-pulse me-2 ${module.health.status === 1 ? 'text-success' : 'text-danger'} fs-5"></i>
+                                <span class="badge ${module.health.status === 1 ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'} rounded-pill px-3 py-2">${module.health.status === 1 ? 'Работает' : 'Не работает'}</span>
+                            </div>
+                            <div class="text-muted">
+                                <small>Последнее обновление: ${formatTime(module.health.last_time)}</small>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+
+            // Добавление обработчиков для кнопок
+            document.querySelectorAll('.module-btn').forEach(button => {
+                button.addEventListener('click', () => {
+                    const confirmButton = document.querySelector('.confirm-module-btn');
+                    if (!confirmButton) {
+                        console.error('Кнопка подтверждения не найдена');
+                        showAlert('Кнопка подтверждения не найдена', 'danger');
+                        return;
+                    }
+                    document.getElementById('changeModuleLabel').textContent = `Подтверждение изменения статуса: ${button.getAttribute('data-module')}`;
+                    confirmButton.setAttribute('data-url', button.getAttribute('data-url'));
+                    confirmButton.setAttribute('data-status', button.getAttribute('data-status'));
+                    bootstrap.Modal.getOrCreateInstance(document.getElementById('changeModuleModal')).show();
+                });
+            });
+
+        } catch (error) {
+            console.error('Ошибка при загрузке данных:', error);
+            showAlert(`Ошибка при загрузке данных: ${error.message}`, 'danger');
+        } finally {
+            loading.style.display = 'none';
+        }
+    };
+
+    // Обработчик для подтверждения изменения статуса модуля
+    const confirmButton = document.querySelector('.confirm-module-btn');
+    if (confirmButton) {
+        confirmButton.addEventListener('click', async () => {
+            const url = confirmButton.getAttribute('data-url');
+            const status = confirmButton.getAttribute('data-status');
+            const newStatus = status === '1' ? 0 : 1;
+
+            loading.style.display = 'block';
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: newStatus }),
+                    credentials: 'same-origin'
+                });
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                if (data.message && (data.status === 0 || data.status === 1)) {
+                    showAlert(data.message, 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('changeModuleModal')).hide();
+                    await window.loadSettings(); // Перезагрузка данных после изменения статуса
+                } else {
+                    showAlert(data.message || 'Ошибка при изменении статуса модуля', 'danger');
+                }
+            } catch (error) {
+                console.error('Ошибка при изменении статуса модуля:', error);
+                showAlert(`Ошибка при изменении статуса модуля: ${error.message}`, 'danger');
+            } finally {
+                loading.style.display = 'none';
+            }
+        });
+    } else {
+        console.error('Кнопка подтверждения не найдена');
+        showAlert('Ошибка инициализации интерфейса', 'danger');
+    }
+});

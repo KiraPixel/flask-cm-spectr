@@ -3,15 +3,14 @@ import uuid
 from flask import session, abort, jsonify, request
 from flask_restx import Namespace, Resource
 from ..utils import need_access, is_valid_api_key, get_api_key_by_username
-from ..models import User, CashWialon, Alert, TransferTasks, db
-from modules.my_time import one_hours_ago_unix, forty_eight_hours_ago_unix, now_unix_time
+from ..models import User, db
 
 api_key_ns = Namespace('key', description='API key')
 
 
 @api_key_ns.route('/generate-api-key')
 class GenerateApiKey(Resource):
-    @need_access(-1)
+    @need_access('login')
     def get(self):
         # Получаем данные пользователя из сессии
         user = session.get('username')
@@ -63,7 +62,7 @@ class AuthorizeApiKey(Resource):
 
 @api_key_ns.route('/get-api-key')
 class GetApiKey(Resource):
-    @need_access(0)
+    @need_access('admin_panel')
     def get(self):
         # Получаем username из сессии
         username = session.get('username')

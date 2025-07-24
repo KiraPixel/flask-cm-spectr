@@ -18,19 +18,25 @@
                 <li class="nav-item">
                     <a class="nav-link {% if request.endpoint == 'main.home' %}active{% endif %}" href="/">Главная</a>
                 </li>
+                {% if 'map' in g.role %}
                 <li class="nav-item">
                     <a class="nav-link {% if request.endpoint == 'main.maps' %}active{% endif %}" href="/maps">Карта</a>
                 </li>
-                {% if g.user.role > -1 %}
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'main.virtual_operator' %}active{% endif %}" href="/virtual_operator">Диспетчер</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'main.dashboard' %}active{% endif %}" href="/dashboard">Дашборд</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'main.reports' %}active{% endif %}" href="/rep">Отчёты</a>
-                    </li>
+                {% endif %}
+                {% if 'voperator' in g.role %}
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'main.virtual_operator' %}active{% endif %}" href="/virtual_operator">Диспетчер</a>
+                </li>
+                {% endif %}
+                {% if 'dashboard' in g.role %}
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'main.dashboard' %}active{% endif %}" href="/dashboard">Дашборд</a>
+                </li>
+                {% endif %}
+                {% if 'reports' in g.role %}
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'main.reports' %}active{% endif %}" href="/rep">Отчёты</a>
+                </li>
                 {% endif %}
             </ul>
 
@@ -46,17 +52,20 @@
                     <!-- Меню пользователя -->
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="userMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            {{ session.username }}
+                            {{ g.user.username }}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
                             <li><a class="dropdown-item" href="{{ url_for('user_profile.index') }}">Профиль</a></li>
-                            {% if g.user.role == 1 %}
-                                <li><a class="dropdown-item" href="/admin">Админ-панель</a></li>
-                                <li><a class="dropdown-item" href="/admin/parser">Парсер</a></li>
-                                <li><a class="dropdown-item" href="/alerts_presets">Пресеты оповещений</a></li>
+                            {% if 'admin_panel' in g.role %}
+                            <li><a class="dropdown-item" href="/admin">Админ-панель</a></li>
+                            {% endif %}
+                            {% if 'parser' in g.role %}
+                            <li><a class="dropdown-item" href="/admin/parser">Парсер</a></li>
                             {% endif %}
                             <li><a class="dropdown-item" href="/api">Документация API</a></li>
+                            {% if 'sbi' in g.role %}
                             <li><a class="dropdown-item" href="/sbi">S-BI</a></li>
+                            {% endif %}
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="{{ url_for('main.logout') }}">Выход</a></li>
                         </ul>

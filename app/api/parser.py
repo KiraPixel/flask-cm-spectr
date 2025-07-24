@@ -28,7 +28,7 @@ class AddNewCar(Resource):
     @parser_ns.response(200, 'Успешно добавлено')
     @parser_ns.response(400, 'Неверный запрос (например, отсутствуют параметры)')
     @parser_ns.response(500, 'Ошибка при выполнении запроса к базе данных')
-    @need_access(1)
+    @need_access('parser')
     def post(self):
         """Добавление нового автомобиля"""
         data = request.json
@@ -114,7 +114,7 @@ close_task = parser_ns.model('CloseTask', {
 @parser_ns.route('/close_task')
 class CloseTask(Resource):
     @parser_ns.expect(close_task)
-    @need_access(1)
+    @need_access('parser')
     def post(self):
         data = request.json
         task_id = data.get('task_id')

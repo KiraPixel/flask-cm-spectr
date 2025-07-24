@@ -14,9 +14,8 @@ class User(db.Model):
     first_login = db.Column(db.DateTime, nullable=True, default='1999-12-02 00:00:00')
     password_activated_date = db.Column(db.DateTime, nullable=True, default='1999-12-02 00:00:00')
     email = db.Column(db.String, nullable=False)
-    access_managers = db.Column(db.JSON)
-    access_regions = db.Column(db.JSON)
-    cesar_access = db.Column(db.Integer, nullable=True, default=0)
+    transport_access = db.Column(db.JSON)
+    functionality_roles = db.Column(db.JSON)
     api_token = db.Column(db.String, nullable=True)
 
     def __repr__(self):
@@ -205,6 +204,7 @@ class IgnoredStorage(db.Model):
     pos_x = db.Column(db.Float, nullable=False)
     pos_y = db.Column(db.Float, nullable=False)
     radius = db.Column(db.Integer, nullable=False)
+    address = db.Column(db.Text, nullable=True)
 
 
 class ParserTasks(db.Model):
@@ -238,6 +238,15 @@ class SystemSettings(db.Model):
     enable_voperator = db.Column(db.Integer)
     enable_xml_parser = db.Column(db.Integer)
     enable_db_cashing = db.Column(db.Integer)
+
+
+class FunctionalityAccess(db.Model):
+    __tablename__ = 'user_functionality_access'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100))
+    localization = db.Column(db.String(100))
+    category = db.Column(db.String(100))
+    category_localization = db.Column(db.String(100))
 
 
 def insert_mailing_record_sqlalchemy(target, subject, content, html_template=None, attachment_name=None, attachment_content=None):

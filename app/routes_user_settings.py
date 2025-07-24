@@ -2,17 +2,23 @@ from flask import Blueprint, request, render_template, redirect, url_for, sessio
 from .utils import need_access
 from .models import db, User, Reports
 from modules import hash_password
+from .utils.functionality_acccess import get_user_roles
 
 us_bp = Blueprint('user_profile', __name__)
 
 
 @us_bp.before_request
 def set_user():
-    g.user = User.query.filter_by(username=session['username']).first()
+    username = session.get('username')
+    if username:
+        g.user = User.query.filter_by(username=username).first()
+        g.role = get_user_roles(g.user)
+    else:
+        g.user = None
 
 
 @us_bp.route('/')
-@need_access(-2)
+@need_access('login')
 def index():
     user = User.query.filter_by(username=session['username']).first_or_404()
     reports = Reports.query.filter_by(username=session['username']).order_by(Reports.id.desc()).all()
@@ -20,7 +26,7 @@ def index():
 
 
 @us_bp.route('/email', methods=['GET', 'POST'])
-@need_access(-2)
+@need_access('login')
 def change_email():
     if request.method == 'POST':
         new_email = request.form.get('email')
@@ -34,7 +40,7 @@ def change_email():
 
 
 @us_bp.route('/pass', methods=['GET', 'POST'])
-@need_access(-2)
+@need_access('login')
 def change_password():
     if request.method == 'POST':
         new_password = request.form.get('new_password')

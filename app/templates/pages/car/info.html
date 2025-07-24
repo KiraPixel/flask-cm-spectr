@@ -1,5 +1,6 @@
 <div class="tab-pane fade show active" id="info" role="tabpanel" aria-labelledby="info-tab">
     <div class="row g-3">
+        {% if 'car_info_storage' in g.role %}
         <div class="col-12">
             <div class="card border-0 shadow-sm rounded-3">
                 <div class="card-header rounded-top-3">
@@ -13,6 +14,8 @@
                 </div>
             </div>
         </div>
+        {% endif %}
+        {% if 'car_info_model' in g.role %}
         <div class="col-12">
             <div class="card border-0 shadow-sm rounded-3">
                 <div class="card-header rounded-top-3">
@@ -32,6 +35,8 @@
                 </div>
             </div>
         </div>
+        {% endif %}
+        {% if 'car_info_rent' in g.role %}
         <div class="col-12">
             <div class="card border-0 shadow-sm rounded-3">
                 <div class="card-header rounded-top-3">
@@ -48,55 +53,74 @@
                 </div>
             </div>
         </div>
+        {% endif %}
     </div>
 </div>
 
 <script>
-    console.log('Info script loaded'); // Для отладки
-    window.addEventListener('carDataLoaded', function() {
-        console.log('carDataLoaded event received in Info'); // Для отладки
-        if (window.carData && window.carData.transport) {
-            document.getElementById('storage_name').textContent = window.carData.storage?.name || '-';
-            document.getElementById('storage_type').textContent = window.carData.storage?.type || '-';
-            document.getElementById('storage_region').textContent = window.carData.storage?.region || '-';
-            document.getElementById('storage_address').textContent = window.carData.storage?.address || '-';
-            document.getElementById('model_type').textContent = window.carData.transport_model?.type || '-';
-            document.getElementById('model_name').textContent = window.carData.transport_model?.name || '-';
-            document.getElementById('model').textContent = window.carData.transport_model?.model || '-';
-            document.getElementById('machine_type').textContent = window.carData.transport_model?.machine_type || '-';
-            document.getElementById('brand').textContent = window.carData.transport_model?.brand || '-';
-            document.getElementById('lift_type').textContent = window.carData.transport_model?.lift_type || '-';
-            document.getElementById('engine').textContent = window.carData.transport_model?.engine || '-';
-            document.getElementById('vin').textContent = window.carData.transport?.vin || '-';
-            document.getElementById('manufacture_year').textContent = window.carData.transport?.manufacture_year || '-';
-            document.getElementById('customer').textContent = window.carData.rent?.customer || '-';
-            document.getElementById('customer_contact').textContent = window.carData.rent?.customer_contact || '-';
-            document.getElementById('manager').textContent = window.carData.rent?.manager || '-';
+console.log('Info script loaded'); // Для отладки
 
-            // Установка координат и добавление data-coords
-            const coords = window.carData.rent?.x && window.carData.rent?.y
-                ? `${window.carData.rent.x}, ${window.carData.rent.y}`
-                : '-';
-            const coordsElement = document.getElementById('coordinates');
-            coordsElement.textContent = coords;
-            coordsElement.setAttribute('data-coords', coords);
-            coordsElement.style.cursor = coords === '-' ? 'default' : 'pointer';
-            coordsElement.style.color = coords === '-' ? 'inherit' : 'var(--bs-primary)';
+window.addEventListener('carDataLoaded', function() {
 
-            // Добавление обработчика клика на координаты
-            coordsElement.addEventListener('click', function() {
-                const coordsStr = this.getAttribute('data-coords');
-                if (coordsStr && coordsStr !== '-') {
-                    const [lat, lon] = coordsStr.split(',').map(Number);
-                    if (!isNaN(lat) && !isNaN(lon) && window.MapController) {
-                        window.MapController.setCenter([lat, lon], 15); // Зум до уровня 15
-                    }
-                }
-            });
-
-            document.getElementById('address').textContent = window.carData.rent?.address || '-';
+    // Функция для безопасного обновления textContent
+    function setTextContent(elementId, value) {
+        const element = document.getElementById(elementId);
+        if (element) {
+            element.textContent = value || '-';
         }
-    });
+    }
+
+    // Информация о складе
+    setTextContent('storage_name', window.carData.storage?.name);
+    setTextContent('storage_type', window.carData.storage?.type);
+    setTextContent('storage_region', window.carData.storage?.region);
+    setTextContent('storage_address', window.carData.storage?.address);
+
+    // Информация о модели транспортного средства (если есть)
+    setTextContent('model_type', window.carData.transport_model?.type);
+    setTextContent('model_name', window.carData.transport_model?.name);
+    setTextContent('model', window.carData.transport_model?.model);
+    setTextContent('machine_type', window.carData.transport_model?.machine_type);
+    setTextContent('brand', window.carData.transport_model?.brand);
+    setTextContent('lift_type', window.carData.transport_model?.lift_type);
+    setTextContent('engine', window.carData.transport_model?.engine);
+    setTextContent('vin', window.carData.transport?.vin);
+    setTextContent('manufacture_year', window.carData.transport?.manufacture_year);
+
+    // Информация об аренде
+    setTextContent('customer', window.carData.rent?.customer);
+    setTextContent('customer_contact', window.carData.rent?.customer_contact);
+    setTextContent('manager', window.carData.rent?.manager);
+
+    // Установка координат и добавление data-coords
+    const coordsElement = document.getElementById('coordinates');
+    if (coordsElement) {
+        const coords = window.carData.rent?.x && window.carData.rent?.y
+            ? `${window.carData.rent.x}, ${window.carData.rent.y}`
+            : '-';
+        coordsElement.textContent = coords;
+        coordsElement.setAttribute('data-coords', coords);
+        coordsElement.style.cursor = coords === '-' ? 'default' : 'pointer';
+        coordsElement.style.color = coords === '-' ? 'inherit' : 'var(--bs-primary)';
+
+        // Добавление обработчика клика на координаты
+        coordsElement.addEventListener('click', function() {
+            const coordsStr = this.getAttribute('data-coords');
+            if (coordsStr && coordsStr !== '-') {
+                const [lat, lon] = coordsStr.split(',').map(Number);
+                if (!isNaN(lat) && !isNaN(lon) && window.MapController) {
+                    window.MapController.setCenter([lat, lon], 15); // Зум до уровня 15
+                } else {
+                    console.error('Ошибка: Некорректные координаты или MapController не определен');
+                }
+            }
+        });
+    } else {
+        console.error('Ошибка: Элемент с id "coordinates" не найден в DOM');
+    }
+
+    setTextContent('address', window.carData.rent?.address);
+});
 </script>
 
 

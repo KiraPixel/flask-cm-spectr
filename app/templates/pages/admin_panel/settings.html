@@ -1,0 +1,24 @@
+<div class="tab-pane fade" id="settings" role="tabpanel" aria-labelledby="settings-tab">
+    <div id="settingsContainer" class="row g-4"></div>
+</div>
+
+<!-- Модальное окно для подтверждения изменения статуса модуля -->
+<div class="modal fade" id="changeModuleModal" tabindex="-1" aria-labelledby="changeModuleLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 shadow-lg border-0">
+            <div class="modal-header border-0 pb-2 px-4">
+                <h5 class="modal-title fw-bold" id="changeModuleLabel">Подтверждение</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+            </div>
+            <div class="modal-body px-4 py-3">
+                <p class="mb-0">Вы уверены, что хотите изменить статус модуля?</p>
+            </div>
+            <div class="modal-footer border-0 pt-2 px-4">
+                <button type="button" class="btn btn-outline-secondary rounded-pill px-4 py-2" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-primary rounded-pill px-4 py-2 confirm-module-btn">Подтвердить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>{% include 'pages/admin_panel/setting.js' %}</script>

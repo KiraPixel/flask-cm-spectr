@@ -1,0 +1,70 @@
+<div class="tab-pane fade" id="alerts-presets" role="tabpanel" aria-labelledby="alerts-presets-tab">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-semibold fs-4">Пресеты оповещений</h2>
+        <button class="btn btn-primary rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#presetModal">
+            <i class="bi bi-plus-circle me-2"></i>Создать пресет
+        </button>
+    </div>
+    <div id="presetsContainer" class="row g-4"></div>
+</div>
+
+<!-- Модальное окно для создания/редактирования пресета оповещений -->
+<div class="modal fade" id="presetModal" tabindex="-1" aria-labelledby="presetModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content rounded-4">
+            <div class="modal-header border-0 pb-2">
+                <h5 class="modal-title fw-bold" id="presetModalLabel">Новый пресет</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+            </div>
+            <div class="modal-body">
+                <form id="presetForm">
+                    <input type="hidden" id="presetId" name="preset_id">
+                    <div class="mb-4">
+                        <label for="presetName" class="form-label fw-semibold">Название пресета</label>
+                        <input type="text" class="form-control rounded-3" id="presetName" name="preset_name" placeholder="Введите название" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Типы алертов</label>
+                        <div id="alertTypesContainer" class="list-group"></div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <label for="wialonDangerDistance" class="form-label fw-semibold">Опасное расстояние (км)</label>
+                            <input type="number" class="form-control rounded-3" id="wialonDangerDistance" name="wialon_danger_distance" value="5" min="0" required>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <label for="wialonDangerHoursNotWork" class="form-label fw-semibold">Часы простоя</label>
+                            <input type="number" class="form-control rounded-3" id="wialonDangerHoursNotWork" name="wialon_danger_hours_not_work" value="72" min="0" required>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label for="active" class="form-label fw-semibold">Активен</label>
+                        <select class="form-select rounded-3" id="active" name="active">
+                            <option value="1">Да</option>
+                            <option value="0">Нет</option>
+                        </select>
+                    </div>
+                    <div class="mb-4">
+                        <label for="editable" class="form-label fw-semibold">Редактируемость</label>
+                        <select class="form-select rounded-3" id="editable" name="editable">
+                            <option value="1">Да</option>
+                            <option value="0">Нет</option>
+                        </select>
+                    </div>
+                    <div class="mb-4">
+                        <label for="personalized" class="form-label fw-semibold">Персонализация</label>
+                        <select class="form-select rounded-3" id="personalized" name="personalized">
+                            <option value="0">Нет</option>
+                            <option value="1">Да</option>
+                        </select>
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <button type="submit" class="btn btn-primary rounded-pill px-4"><i class="bi bi-save me-2"></i>Сохранить</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>{% include 'pages/admin_panel/alerts_presets.js' %}</script>

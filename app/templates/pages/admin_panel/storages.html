@@ -1,0 +1,50 @@
+<div class="tab-pane fade" id="storages" role="tabpanel" aria-labelledby="storages-tab">
+    <div class="d-flex justify-content-end mb-4">
+        <button class="btn btn-primary rounded-pill px-4 py-2 add-storage-btn transition-all" data-bs-toggle="modal" data-bs-target="#storageModal">
+            <i class="bi bi-plus-circle me-2"></i>Добавить склад
+        </button>
+    </div>
+    <div id="storagesContainer" class="row g-4"></div>
+</div>
+
+<!-- Модальное окно для добавления/редактирования склада -->
+<div class="modal fade" id="storageModal" tabindex="-1" aria-labelledby="storageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content rounded-4">
+            <div class="modal-header border-0 pb-2 px-4">
+                <h5 class="modal-title fw-bold" id="storageModalLabel">Добавить склад</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+            </div>
+            <div class="modal-body px-4">
+                <form id="storageForm">
+                    <input type="hidden" id="storageId" name="id">
+                    <div class="mb-4">
+                        <label for="storageName" class="form-label fw-semibold">Название</label>
+                        <input type="text" class="form-control rounded-3" id="storageName" name="name" placeholder="Введите название" required>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <label for="storageX" class="form-label fw-semibold">Координата X (широта)</label>
+                            <input type="number" class="form-control rounded-3" id="storageX" name="x_coord" step="0.0000001" required>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <label for="storageY" class="form-label fw-semibold">Координата Y (долгота)</label>
+                            <input type="number" class="form-control rounded-3" id="storageY" name="y_coord" step="0.0000001" required>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label for="storageRadius" class="form-label fw-semibold">Радиус (км)</label>
+                        <input type="number" class="form-control rounded-3" id="storageRadius" name="radius" required>
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <button type="submit" class="btn btn-primary rounded-pill px-4 py-2" id="storageSubmitBtn">
+                            <i class="bi bi-save me-2"></i>Сохранить
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>{% include 'pages/admin_panel/storages.js' %}</script>

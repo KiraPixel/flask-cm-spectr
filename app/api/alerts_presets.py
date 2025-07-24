@@ -1,4 +1,4 @@
-from flask import request, jsonify
+from flask import request
 from flask_restx import Namespace, Resource, fields
 import json
 
@@ -43,7 +43,7 @@ class AlertsPresets(Resource):
     @alerts_presets_ns.doc(description="Получение всех пресетов оповещений")
     @alerts_presets_ns.response(200, 'Успешно')
     @alerts_presets_ns.response(500, 'Ошибка базы данных')
-    @need_access(1)
+    @need_access('admin_panel')
     def get(self):
         """Получение всех пресетов оповещений"""
         try:
@@ -68,7 +68,7 @@ class AlertsPresets(Resource):
     @alerts_presets_ns.response(200, 'Пресет успешно создан')
     @alerts_presets_ns.response(400, 'Неверный запрос')
     @alerts_presets_ns.response(500, 'Ошибка базы данных')
-    @need_access(1)
+    @need_access('admin_panel')
     def post(self):
         """Создание нового пресета оповещений"""
         data = request.json
@@ -118,6 +118,48 @@ class AlertsPresets(Resource):
             db.session.rollback()
             return {'status': 'error', 'message': f'Ошибка при создании пресета: {str(e)}'}, 500
 
+@alerts_presets_ns.route('/with_vehicle_count')
+class AlertsPresetsWithVehicleCount(Resource):
+    @alerts_presets_ns.doc(description="Получение всех пресетов с количеством техники")
+    @alerts_presets_ns.response(200, 'Успешно')
+    @alerts_presets_ns.response(500, 'Ошибка базы данных')
+    @need_access('admin_panel')
+    def get(self):
+        """Получение всех пресетов с их настройками и количеством транспорта"""
+        try:
+            # Получаем все пресеты
+            presets = db.session.query(AlertTypePresets).all()
+
+            # Получаем количество транспорта по каждому пресету одним запросом
+            preset_counts = db.session.query(
+                Transport.alert_preset,
+                db.func.count(Transport.id)
+            ).group_by(Transport.alert_preset).all()
+            count_map = {preset_id: count for preset_id, count in preset_counts}
+
+            # Формируем итоговый результат
+            result = []
+            for preset in presets:
+                preset_id = preset.id
+                vehicle_count = count_map.get(preset_id, 0)
+                result.append({
+                    'id': preset_id,
+                    'preset_name': preset.preset_name,
+                    'enable_alert_types': json.loads(preset.enable_alert_types) if preset.enable_alert_types else [],
+                    'disable_alert_types': json.loads(preset.disable_alert_types) if preset.disable_alert_types else [],
+                    'wialon_danger_distance': preset.wialon_danger_distance,
+                    'wialon_danger_hours_not_work': preset.wialon_danger_hours_not_work,
+                    'active': preset.active,
+                    'editable': preset.editable,
+                    'personalized': preset.personalized,
+                    'vehicle_count': vehicle_count
+                })
+
+            return {'status': 'success', 'data': result}, 200
+
+        except Exception as e:
+            return {'status': 'error', 'message': f'Ошибка при получении пресетов с количеством техники: {str(e)}'}, 500
+
 
 @alerts_presets_ns.route('/<string:preset_id>')
 class AlertPreset(Resource):
@@ -125,7 +167,7 @@ class AlertPreset(Resource):
     @alerts_presets_ns.response(200, 'Успешно')
     @alerts_presets_ns.response(404, 'Пресет не найден')
     @alerts_presets_ns.response(500, 'Ошибка базы данных')
-    @need_access(1)
+    @need_access('admin_panel')
     def get(self, preset_id):
         """Получение пресета по ID"""
         try:
@@ -157,7 +199,7 @@ class AlertPreset(Resource):
     @alerts_presets_ns.response(403, 'Пресет не редактируемый')
     @alerts_presets_ns.response(404, 'Пресет не найден')
     @alerts_presets_ns.response(500, 'Ошибка базы данных')
-    @need_access(1)
+    @need_access('admin_panel')
     def put(self, preset_id):
         """Обновление пресета"""
         try:
@@ -227,7 +269,7 @@ class VehiclePreset(Resource):
     @alerts_presets_ns.response(200, 'Успешно')
     @alerts_presets_ns.response(404, 'Транспорт не найден')
     @alerts_presets_ns.response(500, 'Ошибка базы данных')
-    @need_access(1)
+    @need_access('admin_panel')
     def post(self):
         """Получение пресета транспорта и пресета по умолчанию по uNumber"""
         try:
@@ -286,7 +328,7 @@ class AlertTypes(Resource):
     @alerts_presets_ns.doc(description="Получение всех типов алертов")
     @alerts_presets_ns.response(200, 'Успешно')
     @alerts_presets_ns.response(500, 'Ошибка базы данных')
-    @need_access(1)
+    @need_access('admin_panel')
     def get(self):
         """Получение всех типов алертов"""
         try:
@@ -308,7 +350,7 @@ class AlertTypeById(Resource):
     @alerts_presets_ns.response(200, 'Успешно')
     @alerts_presets_ns.response(404, 'Тип алерта не найден')
     @alerts_presets_ns.response(500, 'Ошибка базы данных')
-    @need_access(1)
+    @need_access('admin_panel')
     def get(self, alert_un):
         """Получение типа алерта по alert_un"""
         try:
@@ -337,7 +379,7 @@ class VehiclesByPreset(Resource):
     @alerts_presets_ns.response(400, 'Неверный запрос')
     @alerts_presets_ns.response(404, 'Пресет не найден')
     @alerts_presets_ns.response(500, 'Ошибка базы данных')
-    @need_access(1)
+    @need_access('admin_panel')
     def post(self):
         """Получение списка uNumber транспорта и их количества для указанного ID пресета"""
         try:

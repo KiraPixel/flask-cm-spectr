@@ -5,12 +5,15 @@ import time
 import re
 
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash, make_response, send_file, g
+import xml.etree.ElementTree as ET
 
 from modules.my_time import online_check
 from .models import db, User, Transport, TransportModel, Storage, CashWialon, CashCesar, Alert, Comments, TransferTasks, \
-    IgnoredStorage, AlertType
+    IgnoredStorage, AlertType, ParserTasks
 from .utils import need_access
 from modules import report_generator, my_time, hash_password
+from .utils.functionality_acccess import has_role_access, get_user_roles
+from .utils.transport_acccess import get_all_access_transport
 
 # Создаем Blueprint для основных маршрутов приложения
 bp = Blueprint('main', __name__)
@@ -21,13 +24,14 @@ def set_user():
     username = session.get('username')
     if username:
         g.user = User.query.filter_by(username=username).first()
+        g.role = get_user_roles(g.user)
     else:
         g.user = None
 
 
 # Главная страница
 @bp.route('/', endpoint='home')
-@need_access(-2)
+@need_access('login')
 def home():
     # Получаем параметры фильтра из запроса
     filters = {
@@ -95,55 +99,15 @@ def home():
         if not filters['online'] == 'all':
             query = query.filter(CashWialon.last_time.between(last_time_start_unix, last_time_end_unix))
 
-    # Выполняем запрос и получаем данные
-    data_db = query.all()
-
     # Фильтруем транспорт по доступам пользователя
-    user = User.query.filter_by(username=session['username']).first_or_404()
-    if user.role <= -1:
-        user_access_managers = json.loads(user.access_managers) if user.access_managers else []
-        user_access_regions = json.loads(user.access_regions) if user.access_regions else []
+    allowed_uNumbers = get_all_access_transport(session['username'])
+    if not allowed_uNumbers:
+        return render_template('pages/search/page.html', columns=['№ Лота', 'Модель', 'Склад', 'Регион'], table_rows=[],
+                               redi='/car/', request=request)
 
-        # Фильтруем данные, учитывая оба условия
-        combined_data = []
-        for item in data_db:
-            transport, storage, transport_model, wialon = item
-            # Проверяем регион, если user_access_regions не пустой
-            region_ok = not user_access_regions or (storage and storage.region in user_access_regions)
-            # Проверяем менеджера, если user_access_managers не пустой
-            manager_ok = not user_access_managers or (transport and transport.manager in user_access_managers)
-            # Добавляем элемент, если он удовлетворяет обоим условиям
-            if region_ok and manager_ok:
-                combined_data.append(item)
+    query = query.filter(Transport.uNumber.in_(allowed_uNumbers if allowed_uNumbers else ['']))
 
-        # Удаляем дубли, преобразуя в множество и обратно в список
-        unique_combined_data = []
-        seen_keys = set()
-
-        for item in combined_data:
-            # Проверяем, что item содержит ровно 4 элемента
-            if len(item) != 4:
-                print(f"Пропущен элемент с неверной длиной: {item}")
-                continue
-
-            # Распаковываем элемент
-            transport, storage, transport_model, wialon = item
-
-            # Проверяем, что все необходимые атрибуты существуют
-            if not all([hasattr(transport, 'uNumber'), hasattr(storage, 'name'), hasattr(storage, 'region')]):
-                print(f"Пропущен элемент с отсутствующими атрибутами: {item}")
-                continue
-
-            # Формируем ключ для проверки уникальности
-            key = (transport.uNumber, storage.name, storage.region)
-
-            # Добавляем элемент, если ключ ещё не встречался
-            if key not in seen_keys:
-                seen_keys.add(key)
-                unique_combined_data.append(item)
-
-        data_db = unique_combined_data
-
+    data_db = query.all()
     columns = ['№ Лота', 'Модель', 'Склад', 'Регион']
     columns_data = []
     seen_unumbers = set()  # Множество для отслеживания уникальных uNumber
@@ -168,7 +132,7 @@ def home():
 
 # Страница состояния
 @bp.route('/virtual_operator')
-@need_access(0)
+@need_access('voperator')
 def virtual_operator():
     distance = db.session.query(Alert).join(AlertType, Alert.type==AlertType.alert_un).filter(Alert.status == 0, Alert.type.in_(['distance', 'gps'])).order_by(Alert.date.desc()).all()
     no_docs_cord = db.session.query(Alert).join(AlertType, Alert.type == AlertType.alert_un).filter(Alert.status == 0, Alert.type == 'no_docs_cords').order_by(Alert.date.desc()).all()
@@ -193,8 +157,10 @@ def virtual_operator():
 
 # Дашборды
 @bp.route('/dashboard')
-@need_access(0)
+@need_access('dashboard')
 def dashboard():
+    cesar_access = has_role_access(g.user.username, 'csp')
+
     # Wialon
     online_count = db.session.query(CashWialon).filter(CashWialon.last_time >= my_time.five_minutes_ago_unix()).count()
     offline_count = db.session.query(CashWialon).filter(CashWialon.last_time < my_time.five_minutes_ago_unix()).count()
@@ -233,12 +199,12 @@ def dashboard():
         'last_cesar': last_cesar
     }
 
-    return render_template('pages/dashboard/page.html', wialon=wialon, connections=connections, cesar=cesar, distance=distance)
+    return render_template('pages/dashboard/page.html', wialon=wialon, connections=connections, cesar=cesar, distance=distance, cesar_access=cesar_access)
 
 
 # Страница отчетов
 @bp.route('/rep')
-@need_access(0)
+@need_access('reports')
 def reports():
     user = User.query.filter_by(username=session['username']).first_or_404()
     categories = [
@@ -289,7 +255,7 @@ def reports():
         },
     ]
 
-    if user.cesar_access == 0:
+    if not has_role_access(user.username, 'csp'):
         categories = [category for category in categories if category['id'] != 'cesar']
 
     return render_template('pages/reports/page.html', categories=categories)
@@ -317,21 +283,15 @@ def login():
 
 # Выход из системы
 @bp.route('/logout')
-@need_access(-2)
+@need_access('login')
 def logout():
     session.pop('username', None)
     flash('Вы вышли из системы', 'info')
     return redirect(url_for('main.login'))
 
 
-@bp.route('/alerts_presets')
-@need_access(1)
-def alert_presets():
-    return render_template('pages/alerts_presets/page.html')
-
-
 @bp.route('/car/<string:car_id>')
-@need_access(-1)
+@need_access('login')
 def car(car_id):
     text = car_id.replace(' ', '')
     if re.match(r'^[A-Z]+\d{5}$', text):
@@ -348,7 +308,7 @@ def car(car_id):
 
 # Скачивание отчета
 @bp.route('/send_report', endpoint="send_report")
-@need_access(0)
+@need_access('report')
 def send_report():
     report_name = request.args.get('report')
     print(f"Received report name: {report_name}")
@@ -373,8 +333,51 @@ def send_report():
 
 
 @bp.route('/maps/')
-@need_access(-1)
+@need_access('map')
 def maps():
     return render_template('pages/maps/page.html')
 
 
+@bp.route('/admin', methods=['GET'])
+@need_access('admin_panel')
+def admin_panel():
+    return render_template('pages/admin_panel/page.html')
+
+
+@bp.route('/admin/parser', methods=['GET'])
+@need_access('parser')
+def parser_page():
+    tasks_with_error_all = ParserTasks.query.filter(
+        ParserTasks.task_completed == 0,
+        ~ParserTasks.task_name.in_(['new_car', 'new_car_error'])
+    ).all()
+    tasks_with_error_new_car = ParserTasks.query.filter(
+        ParserTasks.task_completed == 0,
+        ParserTasks.task_name.in_(['new_car', 'new_car_error'])
+    ).all()
+
+    parsed_tasks = []
+    for task in tasks_with_error_new_car:
+        if not task.info:
+            parsed_tasks.append({"id": task.id, "error": "Пустое содержимое XML"})
+            continue
+        try:
+            root = ET.fromstring(task.info)
+            task_data = {
+                "id": task.id,
+                "код_склада": root.attrib.get("КодСклада", "").strip() or "None",
+                "склад": root.attrib.get("Склад", "").strip() or "None",
+                "лот": root.attrib.get("Лот", "").strip() or "None",
+                "ИДМодели": root.attrib.get("ИДМодели", "").strip() or "None",
+                "серия": root.attrib.get("Серия", "").strip() or "None",
+                "серия_год_выпуска": root.attrib.get("СерияГодВыпуска", "").strip() or "None",
+                "широта": root.attrib.get("Широта", "").strip() or "0",
+                "долгота": root.attrib.get("Долгота", "").strip() or "0",
+                "контрагент": root.attrib.get("Контрагент", "").strip() or "None",
+                "менеджер": root.attrib.get("ОтветственныйМенеджер", "").strip() or "None"
+            }
+            parsed_tasks.append(task_data)
+        except Exception as e:
+            parsed_tasks.append({"id": task.id, "error": f"Ошибка при обработке XML: {e}"})
+
+    return render_template('pages/parser/page.html', tasks_with_error=tasks_with_error_all, parsed_tasks=parsed_tasks)
