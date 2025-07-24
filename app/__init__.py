@@ -44,15 +44,20 @@ def create_app():
         g.role = None
 
         try:
+            if session is None:
+                return
+            if not 'username' is session:
+                return
             username = session['username']
-            if username:
-                user= User.query.filter_by(username=username).first()
-                if user is not None:
-                    g.user = user
-                    g.role = get_user_roles(g.user)
+            if not username:
+                return
+            user = User.query.filter_by(username=username).first()
+            if user is not None:
+                g.user = user
+                g.role = get_user_roles(g.user)
         except Exception as e:
-            logging.error(
-                'set_current_user: Error=%s',
+            logger.debug(
+                'Can not set user: ERROR=%s',
                 e
             )
 
