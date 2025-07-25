@@ -23,7 +23,7 @@ edit_comment_parser.add_argument('action', type=str, required=False, help='Де�
 
 # Парсер для редактирования комментария к алерту
 edit_comment_model = user_ns.model('EditAlertComment', {
-    'comment_id': fields.Integer(required=True, description='ID алерта'),
+    'comment_id': fields.String(required=True, description='ID алерта'),
     'comment': fields.String(required=True, description='Текст комментария (максимум 500 символов)')
 }, description='Данные для редактирования комментария к алерту')
 
@@ -94,6 +94,7 @@ class EditAlertComment(Resource):
     @need_access('voperator')
     def post(self):
         """Редактировать комментарий к алерту"""
+
         data = request.json
         report_id = data.get('comment_id')
         new_comment = data.get('comment')
