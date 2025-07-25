@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
         container.innerHTML = '';
 
         try {
-            const response = await fetch('/api/admin/storage', {
+            const response = await fetch('/api/admin/storage/', {
                 headers: { 'Content-Type': 'application/json' },
                 redirect: 'follow',
                 credentials: 'same-origin'
