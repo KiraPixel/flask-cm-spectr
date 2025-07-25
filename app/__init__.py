@@ -46,11 +46,9 @@ def create_app():
         try:
             if session is None:
                 return
-            if not 'username' is session:
+            if not 'username' in session:
                 return
             username = session['username']
-            if not username:
-                return
             user = User.query.filter_by(username=username).first()
             if user is not None:
                 g.user = user
