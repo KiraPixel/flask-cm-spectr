@@ -174,9 +174,6 @@
             updateBlockNumbers();
             historyData = [];
             const hasCoords = window.carData.rent?.x && window.carData.rent?.y;
-            if (!hasCoords && window.myMap.geoObjects.getLength() > 0) {
-                window.MapController.setBounds();
-            }
         });
 
         function plotRouteAndMarkers() {
