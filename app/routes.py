@@ -308,7 +308,7 @@ def car(car_id):
 
 # Скачивание отчета
 @bp.route('/send_report', endpoint="send_report")
-@need_access('report')
+@need_access('reports')
 def send_report():
     report_name = request.args.get('report')
     print(f"Received report name: {report_name}")
