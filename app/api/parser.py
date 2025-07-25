@@ -96,7 +96,7 @@ class AddNewCar(Resource):
 
             for task in tasks:
                 task.task_completed = 1
-                task.task_manager = session['username']
+                task.task_manager = g.user
 
             if tasks:
                 db.session.commit()

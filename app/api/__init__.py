@@ -1,8 +1,12 @@
-from flask import Blueprint
+import logging
+
+from flask import Blueprint, session, request, g
 from flask_restx import Api
 
 # Создаем основной Blueprint
 api_bp = Blueprint('api', __name__)
+
+logger = logging.getLogger('flask_cm_spectr')
 
 # Инициализация API с поддержкой авторизации
 api = Api(api_bp,
@@ -41,3 +45,12 @@ api.add_namespace(alerts_presets_ns)
 api.add_namespace(admin_ns)
 api.add_namespace(admin_users_ns)
 api.add_namespace(admin_storages_ns)
+
+@api_bp.before_request
+def before_request():
+    username = g.user
+
+    logger.debug(
+        'Request: User=%s, Method=%s, URL=%s, ARGS=%s',
+        username, request.method, request.url, request.data,
+    )

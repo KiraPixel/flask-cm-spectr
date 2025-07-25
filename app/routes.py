@@ -1,12 +1,12 @@
 import ast
 import json
+import logging
 import os
 import time
 import re
 
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash, make_response, send_file, g
 import xml.etree.ElementTree as ET
-
 from modules.my_time import online_check
 from .models import db, User, Transport, TransportModel, Storage, CashWialon, CashCesar, Alert, Comments, TransferTasks, \
     IgnoredStorage, AlertType, ParserTasks
@@ -15,18 +15,17 @@ from modules import report_generator, my_time, hash_password
 from .utils.functionality_acccess import has_role_access, get_user_roles
 from .utils.transport_acccess import get_all_access_transport
 
-# Создаем Blueprint для основных маршрутов приложения
+# Создаем Blueprint
 bp = Blueprint('main', __name__)
-
+# Описываем основной логгер
+logger = logging.getLogger('flask_cm_spectr')
 
 @bp.before_request
-def set_user():
-    username = session.get('username')
-    if username:
-        g.user = User.query.filter_by(username=username).first()
-        g.role = get_user_roles(g.user)
-    else:
-        g.user = None
+def before_request():
+    logger.debug(
+        'Request: User=%s, Method=%s, URL=%s',
+        g.user, request.method, request.url,
+    )
 
 
 # Главная страница
@@ -100,7 +99,7 @@ def home():
             query = query.filter(CashWialon.last_time.between(last_time_start_unix, last_time_end_unix))
 
     # Фильтруем транспорт по доступам пользователя
-    allowed_uNumbers = get_all_access_transport(session['username'])
+    allowed_uNumbers = get_all_access_transport(g.user.username)
     if not allowed_uNumbers:
         return render_template('pages/search/page.html', columns=['№ Лота', 'Модель', 'Склад', 'Регион'], table_rows=[],
                                redi='/car/', request=request)
@@ -206,7 +205,7 @@ def dashboard():
 @bp.route('/rep')
 @need_access('reports')
 def reports():
-    user = User.query.filter_by(username=session['username']).first_or_404()
+    user = g.user
     categories = [
         {
             "id": "main",
@@ -268,13 +267,15 @@ def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
+        session['username'] = username
         user = User.query.filter_by(username=username).first()
-        print(f"UserLogin: {user}")
+
         if user is None:
             error = 'Неправильный логин или пароль. Попробуйте снова.'
         elif hash_password.compare_passwords(user.password, password):
             session.permanent = True
-            session['username'] = username
+            g.user = user
+            logging.info('UserLogin: username=%s', user.username)
             return redirect(url_for('main.home'))
         else:
             error = 'Неправильный логин или пароль. Попробуйте снова.'
@@ -317,7 +318,7 @@ def send_report():
         flash('Не указан отчет для отправки', 'warning')
         return redirect(url_for('main.home'))
 
-    user = User.query.filter_by(username=session['username']).first_or_404()
+    user = g.user
 
     if report_name == 'wialon_with_address':
         if user.role != 1:
