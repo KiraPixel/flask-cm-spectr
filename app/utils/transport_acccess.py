@@ -34,7 +34,7 @@ def validate_transport_access_rules(rules):
         return True, []  # Пустой список валиден
 
     valid_types = {"OR", "AND", "AND NOT", "ALL"}
-    valid_params = {"uNumber", "manager", "region"}
+    valid_params = {"uNumber", "manager", "region", 'ALL'}
 
     for i, rule in enumerate(rules):
         if not isinstance(rule, dict):
@@ -46,9 +46,9 @@ def validate_transport_access_rules(rules):
         rule_type, param, value = rule["type"], rule["param"], rule["value"]
         if rule_type not in valid_types:
             errors.append(f"Правило {i + 1}: неверный тип '{rule_type}', ожидается {valid_types}")
-        if rule_type == "ALL":
-            if param != "" or value != "":
-                errors.append(f"Правило {i + 1}: для типа ALL param и value должны быть пустыми")
+        # if rule_type == "ALL":
+        #     if param != "" or value != "":
+        #         errors.append(f"Правило {i + 1}: для типа ALL param и value должны быть пустыми")
         else:
             if param not in valid_params:
                 errors.append(f"Правило {i + 1}: неверный параметр '{param}', ожидается {valid_params}")
