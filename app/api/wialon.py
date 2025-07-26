@@ -1,11 +1,12 @@
-
 import os
 
 from flask import jsonify, request, session, g
 from flask_restx import Namespace, Resource
 
-
+from app.models import CashWialon
 from app.utils import need_access
+from app.utils.db_log import add_log
+from app.utils.transport_acccess import check_access_to_transport
 from custom_api.wialon import WialonAPI
 
 wialon_ns = Namespace('wialon', description='Wialon commands API')
@@ -28,9 +29,16 @@ class WialonExecCmd(Resource):
     def get(self, unit_id, command_name):
         """Выполнение команды на устройстве через Wialon"""
         username = g.user.username
+        cash_wialon_obj = CashWialon.query.filter_by(id=unit_id).first()
+        if cash_wialon_obj:
+            if not check_access_to_transport(username, cash_wialon_obj.nm):
+                return jsonify({'status': 'not accessed'}, 406)
+        else:
+            return jsonify({'status': 'unit not found'}, 404)
+
+        add_log(cash_wialon_obj.nm, username, 'wialon', f'Exec Command: {command_name}')
 
         response_data, status_code = wialon_api.execute_command(username, unit_id,command_name)
-
         if status_code == 200:
             if response_data:  # Проверка на пустой ответ
                 return jsonify(response_data)

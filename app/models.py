@@ -249,6 +249,16 @@ class FunctionalityAccess(db.Model):
     category_localization = db.Column(db.String(100))
 
 
+class SystemLog(db.Model):
+    __tablename__ = 'system_log'
+    id = db.Column(db.Integer, primary_key=True)
+    date = db.Column(db.String(100))
+    uNumber = db.Column(db.String(100))
+    username = db.Column(db.String(100))
+    prefix = db.Column(db.String(100))
+    message = db.Column(db.String(100))
+
+
 def insert_mailing_record_sqlalchemy(target, subject, content, html_template=None, attachment_name=None, attachment_content=None):
     try:
         sql = text("""

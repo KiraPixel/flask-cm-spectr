@@ -1,7 +1,7 @@
 import ast
 import json
 from sqlalchemy import or_, and_
-from app.models import User, Transport, db, Storage
+from app.models import User, Transport, Storage
 
 
 def normalize_transport_access(transport_access):
