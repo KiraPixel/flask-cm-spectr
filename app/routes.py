@@ -339,7 +339,7 @@ def maps():
     return render_template('pages/maps/page.html')
 
 
-@bp.route('/admin', methods=['GET'])
+@bp.route('/admin/', methods=['GET'])
 @need_access('admin_panel')
 def admin_panel():
     return render_template('pages/admin_panel/page.html')

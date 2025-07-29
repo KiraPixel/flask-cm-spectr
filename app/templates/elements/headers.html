@@ -57,7 +57,7 @@
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
                             <li><a class="dropdown-item" href="{{ url_for('user_profile.index') }}">Профиль</a></li>
                             {% if 'admin_panel' in g.role %}
-                            <li><a class="dropdown-item" href="/admin">Админ-панель</a></li>
+                            <li><a class="dropdown-item" href="/admin/">Админ-панель</a></li>
                             {% endif %}
                             {% if 'parser' in g.role %}
                             <li><a class="dropdown-item" href="/admin/parser">Парсер</a></li>
