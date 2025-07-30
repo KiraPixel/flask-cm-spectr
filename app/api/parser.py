@@ -1,4 +1,4 @@
-from flask import request, session, jsonify
+from flask import request, session, jsonify, g
 from flask_restx import Namespace, Resource, fields
 
 from app import db
