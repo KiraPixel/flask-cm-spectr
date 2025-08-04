@@ -67,7 +67,7 @@
                 <select id="presetSelect" class="form-select rounded-3" disabled>
                     <option value="---">---</option>
                     <option value="new">Создать новый</option>
-                    <option value="remove" id="removePresetOption" style="display: none;">Удалить пресет с транспорта</option>
+                    <option value="remove" id="removePresetOption">Удалить пресет с транспорта</option>
                     <!-- Другие пресеты будут загружены через JavaScript -->
                 </select>
             </div>
@@ -227,11 +227,17 @@
                 document.getElementById('customDistance').textContent = `${custom_preset.wialon_danger_distance} км`;
                 document.getElementById('customHours').textContent = `${custom_preset.wialon_danger_hours_not_work} ч`;
                 populateAlertTypeControls(custom_preset);
-                showSettingsDiff(default_preset, custom_preset);
             } else {
                 document.getElementById('customPreset').style.display = 'none';
                 document.getElementById('editSettingsTitle').textContent = 'Создать персонализированный пресет';
                 populateAlertTypeControls();
+            }
+
+            // Показываем разницу с пресетом по умолчанию, если есть активный кастомный пресет
+            if (custom_preset && custom_preset.active) {
+                showSettingsDiff(default_preset, custom_preset);
+            } else {
+                document.getElementById('settingsDiff').style.display = 'none';
             }
 
             // Заполнение формы редактирования
@@ -246,7 +252,7 @@
             }
             presetSelect.innerHTML = '<option value="---">---</option>' +
                 '<option value="new">Создать новый</option>' +
-                `<option value="remove" id="removePresetOption" ${custom_preset && custom_preset.personalized ? '' : 'style="display: none;"'}>Удалить пресет с транспорта</option>`;
+                '<option value="remove" id="removePresetOption">Удалить пресет с транспорта</option>';
             presetsResult.data.filter(preset => preset.personalized === 0).forEach(preset => {
                 const option = document.createElement('option');
                 option.value = preset.id;
@@ -580,11 +586,6 @@
     .card:hover {
         transform: translateY(-8px);
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-    }
-    .list-group-item {
-        border: 1px solid var(--bs-border-color);
-        background-color: var(--bs-body-bg);
-        padding: 0.75rem 1rem;
     }
     .card-body {
         font-size: 0.9rem;
