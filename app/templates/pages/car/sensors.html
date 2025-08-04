@@ -340,9 +340,6 @@ function buildChart(data, sensorId, sensorName, unitId) {
 
     const values = aggregatedData.map(item => item.sensors[sensorId].value);
 
-    const unitLabel = aggregatedData[0].sensors[sensorId].format?.value || '';
-    const chartLabel = sensorName.replace(/^\[\d+\]\s*/, '');
-
     // Уничтожаем предыдущий график, если он существует
     const chartInstance = window[`sensorGraphChart-${unitId}`];
     if (chartInstance instanceof Chart) {
@@ -355,7 +352,6 @@ function buildChart(data, sensorId, sensorName, unitId) {
         data: {
             labels,
             datasets: [{
-                label: `${chartLabel}${unitLabel ? ` (${unitLabel})` : ''}`,
                 data: values,
                 borderColor: '#0d6efd',
                 backgroundColor: 'rgba(13, 110, 253, 0.1)',
@@ -370,16 +366,12 @@ function buildChart(data, sensorId, sensorName, unitId) {
             maintainAspectRatio: false,
             plugins: {
                 legend: {
-                    position: 'top',
-                    labels: {
-                        color: '#212529',
-                        font: { size: 14 }
-                    }
+                    display: false
                 },
                 tooltip: {
                     callbacks: {
                         label: function(context) {
-                            return `${context.dataset.label}: ${context.parsed.y}${unitLabel ? ' ' + unitLabel : ''}`;
+                            return `${context.parsed.y}`;
                         }
                     }
                 }
@@ -403,7 +395,9 @@ function buildChart(data, sensorId, sensorName, unitId) {
     });
 }
 
-
+function setupAllDataButtons() {
+    // Пустая функция, так как она вызывается, но не определена в исходном коде
+}
 </script>
 
 <style>
@@ -421,13 +415,11 @@ function buildChart(data, sensorId, sensorName, unitId) {
     padding: 0.4em 0.8em;
 }
 
-
 .command-btn:disabled, .sensorGraphFetchDataBtn:disabled {
     opacity: 0.7;
 }
 
 @media (max-width: 768px) {
-
     .btn-group .btn {
         width: 100%;
         margin: 0.5rem 0 !important;
