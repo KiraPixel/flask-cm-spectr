@@ -249,7 +249,8 @@ def reports():
             "title": "Cesar Position",
             "reports": [
                 {"id": "cesar", "name": "Весь транспорт"},
-                {"id": "cesar_offline", "name": "Давно offline (от 3 дней)"}
+                {"id": "cesar_offline", "name": "Давно offline (от 3 дней)"},
+                {"id": "cesar_with_address", "name": "Весь транспорт с адресом"}
             ]
         },
     ]

@@ -84,6 +84,32 @@ def filegen(args):
                     row.pos_x,
                     row.pos_y
                 ])
+        elif args == 'cesar_with_address':
+            ws.append(['cesar_id', 'uNumber', 'PIN', 'last_time', 'address'])
+            query = CashWialon.query.all()
+            for row in query:
+                location = None
+                max_attempts = 50
+                for attempt in range(max_attempts):
+                    try:
+                        location = get_address_from_coords(row.pos_x, row.pos_y)
+                        location = str(location)
+                        if location != "Time out to convert":
+                            break
+                    except Exception as e:
+                        print(f"Попытка {attempt + 1} из {max_attempts} не удалась: {e}")
+
+                    if attempt < max_attempts - 1:
+                        time.sleep(5)
+                    if not location or location == "Time out to convert":
+                        location = "Unable to retrieve address"
+                ws.append([
+                    row.unit_id,
+                    row.object_name,
+                    row.pin,
+                    my_time.unix_to_moscow_time(row.last_time),
+                    location
+                ])
         elif args == 'cesar_offline':
             query = CashCesar.query.filter(CashCesar.last_time < my_time.get_time_minus_three_days()).all()
             for row in query:
