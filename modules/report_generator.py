@@ -86,7 +86,7 @@ def filegen(args):
                 ])
         elif args == 'cesar_with_address':
             ws.append(['cesar_id', 'uNumber', 'PIN', 'last_time', 'address'])
-            query = CashWialon.query.all()
+            query = CashCesar.query.all()
             for row in query:
                 location = None
                 max_attempts = 50
