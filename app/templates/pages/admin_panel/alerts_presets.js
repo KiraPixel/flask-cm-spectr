@@ -2,6 +2,38 @@ document.addEventListener('DOMContentLoaded', () => {
     const loading = document.getElementById('loading');
     const errorDiv = document.getElementById('error');
 
+    // Функция для отображения тоста (уведомления)
+    window.showToast = function(message, type = 'success') {
+        // Проверяем, есть ли контейнер для тостов, если нет — создаем
+        let toastContainer = document.querySelector('.toast-container');
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+            toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+            document.body.appendChild(toastContainer);
+        }
+
+        // Создаем тост
+        const toast = document.createElement('div');
+        toast.className = `toast align-items-center text-bg-${type === 'success' ? 'success' : 'danger'} border-0`;
+        toast.setAttribute('role', 'alert');
+        toast.setAttribute('aria-live', 'assertive');
+        toast.setAttribute('aria-atomic', 'true');
+        toast.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">${message}</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Закрыть"></button>
+            </div>
+        `;
+        toastContainer.appendChild(toast);
+
+        // Показываем тост
+        const bsToast = new bootstrap.Toast(toast);
+        bsToast.show();
+
+        // Автоматически удаляем тост после скрытия
+        toast.addEventListener('hidden.bs.toast', () => toast.remove());
+    };
+
     // Загрузка типов алертов
     async function loadAlertTypes() {
         try {
@@ -32,7 +64,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             const result = await response.json();
-            console.log('API response:', result.data); // Для отладки
             loading.style.display = 'none';
             if (result.status !== 'success') {
                 errorDiv.textContent = result.message || 'Ошибка при загрузке пресетов';
@@ -109,10 +140,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     document.getElementById('wialonDangerDistance').value = wialonDangerDistance;
                     document.getElementById('wialonDangerHoursNotWork').value = wialonDangerHoursNotWork;
                     document.getElementById('active').value = active;
-                    document.getElementById('editable').value = editable;
-                    document.getElementById('personalized').value = personalized;
                     window.populateAlertTypeControls({ enable_alert_types: enableAlertTypes, disable_alert_types: disableAlertTypes });
                     bootstrap.Modal.getOrCreateInstance(document.getElementById('presetModal')).show();
+                    window.loadPresets(); // Обновление списка пресетов после редактирования
                 });
             });
             document.querySelectorAll('.delete-preset').forEach(button => {
@@ -122,6 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
             loading.style.display = 'none';
             errorDiv.textContent = 'Ошибка при загрузке пресетов: ' + error.message;
             errorDiv.style.display = 'block';
+            window.showToast('Ошибка при загрузке пресетов: ' + error.message, 'danger');
         }
     };
 
@@ -176,7 +207,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const disableAlertTypes = [];
         document.querySelectorAll('#alertTypesContainer .btn-group').forEach(group => {
             const alertUn = group.getAttribute('data-alert-un');
-            const activeState = group.querySelector('.alert-state.active').getAttribute('data-state');
+            const activeState = group.querySelector('.alert-state.active')?.getAttribute('data-state');
             if (activeState === 'enabled') {
                 enableAlertTypes.push(alertUn);
             } else if (activeState === 'disabled') {
@@ -190,8 +221,8 @@ document.addEventListener('DOMContentLoaded', () => {
             wialon_danger_distance: parseInt(document.getElementById('wialonDangerDistance').value),
             wialon_danger_hours_not_work: parseInt(document.getElementById('wialonDangerHoursNotWork').value),
             active: parseInt(document.getElementById('active').value),
-            editable: parseInt(document.getElementById('editable').value),
-            personalized: parseInt(document.getElementById('personalized').value)
+            editable: 1,
+            personalized: 0
         };
         const method = presetId ? 'PUT' : 'POST';
         const url = presetId ? `/api/alerts_presets/${presetId}` : '/api/alerts_presets';
@@ -206,9 +237,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
             loading.style.display = 'none';
             if (data.status === 'success') {
-                window.showToast(presetId ? 'Пресет успешно обновлен' : 'Пресет успешно создан');
-                bootstrap.Modal.getInstance(document.getElementById('presetModal')).hide();
-                window.loadPresets();
+                window.showToast(presetId ? 'Пресет успешно обновлен' : 'Пресет успешно создан', 'success');
+                const modalElement = document.getElementById('presetModal');
+                const modalInstance = bootstrap.Modal.getOrCreateInstance(modalElement);
+                modalInstance.hide();
+                document.getElementById('presetForm').reset();
+                await window.loadPresets(); // Обновление списка пресетов
             } else {
                 window.showToast(data.message || 'Ошибка при сохранении пресета', 'danger');
             }
@@ -230,8 +264,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await response.json();
                 loading.style.display = 'none';
                 if (data.status === 'success') {
-                    window.showToast('Пресет успешно удален');
-                    window.loadPresets();
+                    window.showToast('Пресет успешно удален', 'success');
+                    await window.loadPresets(); // Обновление списка пресетов
                 } else {
                     window.showToast(data.message || 'Ошибка при удалении пресета', 'danger');
                 }

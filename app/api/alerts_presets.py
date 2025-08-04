@@ -118,49 +118,6 @@ class AlertsPresets(Resource):
             db.session.rollback()
             return {'status': 'error', 'message': f'Ошибка при создании пресета: {str(e)}'}, 500
 
-@alerts_presets_ns.route('/with_vehicle_count')
-class AlertsPresetsWithVehicleCount(Resource):
-    @alerts_presets_ns.doc(description="Получение всех пресетов с количеством техники")
-    @alerts_presets_ns.response(200, 'Успешно')
-    @alerts_presets_ns.response(500, 'Ошибка базы данных')
-    @need_access('admin_panel')
-    def get(self):
-        """Получение всех пресетов с их настройками и количеством транспорта"""
-        try:
-            # Получаем все пресеты
-            presets = db.session.query(AlertTypePresets).all()
-
-            # Получаем количество транспорта по каждому пресету одним запросом
-            preset_counts = db.session.query(
-                Transport.alert_preset,
-                db.func.count(Transport.id)
-            ).group_by(Transport.alert_preset).all()
-            count_map = {preset_id: count for preset_id, count in preset_counts}
-
-            # Формируем итоговый результат
-            result = []
-            for preset in presets:
-                preset_id = preset.id
-                vehicle_count = count_map.get(preset_id, 0)
-                result.append({
-                    'id': preset_id,
-                    'preset_name': preset.preset_name,
-                    'enable_alert_types': json.loads(preset.enable_alert_types) if preset.enable_alert_types else [],
-                    'disable_alert_types': json.loads(preset.disable_alert_types) if preset.disable_alert_types else [],
-                    'wialon_danger_distance': preset.wialon_danger_distance,
-                    'wialon_danger_hours_not_work': preset.wialon_danger_hours_not_work,
-                    'active': preset.active,
-                    'editable': preset.editable,
-                    'personalized': preset.personalized,
-                    'vehicle_count': vehicle_count
-                })
-
-            return {'status': 'success', 'data': result}, 200
-
-        except Exception as e:
-            return {'status': 'error', 'message': f'Ошибка при получении пресетов с количеством техники: {str(e)}'}, 500
-
-
 @alerts_presets_ns.route('/<string:preset_id>')
 class AlertPreset(Resource):
     @alerts_presets_ns.doc(description="Получение пресета по ID")
@@ -191,6 +148,27 @@ class AlertPreset(Resource):
             }, 200
         except Exception as e:
             return {'status': 'error', 'message': f'Ошибка при получении пресета: {str(e)}'}, 500
+
+    @alerts_presets_ns.doc(description="Удаление пресета")
+    @alerts_presets_ns.response(200, 'Пресет успешно обновлен')
+    @alerts_presets_ns.response(404, 'Пресет не найден')
+    @alerts_presets_ns.response(500, 'Ошибка базы данных')
+    def delete(self, preset_id):
+        """Удаление пресета"""
+        try:
+            preset = db.session.query(AlertTypePresets).filter_by(id=preset_id).first()
+            if not preset:
+                return {'status': 'error', 'message': f'Пресет с id {preset_id} не найден'}, 404
+
+            db.session.delete(preset)
+            db.session.commit()
+
+            return {
+                'status': 'success',
+                'data': 'success'
+            }, 200
+        except Exception as e:
+            return {'status': 'error', 'message': f'Ошибка при удалении пресета: {str(e)}'}, 500
 
     @alerts_presets_ns.doc(description="Обновление пресета")
     @alerts_presets_ns.expect(preset_model)
@@ -260,6 +238,49 @@ class AlertPreset(Resource):
         except Exception as e:
             db.session.rollback()
             return {'status': 'error', 'message': f'Ошибка при обновлении пресета: {str(e)}'}, 500
+
+
+@alerts_presets_ns.route('/with_vehicle_count')
+class AlertsPresetsWithVehicleCount(Resource):
+    @alerts_presets_ns.doc(description="Получение всех пресетов с количеством техники")
+    @alerts_presets_ns.response(200, 'Успешно')
+    @alerts_presets_ns.response(500, 'Ошибка базы данных')
+    @need_access('admin_panel')
+    def get(self):
+        """Получение всех пресетов с их настройками и количеством транспорта"""
+        try:
+            # Получаем все пресеты
+            presets = db.session.query(AlertTypePresets).all()
+
+            # Получаем количество транспорта по каждому пресету одним запросом
+            preset_counts = db.session.query(
+                Transport.alert_preset,
+                db.func.count(Transport.id)
+            ).group_by(Transport.alert_preset).all()
+            count_map = {preset_id: count for preset_id, count in preset_counts}
+
+            # Формируем итоговый результат
+            result = []
+            for preset in presets:
+                preset_id = preset.id
+                vehicle_count = count_map.get(preset_id, 0)
+                result.append({
+                    'id': preset_id,
+                    'preset_name': preset.preset_name,
+                    'enable_alert_types': json.loads(preset.enable_alert_types) if preset.enable_alert_types else [],
+                    'disable_alert_types': json.loads(preset.disable_alert_types) if preset.disable_alert_types else [],
+                    'wialon_danger_distance': preset.wialon_danger_distance,
+                    'wialon_danger_hours_not_work': preset.wialon_danger_hours_not_work,
+                    'active': preset.active,
+                    'editable': preset.editable,
+                    'personalized': preset.personalized,
+                    'vehicle_count': vehicle_count
+                })
+
+            return {'status': 'success', 'data': result}, 200
+
+        except Exception as e:
+            return {'status': 'error', 'message': f'Ошибка при получении пресетов с количеством техники: {str(e)}'}, 500
 
 
 @alerts_presets_ns.route('/vehicle')
