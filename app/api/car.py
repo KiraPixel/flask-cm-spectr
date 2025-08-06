@@ -57,6 +57,7 @@ class GetCarInfo(Resource):
                             "unit_id": item.id,
                             "pos_x": item.pos_y,
                             "pos_y": item.pos_x,
+                            "valid_nav": item.valid_nav,
                             "address": str(get_address_from_coords(item.pos_y, item.pos_x)),
                             "last_time": unix_to_moscow_time(item.last_time),
                             "wialon_cmd": wialon_cmd,
@@ -304,9 +305,9 @@ class GetCarHistory(Resource):
 
     @car_ns.param('nm', 'Номер транспортного средства', _required=True)
     @car_ns.param('monitoring_system', 'Cesar OR Wialon', _required=False)
-    @car_ns.param('block_number', 'UID для Виалона, PIN для Цезаря', _required=False)
-    @car_ns.param('time_from', 'Время начала фильтрации (UNIX timestamp)', _required=True)
-    @car_ns.param('time_to', 'Время окончания фильтрации (UNIX timestamp)', _required=True)
+    @car_ns.param('block_number', 'UID для Виалона, PIN для Цезаря', _required=False, type=int)
+    @car_ns.param('time_from', 'Время начала фильтрации (UNIX timestamp)', _required=True, type=int)
+    @car_ns.param('time_to', 'Время окончания фильтрации (UNIX timestamp)', _required=True, type=int)
     @car_ns.response(200, 'Успешно')  # Указываем модель для ответа
     @car_ns.response(400, 'Неверный запрос (например, отсутствуют параметры)')
     @car_ns.response(500, 'Ошибка при выполнении запроса к базе данных')
@@ -338,8 +339,9 @@ class GetCarHistory(Resource):
             wialon_query = db.session.query(CashHistoryWialon).filter(
                 CashHistoryWialon.nm == nm,
                 CashHistoryWialon.last_time >= time_from_unix,
-                CashHistoryWialon.last_time <= time_to_unix
+                CashHistoryWialon.last_time <= time_to_unix,
             )
+
 
             cesar_query = db.session.query(CashHistoryCesar).filter(
                 CashHistoryCesar.nm == nm,
@@ -350,7 +352,6 @@ class GetCarHistory(Resource):
             if monitoring_system == 'Wialon' or monitoring_system is None:
                 if block_number is not None:
                     wialon_query = wialon_query.filter(CashHistoryWialon.uid == block_number)
-
                 wialon_entries = wialon_query.all()
                 result = [
                     {
@@ -359,6 +360,7 @@ class GetCarHistory(Resource):
                         'pos_x': entry.pos_x,
                         'pos_y': entry.pos_y,
                         'last_time': entry.last_time,
+                        'valid_nav': entry.valid_nav,
                         'source': 'wialon'
                     }
                     for entry in wialon_entries
@@ -376,6 +378,7 @@ class GetCarHistory(Resource):
                         'pos_y': entry.pos_x,
                         'pos_x': entry.pos_y,
                         'last_time': entry.last_time,
+                        'valid_nav': 1,
                         'source': 'cesar'
                     }
                     for entry in cesar_entries

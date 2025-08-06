@@ -1,17 +1,17 @@
 <div class="tab-pane fade" id="movement" role="tabpanel" aria-labelledby="movement-tab">
-    <div class="card border-0 shadow-sm rounded-3" style="min-height: 350px;">
+    <div class="card border-0 shadow-sm rounded-3" style="min-height: 350px; max-width: 100%; margin: 0 auto;">
         <div class="card-body p-4">
             <div class="row g-3" style="min-height: 220px;">
-                <div class="col-md-3">
+                <div class="col-12 col-md-6 col-lg-3">
                     <label for="dateFrom" class="form-label fw-bold">Дата и время от:</label>
                     <input type="datetime-local" class="form-control" id="dateFrom" required>
                 </div>
-                <div class="col-md-3">
+                <div class="col-12 col-md-6 col-lg-3">
                     <label for="dateTo" class="form-label fw-bold">Дата и время до:</label>
                     <input type="datetime-local" class="form-control" id="dateTo" required>
                 </div>
-                <div class="col-md-12"></div>
-                <div class="col-md-3" id="monitoringSystemContainer">
+                <div class="col-12"></div>
+                <div class="col-12 col-md-6 col-lg-3" id="monitoringSystemContainer">
                     <label for="monitoringSystem" class="form-label fw-bold">Система мониторинга:</label>
                     <select class="form-control" id="monitoringSystem" name="monitoring_system">
                         <option value="" selected>Все</option>
@@ -19,13 +19,20 @@
                         <option value="Cesar">Cesar</option>
                     </select>
                 </div>
-                <div class="col-md-3" id="blockNumberContainer">
+                <div class="col-12 col-md-6 col-lg-3" id="blockNumberContainer">
                     <label for="blockNumber" class="form-label fw-bold">Номер блока:</label>
                     <select class="form-control" id="blockNumber" name="block_number" disabled>
                         <option value="" selected>Все</option>
                     </select>
                 </div>
-                <div class="col-md-12 d-flex gap-3 mt-4">
+                <div class="col-12">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="validNav" checked>
+                        <label class="form-check-label" for="validNav">Валидная навигация</label>
+                        <small class="form-text text-muted d-block">Вся навигация до 07.08.2025 считается валидной</small>
+                    </div>
+                </div>
+                <div class="col-12 d-flex flex-wrap gap-3 mt-4">
                     <button class="btn btn-primary px-4" id="applyBtn">
                         <i class="bi bi-check-lg me-2"></i>Применить
                     </button>
@@ -167,6 +174,7 @@
             window.MapController.clearRoute();
             document.getElementById('dateFrom').value = '';
             document.getElementById('dateTo').value = '';
+            document.getElementById('validNav').checked = true;
             const monitoring = window.carData.monitoring || [];
             const hasWialon = monitoring.some(item => item.type === 'wialon' && item.uid);
             const hasCesar = monitoring.some(item => item.type === 'cesar' && item.pin);
@@ -184,7 +192,14 @@
 
             window.MapController.clearRoute();
 
-            const coordinates = historyData.map(entry => [entry.pos_y, entry.pos_x]);
+            const validNavCheckbox = document.getElementById('validNav');
+            let filteredData = historyData;
+
+            if (validNavCheckbox.checked) {
+                filteredData = historyData.filter(entry => entry.valid_nav === 1);
+            }
+
+            const coordinates = filteredData.map(entry => [entry.pos_y, entry.pos_x]);
 
             if (coordinates.length > 0) {
                 let startMark = new ymaps.Placemark(coordinates[0], {
@@ -222,13 +237,3 @@
         initializeDropdowns();
     });
 </script>
-
-<style>
-    .form-control:focus {
-        box-shadow: 0 0 8px rgba(13, 110, 253, 0.3);
-    }
-    .btn-primary:hover, .btn-outline-secondary:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    }
-</style>
