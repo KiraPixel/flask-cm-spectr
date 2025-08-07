@@ -320,6 +320,11 @@ class GetCarHistory(Resource):
         monitoring_system = request.args.get('monitoring_system')
         block_number = request.args.get('block_number')
 
+        # временная заглушка
+        if nm is not None:
+            return {
+                'error': f'Функция временно отключена'}, 400
+
         valid_systems = {None, 'Wialon', 'Cesar'}
         if monitoring_system not in valid_systems:
             return {'error': f'Invalid monitoring_system value: {monitoring_system}. Valid values: {valid_systems}'}, 400
