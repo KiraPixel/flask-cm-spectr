@@ -1,6 +1,7 @@
+import logging
 import os
 
-from flask import jsonify, request, session, g
+from flask import jsonify, request, session, g, make_response
 from flask_restx import Namespace, Resource
 
 from app.models import CashWialon
@@ -15,6 +16,9 @@ wialon_api_url = os.getenv('WIALON_HOST', 'default_host')
 
 # Создаем экземпляр WialonAPI
 wialon_api = WialonAPI(wialon_token, wialon_api_url)
+
+# Получаем экземпляр логера
+logger = logging.getLogger('flask_cm_spectr')
 
 @wialon_ns.route('/wialon_exec_cmd/<int:unit_id>/<string:command_name>', methods=['GET'])
 class WialonExecCmd(Resource):
@@ -53,16 +57,17 @@ class WialonGetSensor(Resource):
     @wialon_ns.doc(params={'unit_id': 'Номер объекта в виалоне'})
     @wialon_ns.response(200, 'Успешно')
     @wialon_ns.response(400, 'Неверный запрос (например, отсутствуют параметры)')
-    @wialon_ns.response(500, 'Ошибка при выполнении запроса к базе данных')
+    @wialon_ns.response(500, 'Ошибка при выполнении запроса к виалону')
     @need_access('car_sensors')
     def get(self, unit_id):
         username = session.get('username')
-
         final_response = wialon_api.fetch_sensor_data(username, unit_id)
+        
         if final_response is not None:
-            return jsonify(final_response)
-        # После 6 неудачных попыток возвращаем ошибку
-        return jsonify({'error': 'Failed to fetch valid sensor data after multiple attempts'}), 500
+            return make_response(jsonify(final_response), 200)
+        else:
+            logger.error(f'Wialon не вернул датчики. User: {g.user.username}, unit_id: {unit_id}')
+            return make_response(jsonify({'error': 'Wialon API server error'}), 500)
 
 
 @wialon_ns.route('/wialon_get_unit_messages/')

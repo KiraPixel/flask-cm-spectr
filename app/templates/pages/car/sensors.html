@@ -189,7 +189,7 @@ function refreshSensors() {
 
             let sensorsHtml = '';
             if (error || data.error) {
-                sensorsHtml = '<div class="alert alert-danger">Ошибка загрузки данных датчиков</div>';
+                sensorsHtml = '<div class="alert alert-danger">Wialon API не вернул данные по датчикам. Попробуйте еще раз</div>';
             } else {
                 Object.entries(sensorsData).forEach(([id, sensor]) => {
                     const value = data[id] !== undefined ? data[id] : 'Н/Д';

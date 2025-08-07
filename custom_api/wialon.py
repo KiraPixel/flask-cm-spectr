@@ -55,7 +55,6 @@ class WialonAPI:
             sid = self._ensure_valid_sid(username)
             if not sid:
                 return None
-
             try:
                 response = requests.get(self.api_url, params={
                     'svc': 'unit/calc_last_message',
