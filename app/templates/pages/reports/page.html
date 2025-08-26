@@ -18,10 +18,13 @@
                         {% for report in category.reports %}
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             <span>{{ report.name }}</span>
-                            <a href="{{ url_for('main.send_report', report=report.id) }}"
-                               class="btn btn-sm btn-outline-primary send-report">
-                                <i class="bi bi-envelope-arrow-down"></i>
-                            </a>
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-primary send-report"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#reportModal-{{ report.id }}"
+                                    data-report-id="{{ report.id }}">
+                                <i class="bi bi-{% if report.params %}gear{% else %}envelope-arrow-down{% endif %}"></i>
+                            </button>
                         </li>
                         {% endfor %}
                     </ul>
@@ -31,4 +34,107 @@
         {% endfor %}
     </div>
 </div>
+
+<!-- Модальные окна для всех отчетов -->
+{% for category in categories %}
+    {% for report in category.reports %}
+    <div class="modal fade" id="reportModal-{{ report.id }}" tabindex="-1" aria-labelledby="reportModalLabel-{{ report.id }}" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="reportModalLabel-{{ report.id }}">{{ report.name }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form class="report-form" data-report-id="{{ report.id }}">
+                        {% if report.params %}
+                        {% for param_name, param_data in report.params.items() %}
+                        <div class="mb-3">
+                            {% if param_data.type == 'checkbox' %}
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span>{{ param_data.label }}</span>
+                                <input type="checkbox"
+                                       class="form-check-input"
+                                       id="{{ param_name }}"
+                                       name="{{ param_name }}">
+                            </div>
+                            {% else %}
+                            <label for="{{ param_name }}" class="form-label">{{ param_data.label }}</label>
+                            {% if param_data.type == 'date' %}
+                            <input type="date"
+                                   class="form-control"
+                                   id="{{ param_name }}"
+                                   name="{{ param_name }}"
+                                   required>
+                            {% elif param_data.type == 'text' %}
+                            <input type="text"
+                                   class="form-control"
+                                   id="{{ param_name }}"
+                                   name="{{ param_name }}"
+                                   placeholder="{{ param_data.placeholder if param_data.placeholder else '' }}"
+                                   required>
+                            {% elif param_data.type == 'multitext' %}
+                            <textarea class="form-control"
+                                      id="{{ param_name }}"
+                                      name="{{ param_name }}"
+                                      rows="4"
+                                      placeholder="{{ param_data.placeholder if param_data.placeholder else '' }}"
+                                      required></textarea>
+                            {% endif %}
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                        {% else %}
+                        <p>Этот отчет не требует дополнительных параметров.</p>
+                        <input type="hidden" name="report_id" value="{{ report.id }}">
+                        {% endif %}
+                        <button type="submit" class="btn btn-primary">Отправить</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+{% endfor %}
+
+<script>
+document.querySelectorAll('.report-form').forEach(form => {
+    form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const reportId = form.dataset.reportId;
+        const formData = new FormData(form);
+        const data = { report_id: reportId };
+
+        // Собираем данные формы в JSON
+        for (const [key, value] of formData.entries()) {
+            if (key === 'only_home_storages') {
+                data[key] = value === 'on'; // Преобразуем чекбокс в boolean
+            } else {
+                data[key] = value;
+            }
+        }
+
+        try {
+            const response = await fetch('{{ url_for("api.reports_get_report") }}', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const result = await response.json();
+            if (result.success) {
+                alert(result.message); // Показываем сообщение об успехе
+            } else {
+                alert(result.message); // Показываем сообщение об ошибке
+            }
+        } catch (error) {
+            alert('Ошибка при отправке запроса: ' + error.message);
+        }
+
+        // Закрываем модальное окно
+        const modal = form.closest('.modal');
+        const bsModal = bootstrap.Modal.getInstance(modal);
+        bsModal.hide();
+    });
+});
+</script>
 {% endblock %}

@@ -282,8 +282,48 @@ def insert_mailing_record_sqlalchemy(target, subject, content, html_template=Non
             'attachment_content': attachment_content
         })
         db.session.commit()
-        return True  # Успешное выполнение
+        return True
     except Exception as e:
         db.session.rollback()
         print(f"Error inserting mailing record: {e}")
         return False
+
+
+def custom_transport_transfer(start_date, end_date, regions, home_storage):
+    try:
+        if isinstance(regions, list):
+            regions = ",".join([f"'{r}'" for r in regions])
+        else:
+            regions = f"'{regions}'"
+
+        sql = text("""
+            CALL cm.reports_custom_transport_transfer(
+            :start_date, 
+            :end_date, 
+            :regions, 
+            :home_storage)
+        """)
+
+        result = db.session.execute(sql, {
+            'start_date': start_date,
+            'end_date': end_date,
+            'regions': regions,
+            'home_storage': home_storage
+        })
+
+        rows = result.fetchall()
+        result.close()
+        db.session.commit()
+
+        columns = [
+            'uNumber', 'name', 'region', 'type', 'model_name', 'formatted_date',
+            'wialon_uid_count', 'wialon_last_time', 'cesar_pin_count'
+        ]
+        result_list = [dict(zip(columns, row)) for row in rows]
+
+        return result_list
+    except Exception as e:
+        db.session.rollback()
+        print(f"Ошибка при вызове процедуры custom_transport_transfer: {e}")
+        return False
+

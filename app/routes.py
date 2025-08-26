@@ -253,6 +253,26 @@ def reports():
                 {"id": "cesar_with_address", "name": "Весь транспорт с адресом"}
             ]
         },
+        {
+            "id": "customs",
+            "title": "Кастомные отчеты",
+            "reports": [
+                {
+                    "id": "custom_transport_transfer",
+                    "name": "Перемещения транспорта",
+                    "params": {
+                        "date_from": {"type": "date", "label": "Дата от"},
+                        "date_to": {"type": "date", "label": "Дата до"},
+                        "region": {
+                            "type": "multitext",
+                            "label": "Регион",
+                            "placeholder": "Введите регионы, разделяя запятыми или переносом строки, например: Химки (г), Москва, СПБ"
+                        },
+                        "only_home_storages": {"type": "checkbox", "label": "Только Домашние склады"}
+                    }
+                }
+            ]
+        },
     ]
 
     if not has_role_access(user.username, 'csp'):
@@ -307,31 +327,6 @@ def car(car_id):
         car_name=car_name,
         ignored_storages = ignored_storages
     )
-
-# Скачивание отчета
-@bp.route('/send_report', endpoint="send_report")
-@need_access('reports')
-def send_report():
-    report_name = request.args.get('report')
-    print(f"Received report name: {report_name}")
-
-    if not report_name:
-        flash('Не указан отчет для отправки', 'warning')
-        return redirect(url_for('main.home'))
-
-    user = g.user
-
-    if report_name == 'wialon_with_address':
-        if user.role != 1:
-            flash('Нет прав', 'warning')
-            return redirect(url_for('main.reports'))
-
-    if report_generator.generate_and_send_report(report_name, user):
-        flash('Отчет отправлен на почту', 'info')
-        return redirect(url_for('main.reports'))
-    else:
-        flash('Произошла ошибка, обратитесь к системному администратору', 'warning')
-        return redirect(url_for('main.reports'))
 
 
 @bp.route('/maps/')

@@ -5,8 +5,8 @@ from typing import Dict, List, Optional, Tuple
 from uuid import uuid4
 
 from openpyxl import Workbook
-from sqlalchemy import func
-from app.models import Transport, CashCesar, CashWialon, Reports, Alert, TransportModel, Storage
+from sqlalchemy import func, text
+from app.models import Transport, CashCesar, CashWialon, Reports, Alert, TransportModel, Storage, custom_transport_transfer
 from app.utils import get_address_from_coords
 from . import my_time, coord_math
 from app import db
@@ -247,9 +247,20 @@ REPORT_CONFIGS = {
             row.address or '',
             row.organization or ''
         ]
+    },
+    'custom_transport_transfer': {
+        'headers': ['uNumber', 'name', 'region', 'type', 'model_name', 'formatted_date',
+                   'wialon_uid_count', 'wialon_last_time', 'cesar_pin_count'],
+        'query': lambda **params: custom_transport_transfer(
+            start_date=params.get('date_from'),
+            end_date=params.get('date_to'),
+            regions=[r.strip() for r in params.get('region', '').replace('\n', ',').split(',') if r.strip()] if params.get('region') else [],
+            home_storage=params.get('only_home_storages') == 'on'
+        ),
+        'row_builder': lambda row: [row.get(col, '') for col in ['uNumber', 'name', 'region', 'type', 'model_name',
+                                                                 'formatted_date', 'wialon_uid_count', 'wialon_last_time', 'cesar_pin_count']]
     }
 }
-
 
 def get_location(x: float, y: float) -> str:
     """Получение адреса по координатам с механизмом повторных попыток."""
@@ -311,8 +322,8 @@ def build_voperator_row(alert: Alert) -> List:
     ]
 
 
-def generate_excel_report(report_type: str) -> Optional[bytes]:
-    """Генерация Excel-отчета на основе типа отчета."""
+def generate_excel_report(report_type: str, **params) -> Optional[bytes]:
+    """Генерация Excel-отчета на основе типа отчета и параметров."""
     if report_type not in REPORT_CONFIGS:
         return None
 
@@ -321,7 +332,12 @@ def generate_excel_report(report_type: str) -> Optional[bytes]:
     ws = wb.active
     ws.append(config['headers'])
 
-    for row in config['query']():
+    # Вызов query с параметрами
+    query_result = config['query'](**params) if params else config['query']()
+    if not query_result:  # Проверка на False или пустой результат
+        return None
+
+    for row in query_result:
         row_data = config['row_builder'](row)
         if row_data:  # Пропуск строк None (например, отфильтрованных в health_coordinates)
             ws.append(row_data)
@@ -332,29 +348,39 @@ def generate_excel_report(report_type: str) -> Optional[bytes]:
     return output.getvalue()
 
 
-def generate_and_send_report(args: str, user) -> bool:
+def generate_and_send_report(report_id: str, user, **params) -> bool:
     """Генерация и отправка отчета пользователю."""
     report_entry = Reports(
         username=user.username,
-        type=args,
+        type=report_id,
         status='Генерация отчета'
     )
     db.session.add(report_entry)
     db.session.commit()
 
     try:
-        report_content = generate_excel_report(args)
+        # Генерация отчета с учетом параметров
+        report_content = generate_excel_report(report_id, **params)
         if report_content is None:
             report_entry.status = 'Ошибка: Не удалось сгенерировать отчет'
             db.session.commit()
             return False
 
-        subject = f'Отчет: {args}'
-        body = f'Во вложении заказанный отчет {args}.'
-        attachment_name = f'{args}.xlsx'
+        # Формирование темы и тела письма
+        subject = f'Отчет: {report_id}'
+        if params:
+            params_str = ', '.join(f"{key}: {value}" for key, value in params.items())
+            body = f'Во вложении заказанный отчет "{report_id}" с параметрами: {params_str}.'
+        else:
+            body = f'Во вложении заказанный отчет "{report_id}".'
 
+        attachment_name = f'{report_id}.xlsx'
+
+        # Отправка письма
         success = mail_sender.send_email(
-            user.email, subject, body,
+            user.email,
+            subject,
+            body,
             attachment_name=attachment_name,
             attachment_content=report_content
         )
