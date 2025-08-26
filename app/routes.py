@@ -1,18 +1,17 @@
-import ast
-import json
 import logging
-import os
 import time
 import re
 
-from flask import Blueprint, render_template, request, redirect, url_for, session, flash, make_response, send_file, g
+from flask import Blueprint, render_template, request, redirect, url_for, session, flash, g
 import xml.etree.ElementTree as ET
-from modules.my_time import online_check
-from .models import db, User, Transport, TransportModel, Storage, CashWialon, CashCesar, Alert, Comments, TransferTasks, \
+
+from sqlalchemy import case
+
+from .models import db, User, Transport, TransportModel, Storage, CashWialon, CashCesar, Alert, \
     IgnoredStorage, AlertType, ParserTasks
 from .utils import need_access
-from modules import report_generator, my_time, hash_password
-from .utils.functionality_acccess import has_role_access, get_user_roles
+from modules import my_time, hash_password
+from .utils.functionality_acccess import has_role_access
 from .utils.transport_acccess import get_all_access_transport
 
 # Создаем Blueprint
@@ -133,24 +132,44 @@ def home():
 @bp.route('/virtual_operator')
 @need_access('voperator')
 def virtual_operator():
-    distance = db.session.query(Alert).join(AlertType, Alert.type==AlertType.alert_un).filter(Alert.status == 0, Alert.type.in_(['distance', 'gps'])).order_by(Alert.date.desc()).all()
-    no_docs_cord = db.session.query(Alert).join(AlertType, Alert.type == AlertType.alert_un).filter(Alert.status == 0, Alert.type == 'no_docs_cords').order_by(Alert.date.desc()).all()
-    not_work = db.session.query(Alert).join(AlertType, Alert.type==AlertType.alert_un).filter(Alert.status == 0, Alert.type == 'not_work').order_by(Alert.date.desc()).all()
-    no_equipment = db.session.query(Alert).join(AlertType, Alert.type==AlertType.alert_un).filter(Alert.status == 0, Alert.type == 'no_equipment').order_by(Alert.date.desc()).all()
-    other = db.session.query(Alert).join(AlertType, Alert.type == AlertType.alert_un).filter(Alert.status == 0,
-                                                                                             Alert.type.not_in(
-                                                                                                 ['distance', 'gps',
-                                                                                                  'no_docs_cords',
-                                                                                                  'not_work',
-                                                                                                  'no_equipment'])).order_by(Alert.date.desc()).all()
+    category_case = case(
+        (Alert.type.in_(["distance", "gps"]), "distance"),
+        (Alert.type == "no_docs_cords", "no_docs_cord"),
+        (Alert.type == "not_work", "not_work"),
+        (Alert.type == "no_equipment", "no_equipment"),
+        else_="other"
+    )
+
+    alerts = (
+        db.session.query(Alert, category_case.label("category"))
+        .join(AlertType, Alert.type == AlertType.alert_un)
+        .filter(Alert.status == 0)
+        .order_by(Alert.date.desc())
+        .all()
+    )
+
+    categories = {
+        "distance": [],
+        "no_docs_cord": [],
+        "not_work": [],
+        "no_equipment": [],
+        "other": []
+    }
+
+    for alert, cat in alerts:
+        categories[cat].append(alert)
+
     last_100_alerts = db.session.query(Alert).join(AlertType, Alert.type==AlertType.alert_un).order_by(Alert.date.desc()).limit(100).all()
-    return render_template('pages/virtual_operator/page.html',
-                           distance=distance,
-                           no_docs_cord=no_docs_cord,
-                           not_work=not_work,
-                           no_equipment=no_equipment,
-                           other=other,
-                           last_100_alerts=last_100_alerts)
+
+    return render_template(
+        'pages/virtual_operator/page.html',
+        distance=categories["distance"],
+        no_docs_cord=categories["no_docs_cord"],
+        not_work=categories["not_work"],
+        no_equipment=categories["no_equipment"],
+        other=categories["other"],
+        last_100_alerts=last_100_alerts
+    )
 
 
 

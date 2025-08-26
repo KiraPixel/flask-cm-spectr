@@ -36,7 +36,7 @@ class Transport(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     storage_id = db.Column(db.Integer, db.ForeignKey('storage.ID'), nullable=False)
-    model_id = db.Column(db.Text, db.ForeignKey('transport_model.id'), nullable=False)  # Указание внешнего ключа
+    model_id = db.Column(db.Text, db.ForeignKey('transport_model.id'), nullable=False)
     storage = db.relationship('Storage', back_populates='transports', primaryjoin="Storage.ID == Transport.storage_id")
     uNumber = db.Column(db.Text)
     manufacture_year = db.Column(db.Text)
@@ -149,9 +149,9 @@ class Alert(db.Model):
     __tablename__ = 'alert'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     date = db.Column(db.Integer, nullable=False, default=0)
-    uNumber = db.Column(db.Text, nullable=False)
-    type = db.Column(db.String(255), db.ForeignKey('alert_type.alert_un'), nullable=False)  # Изменяем на String(255) и добавляем ForeignKey
-    data = db.Column(db.Text, nullable=False)
+    uNumber = db.Column(db.Text(50), nullable=False)
+    type = db.Column(db.Text(50), db.ForeignKey('alert_type.alert_un'), nullable=False)
+    data = db.Column(db.Text(50), nullable=False)
     status = db.Column(db.Integer, nullable=True, default=0)
     comment = db.Column(db.String(100), nullable=True)
     comment_editor = db.Column(db.String(100), nullable=True)
