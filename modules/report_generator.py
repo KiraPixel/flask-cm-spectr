@@ -6,7 +6,7 @@ from uuid import uuid4
 
 from openpyxl import Workbook
 from sqlalchemy import func, text
-from app.models import Transport, CashCesar, CashWialon, Reports, Alert, TransportModel, Storage, custom_transport_transfer
+from app.models import Transport, CashCesar, CashWialon, Reports, Alert, TransportModel, Storage, reports_custom_transport_transfer
 from app.utils import get_address_from_coords
 from . import my_time, coord_math
 from app import db
@@ -249,16 +249,16 @@ REPORT_CONFIGS = {
         ]
     },
     'custom_transport_transfer': {
-        'headers': ['uNumber', 'name', 'region', 'type', 'model_name', 'formatted_date',
-                   'wialon_uid_count', 'wialon_last_time', 'cesar_pin_count'],
-        'query': lambda **params: custom_transport_transfer(
-            start_date=params.get('date_from'),
-            end_date=params.get('date_to'),
-            regions=[r.strip() for r in params.get('region', '').replace('\n', ',').split(',') if r.strip()] if params.get('region') else [],
-            home_storage=params.get('only_home_storages') == 'on'
-        ),
-        'row_builder': lambda row: [row.get(col, '') for col in ['uNumber', 'name', 'region', 'type', 'model_name',
-                                                                 'formatted_date', 'wialon_uid_count', 'wialon_last_time', 'cesar_pin_count']]
+    'headers': ['номер_лота', 'склад', 'регион', 'тип', 'модель_техники',
+                'дата_перемещения', 'виалон_количество', 'виалон_онлайн', 'цезарь_количество'],
+    'query': lambda **params: reports_custom_transport_transfer(
+        start_date=params.get('date_from'),
+        end_date=params.get('date_to'),
+        region=params.get('region', 'Химки (г)'),
+        home_storage=params.get('only_home_storages', 0)
+    ),
+    'row_builder': lambda row: [row.get(col, '') for col in ['номер_лота', 'склад', 'регион', 'тип', 'модель_техники',
+                                                             'дата_перемещения', 'виалон_количество', 'виалон_онлайн', 'цезарь_количество']]
     }
 }
 
@@ -388,7 +388,6 @@ def generate_and_send_report(report_id: str, user, **params) -> bool:
         report_entry.status = 'Отчет отправлен' if success else 'Ошибка: Не удалось отправить отчет'
         db.session.commit()
         return success
-
     except Exception as e:
         db.session.rollback()
         report_entry.status = f'Ошибка: {str(e)}'

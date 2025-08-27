@@ -108,7 +108,7 @@ document.querySelectorAll('.report-form').forEach(form => {
         // Собираем данные формы в JSON
         for (const [key, value] of formData.entries()) {
             if (key === 'only_home_storages') {
-                data[key] = value === 'on'; // Преобразуем чекбокс в boolean
+                data[key] = value === 'on' ? 1 : 0; // Преобразуем чекбокс в 1 или 0
             } else {
                 data[key] = value;
             }

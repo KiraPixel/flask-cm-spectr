@@ -283,9 +283,9 @@ def reports():
                         "date_from": {"type": "date", "label": "Дата от"},
                         "date_to": {"type": "date", "label": "Дата до"},
                         "region": {
-                            "type": "multitext",
+                            "type": "text",
                             "label": "Регион",
-                            "placeholder": "Введите регионы, разделяя запятыми или переносом строки, например: Химки (г), Москва, СПБ"
+                            "placeholder": "Название региона"
                         },
                         "only_home_storages": {"type": "checkbox", "label": "Только Домашние склады"}
                     }

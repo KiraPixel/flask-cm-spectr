@@ -289,25 +289,20 @@ def insert_mailing_record_sqlalchemy(target, subject, content, html_template=Non
         return False
 
 
-def custom_transport_transfer(start_date, end_date, regions, home_storage):
+def reports_custom_transport_transfer(start_date, end_date, region, home_storage):
     try:
-        if isinstance(regions, list):
-            regions = ",".join([f"'{r}'" for r in regions])
-        else:
-            regions = f"'{regions}'"
-
         sql = text("""
             CALL cm.reports_custom_transport_transfer(
             :start_date, 
             :end_date, 
-            :regions, 
+            :region, 
             :home_storage)
         """)
 
         result = db.session.execute(sql, {
             'start_date': start_date,
             'end_date': end_date,
-            'regions': regions,
+            'region': f'%{region}%',
             'home_storage': home_storage
         })
 
@@ -315,10 +310,8 @@ def custom_transport_transfer(start_date, end_date, regions, home_storage):
         result.close()
         db.session.commit()
 
-        columns = [
-            'uNumber', 'name', 'region', 'type', 'model_name', 'formatted_date',
-            'wialon_uid_count', 'wialon_last_time', 'cesar_pin_count'
-        ]
+        columns = ['номер_лота', 'склад', 'регион', 'тип', 'модель_техники',
+                    'дата_перемещения', 'виалон_количество', 'виалон_онлайн', 'цезарь_количество']
         result_list = [dict(zip(columns, row)) for row in rows]
 
         return result_list
