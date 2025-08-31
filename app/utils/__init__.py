@@ -1,19 +1,28 @@
 from functools import wraps
 
 from flask import session, flash, redirect, url_for, request, g
+from flask_restx import Resource
 
 from .functionality_acccess import get_user_roles
+from ..config import SECRET_KEY
 from ..models import db, User, Storage, Coord, AlertType, Transport
 from modules import my_time, location_module
 import datetime
+import jwt
 
 
 def need_access(required_role):
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
+            is_api_request = False
+            if len(args) > 0 and isinstance(args[0], Resource):
+                is_api_request = True
+
             # Проверка на наличие API-ключа в запросе
             api_key = request.headers.get('X-API-KEY')
+            auth_header = request.headers.get('Authorization')
+            user = None
 
             if api_key:
                 # Находим пользователя по API-ключу
@@ -22,19 +31,36 @@ def need_access(required_role):
                 if not user_for_api_key:
                     return 'invalid api key', 401
 
-                # Если пользователь найден, записываем его в сессию
                 user = user_for_api_key
-                g.user = user
-                session['username'] = user.username
-                session.permanent = True
 
-            # Проверка, есть ли в сессии 'username'
-            if 'username' not in session:
-                flash('Вы пытались зайти на страницу, к которой требуется авторизация.', 'warning')
-                return redirect(url_for('main.login'))  # Редирект на страницу авторизации
+            elif auth_header and auth_header.startswith('Bearer '):
+                token = auth_header.split(' ')[1]
+                try:
+                    payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
+                    user_id = payload.get('user_id')
+                    username = payload.get('username')
+                    iat = payload.get('iat')
+                    if not user_id:
+                        return 'Invalid token', 401
+                    user = User.query.get(user_id)
+                    if not user or user.username != username:
+                        return 'Invalid user or token mismatch', 401
+                    else:
+                        if iat <= user.password_activated_date:
+                            return 'Token expired', 401
+                except jwt.ExpiredSignatureError:
+                    return 'Token expired', 401
+                except jwt.InvalidTokenError:
+                    return 'Invalid token', 401
+            elif 'username' in session:
+                user = g.user
 
-            # Получаем пользователя из базы данных
-            user = g.user
+            if user is None:
+                if is_api_request:
+                    return 'unauthorized', 401
+                else:
+                    flash('Вы пытались зайти на страницу, к которой требуется авторизация.', 'warning')
+                    return redirect(url_for('main.login'))
 
             # Устанавливаем текущее время для активности пользователя
             msk_time = datetime.datetime.fromtimestamp(my_time.now_unix_time(),
