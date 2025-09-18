@@ -250,7 +250,7 @@ REPORT_CONFIGS = {
     },
     'custom_transport_transfer': {
     'headers': ['номер_лота', 'склад', 'регион', 'тип', 'модель_техники',
-                'дата_перемещения', 'виалон_количество', 'виалон_онлайн', 'цезарь_количество'],
+                'дата_перемещения', 'виалон_количество', 'виалон_онлайн', 'цезарь_количество', 'пресет_ид', 'пресет_имя'],
     'query': lambda **params: reports_custom_transport_transfer(
         start_date=params.get('date_from'),
         end_date=params.get('date_to'),
