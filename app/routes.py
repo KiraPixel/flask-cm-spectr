@@ -233,7 +233,8 @@ def reports():
                 {"id": "main_transport", "name": "Все транспортные средства"},
                 {"id": "main_storage", "name": "Все склады"},
                 {"id": "main_transport_model", "name": "Все модели ТС"},
-                {"id": "main_summary", "name": "Сводный отчет с оборудованием"}
+                {"id": "main_summary", "name": "Сводный отчет с оборудованием"},
+                {"id": "voperator", "name": "Все открытые алерты"}
             ]
         },
         {
@@ -246,21 +247,12 @@ def reports():
             ]
         },
         {
-            "id": "dispatcher",
-            "title": "Виртуальный диспетчер",
-            "reports": [
-                {"id": "vopereator_theft_risk", "name": "Опасность угона"},
-                {"id": "vopereator_nonworking_equipment", "name": "Нерабочее оборудование"},
-                {"id": "vopereator_no_equipment", "name": "Отсутствие оборудования"}
-            ]
-        },
-        {
             "id": "wialon",
             "title": "Wialon",
             "reports": [
                 {"id": "wialon", "name": "Весь транспорт"},
                 {"id": "wialon_offline", "name": "Давно offline (от 3 дней)"},
-                {"id": "wialon_with_address", "name": "Весь транспорт с адресом"}
+                {"id": "with_address_wialon", "name": "Весь транспорт с адресом"}
             ]
         },
         {
@@ -269,7 +261,7 @@ def reports():
             "reports": [
                 {"id": "cesar", "name": "Весь транспорт"},
                 {"id": "cesar_offline", "name": "Давно offline (от 3 дней)"},
-                {"id": "cesar_with_address", "name": "Весь транспорт с адресом"}
+                {"id": "with_address_cesar", "name": "Весь транспорт с адресом"}
             ]
         },
         {

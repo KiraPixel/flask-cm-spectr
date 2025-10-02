@@ -42,6 +42,7 @@
                     {% for report in reports %}
                         <li class="list-group-item">
                             <p><strong>Тип отчета:</strong> {{ report.type }}</p>
+                            <p><strong>Процент выполнения:</strong> {{ report.percentage_completed or '-1'}}%</p>
                             <p><strong>Статус:</strong> {{ report.status }}</p>
                         </li>
                     {% endfor %}
