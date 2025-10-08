@@ -35,11 +35,12 @@
                 [posY, posX],
                 {
                     hintContent: `${uNumber} - ${unixToDatetime(last_date)}`,
-                    balloonContent: `<b>${uNumber}</b>`, // Текст в балуне
+                    balloonContent: `<b>${uNumber}</b>`,
+                    iconCaption: uNumber // Добавляем uNumber как подпись под маркером
                 },
                 {
                     preset: `islands#${color}DotIcon`,
-                    iconCaptionMaxWidth: '150', // Ограничиваем ширину подписи
+                    iconCaptionMaxWidth: '150' // Ограничиваем ширину подписи
                 }
             );
 
