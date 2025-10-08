@@ -277,16 +277,16 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // Обработчик для создания нового пресета
-    document.querySelector('[data-bs-target="#presetModal"]').addEventListener('click', () => {
+    document.querySelector('[data-bs-target="#presetModal"]').addEventListener('click', async () => {
         document.getElementById('presetModalLabel').textContent = 'Новый пресет';
         document.getElementById('presetForm').reset();
         document.getElementById('presetId').value = '';
         document.getElementById('wialonDangerDistance').value = '5';
         document.getElementById('wialonDangerHoursNotWork').value = '72';
         document.getElementById('active').value = '1';
-        document.getElementById('editable').value = '1';
-        document.getElementById('personalized').value = '0';
+        await loadAlertTypes();
         window.populateAlertTypeControls();
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('presetModal')).show();
     });
 
     // Инициализация
