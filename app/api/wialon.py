@@ -42,7 +42,7 @@ class WialonExecCmd(Resource):
 
         add_log(cash_wialon_obj.nm, username, 'wialon', f'Exec Command: {command_name}')
 
-        response_data, status_code = wialon_api.execute_command(username, unit_id,command_name)
+        response_data, status_code = wialon_api.execute_command(username, unit_id, command_name)
         if status_code == 200:
             if response_data:  # Проверка на пустой ответ
                 return jsonify(response_data)

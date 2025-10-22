@@ -2,7 +2,7 @@ from flask import session, jsonify, request, g
 from flask_restx import Namespace, Resource
 from ..utils import need_access, get_address_from_coords, storage_id_to_name
 from ..models import User, CashWialon, Alert, TransferTasks, db, Transport, Storage, TransportModel, CashCesar, \
-    AlertType, Comments, CashHistoryWialon, AlertTypePresets, CashHistoryCesar
+    AlertType, Comments, CashHistoryWialon, AlertTypePresets, CashHistoryCesar, CashAxenta
 from modules.my_time import unix_to_moscow_time, online_check_cesar, online_check
 from ..utils.functionality_acccess import has_role_access, get_user_roles
 
@@ -81,6 +81,33 @@ class GetCarInfo(Resource):
                         "online": online_check_cesar(item.last_time)
                     }
                     monitoring_json_response["monitoring"].append(monitoring_json_block)
+
+            # Получение информации из Axenta
+            if 'axenta' in user_role:
+                axenta = db.session.query(CashAxenta).filter(CashAxenta.nm.like(car.uNumber)).all()
+                if axenta:
+                    for item in axenta:
+                        axenta_cmd = None
+                        connected_status = None
+                        if 'car_command' in user_role:
+                            axenta_cmd = item.cmd
+                        if item.connected_status:
+                            connected_status = 'Online'
+                        monitoring_json_block = {
+                            "type": 'axenta',
+                            "online": connected_status,
+                            "uid": item.uid,
+                            "unit_id": item.id,
+                            "pos_x": item.pos_x,
+                            "pos_y": item.pos_y,
+                            "valid_nav": item.valid_nav,
+                            "address": str(get_address_from_coords(item.pos_x, item.pos_y)),
+                            "last_time": unix_to_moscow_time(item.last_time),
+                            "axenta_cmd": axenta_cmd,
+                            "axenta_sensors_list": item.sens,
+                            "axenta_satellite_count": item.gps,
+                        }
+                        monitoring_json_response["monitoring"].append(monitoring_json_block)
 
             #Получение алертов
             alerts_json_response = {"alert": []}
