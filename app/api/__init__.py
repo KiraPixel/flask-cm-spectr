@@ -52,7 +52,10 @@ api.add_namespace(auth_ns)
 
 @api_bp.before_request
 def before_request():
-    username = g.user
+    try:
+        username = g.user.username
+    except:
+        username = g.user or 'Неизвестен'
 
     logger.debug(
         'Request: User=%s, Method=%s, URL=%s, ARGS=%s',
