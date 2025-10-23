@@ -331,10 +331,12 @@ def car(car_id):
         if text[1] != ' ':
             car_id = text[:1] + ' ' + text[1:]
     car_name = f'{car_id}'
+    ignored_storages = db.session.query(IgnoredStorage).all()
 
     return render_template(
         'pages/car/page.html',
         car_name=car_name,
+        ignored_storages=ignored_storages
     )
 
 
