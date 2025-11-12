@@ -60,6 +60,7 @@ def home():
 
     # Применяем фильтры к запросу
     if filters['nm']:
+        filters['nm'] = filters['nm'].rstrip()
         query = query.filter(Transport.uNumber.like(f'%{filters["nm"]}%'))
     if filters['model']:
         query = query.filter(TransportModel.name.like(f'%{filters["model"]}%'))
