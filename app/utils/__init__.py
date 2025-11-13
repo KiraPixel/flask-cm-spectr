@@ -31,6 +31,7 @@ def need_access(required_role):
                 if not user_for_api_key:
                     return 'invalid api key', 401
                 user = user_for_api_key
+                g.user = user
             elif auth_header and auth_header.startswith('Bearer '):
                 token = auth_header.split(' ')[1]
                 try:
