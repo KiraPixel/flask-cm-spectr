@@ -1,5 +1,4 @@
-name: Build, Push and Update Deployment
-
+name: Build and Push
 on:
   push:
     branches:
@@ -12,37 +11,41 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Set image tag
-      id: vars
-      run: echo "TAG=$(date +%Y%m%d%H%M%S)" >> $GITHUB_ENV
+      - name: Generate image tag
+        id: vars
+        run: |
+          TAG=$(date +%Y%m%d%H%M%S)
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "TAG=$TAG" >> $GITHUB_ENV  # на всякий случай
 
-    - name: Log in to GitHub Container Registry
-      uses: docker/login-action@v2
-      with:
-        registry: ghcr.io
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v4
-      with:
-        context: .
-        push: true
-        tags: ghcr.io/kirapixel/flask-cm-spectr:${{ env.TAG }}
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/kirapixel/flask-cm-spectr:${{ steps.vars.outputs.tag }}
+            ghcr.io/kirapixel/flask-cm-spectr:latest
 
-    - name: Update deployment.yaml with new image tag
-      run: |
-        sed -i "s|image: ghcr.io/kirapixel/flask-cm-spectr:.*|image: ghcr.io/kirapixel/flask-cm-spectr:${{ env.TAG }}|g" deploy/deployment.yaml
+      - name: Update deployment.yaml with new image tag
+        run: |
+          sed -i "s|image: ghcr.io/kirapixel/flask-cm-spectr:.*|image: ghcr.io/kirapixel/flask-cm-spectr:${{ steps.vars.outputs.tag }}|g" deploy/deployment.yaml
 
-    - name: Commit and push deployment update
-      run: |
-        git config user.name "github-actions[bot]"
-        git config user.email "github-actions[bot]@users.noreply.github.com"
-        git add deploy/deployment.yaml
-        git commit -m "Update image tag to ${{ env.TAG }}"
-        git push
+      - name: Commit and push deployment update
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add deploy/deployment.yaml
+          git commit -m "Update image tag to ${{ steps.vars.outputs.tag }}" || echo "No changes to commit"
+          git push
