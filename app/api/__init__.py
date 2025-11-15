@@ -12,7 +12,7 @@ logger = logging.getLogger('flask_cm_spectr')
 api = Api(api_bp,
           version='1.0',
           title='API Documentation',
-          description='Описание и документация для API',
+          description='API методы ЦМ',
           authorizations={
               'api_key': {
                   'type': 'apiKey',
