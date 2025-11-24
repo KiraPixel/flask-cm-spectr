@@ -4,7 +4,7 @@ import os
 from flask import jsonify, request, session, g, make_response
 from flask_restx import Namespace, Resource
 
-from app.models import CashWialon
+from app.models import CashWialon, Transport
 from app.utils import need_access
 from app.utils.db_log import add_log
 from app.utils.transport_acccess import check_access_to_transport
@@ -34,11 +34,16 @@ class WialonExecCmd(Resource):
         """Выполнение команды на устройстве через Wialon"""
         username = g.user.username
         cash_wialon_obj = CashWialon.query.filter_by(id=unit_id).first()
-        if cash_wialon_obj:
-            if not check_access_to_transport(username, cash_wialon_obj.nm):
+        transport = Transport.query.filter_by(uNumber=cash_wialon_obj.nm).first()
+        if transport:
+            if not check_access_to_transport(username, transport.uNumber):
                 return jsonify({'status': 'not accessed'}, 406)
         else:
-            return jsonify({'status': 'unit not found'}, 404)
+            if cash_wialon_obj:
+                if not check_access_to_transport(username, cash_wialon_obj.nm):
+                    return jsonify({'status': 'not accessed'}, 406)
+            else:
+                return jsonify({'status': 'unit not found'}, 404)
 
         add_log(cash_wialon_obj.nm, username, 'wialon', f'Exec Command: {command_name}')
 
