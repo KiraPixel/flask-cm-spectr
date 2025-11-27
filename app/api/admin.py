@@ -106,6 +106,8 @@ class UsersList(Resource):
                 admin_users_ns.abort(404, f"Пользователь с id={user_id} не найден")
         else:
             users = User.query.all()
+            for u in users:
+                u.last_activity = u.last_activity.strftime('%d.%m.%Y %H:%M')
             return users
 
 # Добавление пользователя
