@@ -266,6 +266,15 @@ def reports():
             ]
         },
         {
+            "id": "axenta",
+            "title": "Axenta",
+            "reports": [
+                {"id": "axenta", "name": "Весь транспорт"},
+                {"id": "axenta_offline", "name": "Давно offline (от 3 дней)"},
+                {"id": "with_address_axenta", "name": "Весь транспорт с адресом"}
+            ]
+        },
+        {
             "id": "customs",
             "title": "Кастомные отчеты",
             "reports": [
