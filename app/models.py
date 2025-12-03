@@ -8,6 +8,7 @@ class User(db.Model):
     __tablename__ = 'users'
 
     id = Column(Integer, primary_key=True)
+    status = Column(Integer, default=1)
     username = Column(String(100), unique=True, nullable=False)
     password = Column(String(50), nullable=False)
     role = Column(Integer, nullable=False)

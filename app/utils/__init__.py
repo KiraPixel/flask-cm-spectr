@@ -60,6 +60,12 @@ def need_access(required_role):
                 else:
                     flash('Вы пытались зайти на страницу, к которой требуется авторизация.', 'warning')
                     return redirect(url_for('main.login'))
+            elif user.status != 1:
+                if is_api_request:
+                    return 'unauthorized', 403
+                else:
+                    flash('Учетная запись деактивирована.', 'warning')
+                    return redirect(url_for('main.login'))
 
             # Устанавливаем текущее время для активности пользователя
             msk_time = datetime.datetime.fromtimestamp(my_time.now_unix_time(),

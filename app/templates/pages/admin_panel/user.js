@@ -27,23 +27,58 @@ document.addEventListener('DOMContentLoaded', () => {
             const tbody = document.getElementById('usersTableBody');
             tbody.innerHTML = '';
             users.forEach(user => {
+                // Определяем классы для строки и статус-кнопок
+                const isDeactivated = user.status == 0;
+                const rowClass = isDeactivated ? 'bg-secondary-subtle text-muted' : '';
+                const disabledAttr = isDeactivated ? 'disabled' : '';
+                const deactivatedLabel = isDeactivated ? ' <small class="text-muted ms-2">(деактивирован)</small>' : '';
+
                 tbody.innerHTML += `
-                    <tr>
-                        <td class="ps-4">${user.role === 1 ? '<i class="bi bi-star-fill me-2 text-warning"></i>' : ''}${user.username}</td>
+                    <tr class="${rowClass}" ${isDeactivated ? 'title="Учётная запись деактивирована"' : ''}>
+                        <td class="ps-4">
+                            ${user.role === 1 ? '<i class="bi bi-star-fill me-2 text-warning"></i>' : ''}${user.username}${deactivatedLabel}
+                        </td>
                         <td>${user.email}</td>
-                        <td>${user.last_activity}</td>
+                        <td>${user.last_activity || '—'}</td>
                         <td class="pe-4">
                             <div class="d-flex gap-2">
-                                <button class="btn btn-sm btn-outline-primary rounded-circle" data-bs-toggle="modal" data-bs-target="#editUserModal" data-user-id="${user.id}" title="Редактировать" onclick="populateEditForm(${user.id}, '${user.username}', '${user.email}', ${user.role})">
+                                <!-- Редактировать — оставляем всегда активной (через неё обычно активируют обратно) -->
+                                <button class="btn btn-sm btn-outline-primary rounded-circle edit-user-btn"
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#editUserModal" 
+                                        data-user-id="${user.id}" 
+                                        title="${isDeactivated ? 'Сначала активируйте пользователя' : 'Редактировать'}"
+                                        onclick="populateEditForm(${user.id}, '${user.username.replace(/'/g, "\\'")}', '${user.email.replace(/'/g, "\\'")}', ${user.role}, ${user.status})">
                                     <i class="bi bi-pencil"></i>
                                 </button>
-                                <button class="btn btn-sm btn-outline-danger rounded-circle" data-bs-toggle="modal" data-bs-target="#resetPasswordModal" data-user-id="${user.id}" title="Сбросить пароль">
+            
+                                <!-- Сброс пароля — отключаем для деактивированных -->
+                                <button class="btn btn-sm btn-outline-danger rounded-circle" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#resetPasswordModal" 
+                                        data-user-id="${user.id}" 
+                                        title="Сбросить пароль"
+                                        ${disabledAttr}>
                                     <i class="bi bi-key"></i>
                                 </button>
-                                <button class="btn btn-sm btn-outline-secondary rounded-circle" data-bs-toggle="modal" data-bs-target="#userTransportAccessModal" data-user-id="${user.id}" title="Настройка доступа к транспорту">
+            
+                                <!-- Доступ к транспорту — отключаем -->
+                                <button class="btn btn-sm btn-outline-secondary rounded-circle" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#userTransportAccessModal" 
+                                        data-user-id="${user.id}" 
+                                        title="Настройка доступа к транспорту"
+                                        ${disabledAttr}>
                                     <i class="bi bi-bus-front"></i>
                                 </button>
-                                <button class="btn btn-sm btn-outline-info rounded-circle" data-bs-toggle="modal" data-bs-target="#userFunctionalityRolesModal" data-user-id="${user.id}" title="Настройка ролей функциональности">
+            
+                                <!-- Роли функциональности — отключаем -->
+                                <button class="btn btn-sm btn-outline-info rounded-circle" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#userFunctionalityRolesModal" 
+                                        data-user-id="${user.id}" 
+                                        title="Настройка ролей функциональности"
+                                        ${disabledAttr}>
                                     <i class="bi bi-gear"></i>
                                 </button>
                             </div>
@@ -69,11 +104,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Заполнение формы редактирования
-    window.populateEditForm = (id, username, email, role) => {
+    window.populateEditForm = (id, username, email, role, status) => {
         document.getElementById('editUserForm').dataset.userId = id;
         document.getElementById('editUsername').value = username;
         document.getElementById('editEmail').value = email;
         document.getElementById('editRole').value = role;
+        document.getElementById('editActiveStatus').value = status;
     };
 
     // Обработка отправки формы приглашения

@@ -14,6 +14,7 @@ admin_storages_ns = Namespace('admin/storage', description='Операции с�
 # Модель для пользователя
 user_model = admin_users_ns.model('User', {
     'id': fields.Integer(description='Уникальный идентификатор пользователя'),
+    'status': fields.Integer(description='Статус УЗ: 0 (деактивирована), 1 (активирована)'),
     'username': fields.String(description='Имя пользователя (логин)'),
     'email': fields.String(description='Электронная почта пользователя'),
     'role': fields.Integer(description='Роль пользователя: 0 (обычный пользователь), 1 (администратор)'),
@@ -46,6 +47,7 @@ edit_user_parser = admin_users_ns.parser()
 edit_user_parser.add_argument('username', type=str, required=True, help='Имя пользователя (логин, уникальное)', location='form')
 edit_user_parser.add_argument('email', type=str, required=True, help='Электронная почта пользователя (должна быть валидной)', location='form')
 edit_user_parser.add_argument('role', type=int, required=True, help='Роль пользователя: -1 (обычный пользователь), 1 (администратор)', location='form')
+edit_user_parser.add_argument('status', type=int, required=True, help='Статус УЗ: 0 (деактивирована), 1 (активирована)', location='form')
 
 # Парсер для добавления склада
 storage_parser = admin_storages_ns.parser()
@@ -143,6 +145,7 @@ class EditUser(Resource):
         user.username = args['username']
         user.email = args['email']
         user.role = args['role']
+        user.status = args['status']
         db.session.commit()
         return {'status': 'user_updated'}, 200
 
