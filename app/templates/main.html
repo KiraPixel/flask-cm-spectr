@@ -14,6 +14,12 @@
     <!-- Подключение манифеста для PWA -->
     <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
 
+    <!-- Подключаем FlastPickr (для firefox) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ru.js"></script>
+
     <meta name="theme-color" content="#0d6efd">
     <meta name="description" content="Центр мониторинга для управления транспортом и оборудованием">
     <meta name="mobile-web-app-capable" content="yes">

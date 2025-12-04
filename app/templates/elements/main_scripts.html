@@ -10,3 +10,29 @@
     }
 </script>
 
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const isFirefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
+
+    if (isFirefox) {
+        document.querySelectorAll('input[type="datetime-local"]').forEach(input => {
+            input.type = "text";
+
+            flatpickr(input, {
+                enableTime: true,
+                time_24hr: true,
+                locale: "ru",
+                dateFormat: "Y-m-d\\TH:i",
+                altInput: true,
+                altFormat: "d.m.Y H:i",
+                minuteIncrement: 1,
+                clickOpens: true,
+                allowInput: true,
+            });
+        });
+    }
+});
+</script>
+
