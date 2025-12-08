@@ -156,10 +156,34 @@ function initializeSensors() {
         sensorsContainer.innerHTML += unitCard;
     });
 
+    initializeDynamicDateInputs();
+
     refreshSensors();
     setupCommandButtons();
     setupGraphButtons();
     setupAllDataButtons();
+}
+
+function initializeDynamicDateInputs() {
+    const isFirefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
+
+    if (isFirefox) {
+        document.querySelectorAll('#sensors input[type="datetime-local"]').forEach(input => {
+            input.type = "text";
+
+            flatpickr(input, {
+                enableTime: true,
+                time_24hr: true,
+                locale: "ru",
+                dateFormat: "Y-m-d\\TH:i",
+                altInput: true,
+                altFormat: "d.m.Y H:i",
+                minuteIncrement: 1,
+                clickOpens: true,
+                allowInput: true,
+            });
+        });
+    }
 }
 
 function refreshSensors() {
