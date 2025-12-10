@@ -2,7 +2,7 @@ from flask import session, jsonify, request, g
 from flask_restx import Namespace, Resource
 from ..utils import need_access, get_address_from_coords, storage_id_to_name
 from ..models import User, CashWialon, Alert, TransferTasks, db, Transport, Storage, TransportModel, CashCesar, \
-    AlertType, Comments, CashHistoryWialon, AlertTypePresets, CashHistoryCesar, CashAxenta
+    AlertType, Comments, CashHistoryWialon, AlertTypePresets, CashHistoryCesar, CashAxenta, CashHistoryAxenta
 from modules.my_time import unix_to_moscow_time, online_check_cesar, online_check
 from ..utils.functionality_acccess import has_role_access, get_user_roles
 
@@ -331,7 +331,7 @@ class CarsResource(Resource):
 class GetCarHistory(Resource):
 
     @car_ns.param('nm', 'Номер транспортного средства', _required=True)
-    @car_ns.param('monitoring_system', 'Cesar OR Wialon', _required=False)
+    @car_ns.param('monitoring_system', 'Cesar, Wialon, Axenta', _required=False)
     @car_ns.param('block_number', 'UID для Виалона, PIN для Цезаря', _required=False, type=int)
     @car_ns.param('time_from', 'Время начала фильтрации (UNIX timestamp)', _required=True, type=int)
     @car_ns.param('time_to', 'Время окончания фильтрации (UNIX timestamp)', _required=True, type=int)
@@ -347,7 +347,7 @@ class GetCarHistory(Resource):
         monitoring_system = request.args.get('monitoring_system')
         block_number = request.args.get('block_number')
 
-        valid_systems = {None, 'Wialon', 'Cesar'}
+        valid_systems = {None, 'Wialon', 'Cesar', 'Axenta'}
         if monitoring_system not in valid_systems:
             return {'error': f'Invalid monitoring_system value: {monitoring_system}. Valid values: {valid_systems}'}, 400
 
@@ -369,11 +369,16 @@ class GetCarHistory(Resource):
                 CashHistoryWialon.last_time <= time_to_unix,
             )
 
-
             cesar_query = db.session.query(CashHistoryCesar).filter(
                 CashHistoryCesar.nm == nm,
                 CashHistoryCesar.last_time >= time_from_unix,
                 CashHistoryCesar.last_time <= time_to_unix
+            )
+
+            axenta_query = db.session.query(CashHistoryAxenta).filter(
+                CashHistoryAxenta.nm == nm,
+                CashHistoryAxenta.last_time >= time_from_unix,
+                CashHistoryAxenta.last_time <= time_to_unix
             )
 
             if monitoring_system == 'Wialon' or monitoring_system is None:
@@ -384,13 +389,30 @@ class GetCarHistory(Resource):
                     {
                         'uid': entry.uid,
                         'nm': entry.nm,
-                        'pos_x': entry.pos_x,
-                        'pos_y': entry.pos_y,
+                        'pos_x': entry.pos_y,
+                        'pos_y': entry.pos_x,
                         'last_time': entry.last_time,
                         'valid_nav': entry.valid_nav,
                         'source': 'wialon'
                     }
                     for entry in wialon_entries
+                ]
+
+            if monitoring_system == 'Axenta' or monitoring_system is None:
+                if block_number is not None:
+                    axenta_query = axenta_query.filter(CashHistoryAxenta.uid == block_number)
+                axenta_entries = axenta_query.all()
+                result = [
+                    {
+                        'uid': entry.uid,
+                        'nm': entry.nm,
+                        'pos_x': entry.pos_x,
+                        'pos_y': entry.pos_y,
+                        'last_time': entry.last_time,
+                        'valid_nav': entry.valid_nav,
+                        'source': 'axenta'
+                    }
+                    for entry in axenta_entries
                 ]
 
             if monitoring_system == 'Cesar' or monitoring_system is None:
@@ -402,15 +424,14 @@ class GetCarHistory(Resource):
                     {
                         'uid': entry.pin,
                         'nm': entry.nm,
-                        'pos_y': entry.pos_x,
-                        'pos_x': entry.pos_y,
+                        'pos_y': entry.pos_y,
+                        'pos_x': entry.pos_x,
                         'last_time': entry.last_time,
                         'valid_nav': 1,
                         'source': 'cesar'
                     }
                     for entry in cesar_entries
                 ]
-
             result.sort(key=lambda x: x['last_time'])
 
             return result

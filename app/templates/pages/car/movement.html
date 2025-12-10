@@ -2,6 +2,7 @@
     <div class="card border-0 shadow-sm rounded-3" style="min-height: 350px; max-width: 100%; margin: 0 auto;">
         <div class="card-body p-4">
             <div class="row g-3" style="min-height: 220px;">
+                <!-- Дата от / до -->
                 <div class="col-12 col-md-6 col-lg-3">
                     <label for="dateFrom" class="form-label fw-bold">Дата и время от:</label>
                     <input type="datetime-local" class="form-control" id="dateFrom" required>
@@ -10,21 +11,30 @@
                     <label for="dateTo" class="form-label fw-bold">Дата и время до:</label>
                     <input type="datetime-local" class="form-control" id="dateTo" required>
                 </div>
+
                 <div class="col-12"></div>
+
+                <!-- Система мониторинга -->
                 <div class="col-12 col-md-6 col-lg-3" id="monitoringSystemContainer">
                     <label for="monitoringSystem" class="form-label fw-bold">Система мониторинга:</label>
                     <select class="form-control" id="monitoringSystem" name="monitoring_system">
                         <option value="" selected>Все</option>
                         <option value="Wialon">Wialon</option>
                         <option value="Cesar">Cesar</option>
+                        <option value="Axenta">Axenta</option>
+                        <!-- Добавляй новые сюда, либо они появятся автоматически (см. скрипт) -->
                     </select>
                 </div>
+
+                <!-- Номер блока -->
                 <div class="col-12 col-md-6 col-lg-3" id="blockNumberContainer">
                     <label for="blockNumber" class="form-label fw-bold">Номер блока:</label>
                     <select class="form-control" id="blockNumber" name="block_number" disabled>
                         <option value="" selected>Все</option>
                     </select>
                 </div>
+
+                <!-- Валидная навигация -->
                 <div class="col-12">
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" id="validNav" checked>
@@ -32,6 +42,8 @@
                         <small class="form-text text-muted d-block">Вся навигация до 07.08.2025 считается валидной</small>
                     </div>
                 </div>
+
+                <!-- Кнопки -->
                 <div class="col-12 d-flex flex-wrap gap-3 mt-4">
                     <button class="btn btn-primary px-4" id="applyBtn">
                         <i class="bi bi-check-lg me-2"></i>Применить
@@ -50,190 +62,190 @@
 
 <script>
     console.log('Movement script loaded');
-    window.addEventListener('carDataLoaded', function() {
-        console.log('carDataLoaded event received in Movement');
-        console.log('window.carData:', window.carData);
+
+    const MONITORING_SYSTEMS = [
+        { name: 'Wialon',  type: 'wialon',  check: item => !!item.uid, blockField: 'uid' },
+        { name: 'Cesar',   type: 'cesar',   check: item => !!item.pin, blockField: 'pin' },
+        { name: 'Axenta',  type: 'axenta',  check: item => !!item.uid, blockField: 'uid' },
+    ];
+
+    window.addEventListener('carDataLoaded', function () {
         const lotNumber = document.getElementById('lotNumber').textContent.trim();
         let historyData = [];
 
-        function initializeDropdowns() {
-            const monitoringSystem = document.getElementById('monitoringSystem');
-            const blockNumber = document.getElementById('blockNumber');
-            const monitoringSystemContainer = document.getElementById('monitoringSystemContainer');
-            const blockNumberContainer = document.getElementById('blockNumberContainer');
+        const els = {
+            systemSelect:    document.getElementById('monitoringSystem'),
+            blockSelect:     document.getElementById('blockNumber'),
+            systemCont:      document.getElementById('monitoringSystemContainer'),
+            blockCont:       document.getElementById('blockNumberContainer'),
+            spinner:         document.getElementById('spinner'),
+        };
 
-            blockNumber.innerHTML = '<option value="" selected>Все</option>';
-
+        // Инициализация выпадающих списков
+        function initDropdowns() {
             const monitoring = window.carData.monitoring || [];
-            const hasWialon = monitoring.some(item => item.type === 'wialon' && item.uid);
-            const hasCesar = monitoring.some(item => item.type === 'cesar' && item.pin);
 
-            if (!hasWialon && !hasCesar) {
-                monitoringSystemContainer.classList.add('d-none');
-                blockNumberContainer.classList.add('d-none');
+            // Какие системы реально есть у машины
+            const available = MONITORING_SYSTEMS.filter(sys =>
+                monitoring.some(item => item.type === sys.type && sys.check(item))
+            );
+
+            // Если нет ни одной — прячем всё
+            if (available.length === 0) {
+                els.systemCont.classList.add('d-none');
+                els.blockCont.classList.add('d-none');
                 return;
             }
 
-            monitoringSystemContainer.classList.remove('d-none');
-            blockNumberContainer.classList.remove('d-none');
+            els.systemCont.classList.remove('d-none');
+            els.blockCont.classList.remove('d-none');
 
-            monitoringSystem.querySelector('option[value="Wialon"]').disabled = !hasWialon;
-            monitoringSystem.querySelector('option[value="Cesar"]').disabled = !hasCesar;
-
-            if (hasWialon) {
-                monitoringSystem.value = 'Wialon';
-            } else if (hasCesar) {
-                monitoringSystem.value = 'Cesar';
-            } else {
-                monitoringSystem.value = '';
-            }
-
-            updateBlockNumbers();
-
-            monitoringSystem.addEventListener('change', updateBlockNumbers);
-        }
-
-        function updateBlockNumbers() {
-            const monitoringSystem = document.getElementById('monitoringSystem').value;
-            const blockNumber = document.getElementById('blockNumber');
-            blockNumber.innerHTML = '<option value="" selected>Все</option>';
-
-            const monitoring = window.carData.monitoring || [];
-            let blocks = [];
-
-            if (monitoringSystem === 'Wialon') {
-                blocks = monitoring
-                    .filter(item => item.type === 'wialon' && item.uid)
-                    .map(item => item.uid);
-            } else if (monitoringSystem === 'Cesar') {
-                blocks = monitoring
-                    .filter(item => item.type === 'cesar' && item.pin)
-                    .map(item => item.pin);
-            } else {
-                blocks = [
-                    ...monitoring.filter(item => item.type === 'wialon' && item.uid).map(item => item.uid),
-                    ...monitoring.filter(item => item.type === 'cesar' && item.pin).map(item => item.pin)
-                ];
-                blocks = [...new Set(blocks)];
-            }
-
-            blocks.forEach(block => {
-                const option = document.createElement('option');
-                option.value = block;
-                option.textContent = block;
-                blockNumber.appendChild(option);
+            // Отключаем недоступные опции
+            Array.from(els.systemSelect.options).forEach(opt => {
+                if (opt.value === '') return;
+                opt.disabled = !available.some(s => s.name === opt.value);
             });
 
-            blockNumber.disabled = blocks.length === 0;
+            // Автовыбор по приоритету
+            const prioritySystem = available[0]; // первая в массиве = высший приоритет
+            els.systemSelect.value = prioritySystem.name;
 
-            if (blocks.length > 0) {
-                blockNumber.value = blocks[0];
+            updateBlockNumbers();
+            els.systemSelect.addEventListener('change', updateBlockNumbers);
+        }
+
+        // Обновление списка блоков в зависимости от выбранной системы
+        function updateBlockNumbers() {
+            const selectedName = els.systemSelect.value;
+            els.blockSelect.innerHTML = '<option value="" selected>Все</option>';
+            els.blockSelect.disabled = true;
+
+            if (!selectedName) {
+                // «Все» системы — собираем блоки со всех доступных
+                const allBlocks = new Set();
+                MONITORING_SYSTEMS.forEach(sys => {
+                    const items = (window.carData.monitoring || [])
+                        .filter(item => item.type === sys.type && sys.check(item));
+                    items.forEach(item => allBlocks.add(item[sys.blockField]));
+                });
+
+                [...allBlocks].sort().forEach(block => addBlockOption(block));
+            } else {
+                // Конкретная система
+                const sys = MONITORING_SYSTEMS.find(s => s.name === selectedName);
+                if (!sys) return;
+
+                const blocks = (window.carData.monitoring || [])
+                    .filter(item => item.type === sys.type && sys.check(item))
+                    .map(item => item[sys.blockField])
+                    .sort();
+
+                blocks.forEach(addBlockOption);
+            }
+
+            function addBlockOption(value) {
+                const opt = document.createElement('option');
+                opt.value = value;
+                opt.textContent = value;
+                els.blockSelect.appendChild(opt);
+            }
+
+            if (els.blockSelect.options.length > 1) {
+                els.blockSelect.disabled = false;
+                els.blockSelect.value = els.blockSelect.options[1].value; // первый блок по умолчанию
             }
         }
 
-        document.getElementById('applyBtn').addEventListener('click', function() {
-            const spinner = document.getElementById('spinner');
-            spinner.style.display = 'inline-block';
-            const dateFrom = new Date(document.getElementById('dateFrom').value).getTime() / 1000;
-            const dateTo = new Date(document.getElementById('dateTo').value).getTime() / 1000;
-            const monitoringSystem = document.getElementById('monitoringSystem').value || null;
-            const blockNumber = document.getElementById('blockNumber').value || null;
+        // Кнопка «Применить»
+        document.getElementById('applyBtn').addEventListener('click', () => {
+            els.spinner.style.display = 'inline-block';
 
-            if (isNaN(dateFrom) || isNaN(dateTo) || dateFrom >= dateTo) {
-                alert('Пожалуйста, выберите корректные даты и время.');
-                spinner.style.display = 'none';
+            const timeFrom = new Date(document.getElementById('dateFrom').value).getTime() / 1000;
+            const timeTo   = new Date(document.getElementById('dateTo').value).getTime() / 1000;
+            const system   = els.systemSelect.value || null;
+            const block    = els.blockSelect.value || null;
+
+            if (isNaN(timeFrom) || isNaN(timeTo) || timeFrom >= timeTo) {
+                alert('Выберите корректный диапазон дат');
+                els.spinner.style.display = 'none';
                 return;
             }
 
-            let query = `/api/car/get_history?nm=${encodeURIComponent(lotNumber)}&time_from=${dateFrom}&time_to=${dateTo}`;
-            if (monitoringSystem) {
-                query += `&monitoring_system=${encodeURIComponent(monitoringSystem)}`;
-            }
-            if (blockNumber) {
-                query += `&block_number=${encodeURIComponent(blockNumber)}`;
-            }
+            let url = `/api/car/get_history?nm=${encodeURIComponent(lotNumber)}&time_from=${timeFrom}&time_to=${timeTo}`;
+            if (system) url += `&monitoring_system=${encodeURIComponent(system)}`;
+            if (block)  url += `&block_number=${encodeURIComponent(block)}`;
 
-            fetch(query)
-                .then(response => response.json())
+            fetch(url)
+                .then(r => r.json())
                 .then(data => {
-                    spinner.style.display = 'none';
-                    if (data.error) {
-                        alert(data.error);
-                        return;
-                    }
+                    els.spinner.style.display = 'none';
+                    if (data.error) return alert(data.error);
+
                     historyData = data;
                     plotRouteAndMarkers();
                 })
-                .catch(error => {
-                    spinner.style.display = 'none';
-                    alert('Ошибка при получении истории передвижения: ' + error);
+                .catch(err => {
+                    els.spinner.style.display = 'none';
+                    alert('Ошибка загрузки истории: ' + err);
                 });
         });
 
-        document.getElementById('clearBtn').addEventListener('click', function() {
-            window.MapController.clearRoute();
+        // Кнопка «Очистить»
+        document.getElementById('clearBtn').addEventListener('click', () => {
+            window.MapController?.clearRoute();
             document.getElementById('dateFrom').value = '';
             document.getElementById('dateTo').value = '';
             document.getElementById('validNav').checked = true;
+
+            // Возвращаем систему по приоритету
             const monitoring = window.carData.monitoring || [];
-            const hasWialon = monitoring.some(item => item.type === 'wialon' && item.uid);
-            const hasCesar = monitoring.some(item => item.type === 'cesar' && item.pin);
-            document.getElementById('monitoringSystem').value = hasWialon ? 'Wialon' : (hasCesar ? 'Cesar' : '');
+            const available = MONITORING_SYSTEMS.find(sys =>
+                monitoring.some(item => item.type === sys.type && sys.check(item))
+            );
+            els.systemSelect.value = available ? available.name : '';
             updateBlockNumbers();
+
             historyData = [];
-            const hasCoords = window.carData.rent?.x && window.carData.rent?.y;
         });
 
+        // Отрисовка маршрута
         function plotRouteAndMarkers() {
-            if (!window.myMap || !window.mobileMap) {
-                console.error('Одна из карт не инициализирована');
-                return;
-            }
+            if (!window.MapController) return;
 
             window.MapController.clearRoute();
 
-            const validNavCheckbox = document.getElementById('validNav');
-            let filteredData = historyData;
-
-            if (validNavCheckbox.checked) {
-                filteredData = historyData.filter(entry => entry.valid_nav === 1);
+            let data = historyData;
+            if (document.getElementById('validNav').checked) {
+                data = data.filter(p => p.valid_nav === 1);
             }
 
-            const coordinates = filteredData.map(entry => [entry.pos_y, entry.pos_x]);
+            const coords = data.map(p => [p.pos_x, p.pos_y]);
 
-            if (coordinates.length > 0) {
-                let startMark = new ymaps.Placemark(coordinates[0], {
-                    balloonContent: 'Начало маршрута'
-                }, { preset: 'islands#greenDotIcon' });
-                window.MapController.addRouteObject(startMark);
-            }
+            if (coords.length === 0) return;
 
-            if (coordinates.length > 1) {
-                let endMark = new ymaps.Placemark(coordinates[coordinates.length - 1], {
-                    balloonContent: 'Конец маршрута'
-                }, { preset: 'islands#redDotIcon' });
-                window.MapController.addRouteObject(endMark);
+            // Старт
+            const start = new ymaps.Placemark(coords[0], { balloonContent: 'Старт' }, { preset: 'islands#greenDotIcon' });
+            window.MapController.addRouteObject(start);
 
-                window.MapController.setCenter(coordinates[coordinates.length - 1], 12);
+            if (coords.length > 1) {
+                // Финиш
+                const end = new ymaps.Placemark(coords[coords.length - 1], { balloonContent: 'Финиш' }, { preset: 'islands#redDotIcon' });
+                window.MapController.addRouteObject(end);
 
+                // Линия
                 const line = new ymaps.GeoObject({
-                    geometry: {
-                        type: 'LineString',
-                        coordinates: coordinates
-                    },
-                    properties: {
-                        hintContent: 'Маршрут',
-                        balloonContent: 'Это линия маршрута'
-                    }
+                    geometry: { type: 'LineString', coordinates: coords }
                 }, {
-                    strokeWidth: 4,
-                    strokeColor: '#0000FF'
+                    strokeColor: '#0000FF',
+                    strokeWidth: 5
                 });
-
                 window.MapController.addRouteObject(line);
+
+                window.MapController.setCenter(coords[coords.length - 1], 14);
             }
         }
 
-        initializeDropdowns();
+        // Запускаем
+        initDropdowns();
     });
 </script>
