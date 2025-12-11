@@ -4,6 +4,7 @@ from flask import Blueprint, session, request, g
 from flask_restx import Api
 
 from .axenta import axenta_ns
+from .report_generator import report_api
 
 # Создаем основной Blueprint
 api_bp = Blueprint('api', __name__)
@@ -50,6 +51,7 @@ api.add_namespace(admin_ns)
 api.add_namespace(admin_users_ns)
 api.add_namespace(admin_storages_ns)
 api.add_namespace(reports_ns)
+api.add_namespace(report_api)
 api.add_namespace(auth_ns)
 api.add_namespace(axenta_ns)
 
