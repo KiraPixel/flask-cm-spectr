@@ -6,134 +6,182 @@
 
 {% block body %}
 <div class="container py-5">
-    <div class="row g-4">
-        {% for category in categories %}
-        <div class="col-lg-4 col-md-6">
-            <div class="card shadow-sm h-100">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">{{ category.title }}</h5>
-                </div>
-                <div class="card-body d-flex flex-column">
-                    <ul class="list-group list-group-flush mb-3">
-                        {% for report in category.reports %}
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <span>{{ report.name }}</span>
-                            <button type="button"
-                                    class="btn btn-sm btn-outline-primary send-report"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#reportModal-{{ report.id }}"
-                                    data-report-id="{{ report.id }}">
-                                <i class="bi bi-{% if report.params %}gear{% else %}envelope-arrow-down{% endif %}"></i>
-                            </button>
-                        </li>
-                        {% endfor %}
-                    </ul>
-                </div>
+    <div id="loading-spinner" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Загрузка...</span>
+        </div>
+        <p class="mt-2">Загрузка отчетов...</p>
+    </div>
+
+    <div id="categories-container" class="row g-4 d-none">
+        </div>
+</div>
+
+<div class="modal fade" id="universalReportModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">Параметры отчета</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="dynamic-report-form">
+                    <div id="form-fields-container">
+                        </div>
+                    <div class="mt-4 d-flex justify-content-end">
+                        <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Отмена</button>
+                        <button type="submit" class="btn btn-primary" id="submitBtn">Сформировать</button>
+                    </div>
+                </form>
             </div>
         </div>
-        {% endfor %}
     </div>
 </div>
 
-<!-- Модальные окна для всех отчетов -->
-{% for category in categories %}
-    {% for report in category.reports %}
-    <div class="modal fade" id="reportModal-{{ report.id }}" tabindex="-1" aria-labelledby="reportModalLabel-{{ report.id }}" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="reportModalLabel-{{ report.id }}">{{ report.name }}</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form class="report-form" data-report-id="{{ report.id }}">
-                        {% if report.params %}
-                        {% for param_name, param_data in report.params.items() %}
-                        <div class="mb-3">
-                            {% if param_data.type == 'checkbox' %}
-                            <div class="d-flex justify-content-between align-items-center">
-                                <span>{{ param_data.label }}</span>
-                                <input type="checkbox"
-                                       class="form-check-input"
-                                       id="{{ param_name }}"
-                                       name="{{ param_name }}">
-                            </div>
-                            {% else %}
-                            <label for="{{ param_name }}" class="form-label">{{ param_data.label }}</label>
-                            {% if param_data.type == 'date' %}
-                            <input type="date"
-                                   class="form-control"
-                                   id="{{ param_name }}"
-                                   name="{{ param_name }}"
-                                   required>
-                            {% elif param_data.type == 'text' %}
-                            <input type="text"
-                                   class="form-control"
-                                   id="{{ param_name }}"
-                                   name="{{ param_name }}"
-                                   placeholder="{{ param_data.placeholder if param_data.placeholder else '' }}"
-                                   required>
-                            {% elif param_data.type == 'multitext' %}
-                            <textarea class="form-control"
-                                      id="{{ param_name }}"
-                                      name="{{ param_name }}"
-                                      rows="4"
-                                      placeholder="{{ param_data.placeholder if param_data.placeholder else '' }}"
-                                      required></textarea>
-                            {% endif %}
-                            {% endif %}
-                        </div>
-                        {% endfor %}
-                        {% else %}
-                        <p>Этот отчет не требует дополнительных параметров.</p>
-                        <input type="hidden" name="report_id" value="{{ report.id }}">
-                        {% endif %}
-                        <button type="submit" class="btn btn-primary">Отправить</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-    {% endfor %}
-{% endfor %}
-
 <script>
-document.querySelectorAll('.report-form').forEach(form => {
-    form.addEventListener('submit', async (event) => {
-        event.preventDefault();
-        const reportId = form.dataset.reportId;
-        const formData = new FormData(form);
-        const data = { report_id: reportId };
+document.addEventListener('DOMContentLoaded', async () => {
+    const categoriesContainer = document.getElementById('categories-container');
+    const loadingSpinner = document.getElementById('loading-spinner');
+    let reportList = [];
 
-        // Собираем данные формы в JSON
-        for (const [key, value] of formData.entries()) {
-            if (key === 'only_home_storages') {
-                data[key] = value === 'on' ? 1 : 0; // Преобразуем чекбокс в 1 или 0
-            } else {
-                data[key] = value;
-            }
+    try {
+        // 1. Загружаем данные из API параллельно
+        const [catsRes, typesRes] = await Promise.all([
+            fetch('/api/report_generator/report-categories'),
+            fetch('/api/report_generator/report-list')
+        ]);
+
+        const categories = await catsRes.json();
+        reportList = await typesRes.json();
+
+        // Сортируем категории по позиции
+        categories.sort((a, b) => a.position - b.position);
+
+        // 2. Отрисовываем категории
+        categories.forEach(cat => {
+            const catReports = reportList.filter(r => r.category === cat.id);
+            if (catReports.length === 0) return;
+
+            const cardHtml = `
+                <div class="col-lg-4 col-md-6">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">${cat.localization_name}</h5>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-group list-group-flush" id="cat-list-${cat.id}">
+                                ${catReports.map(report => `
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <small class="text-wrap">${report.localization_name}</small>
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-primary ms-2 open-report-btn"
+                                                data-report-name="${report.report_name}">
+                                            <i class="bi bi-${report.configuration ? 'gear' : 'envelope-arrow-down'}"></i>
+                                        </button>
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            `;
+            categoriesContainer.insertAdjacentHTML('beforeend', cardHtml);
+        });
+
+        loadingSpinner.classList.add('d-none');
+        categoriesContainer.classList.remove('d-none');
+
+        // 3. Обработка клика по кнопке отчета
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest('.open-report-btn');
+            if (!btn) return;
+
+            const reportName = btn.dataset.reportName;
+            const report = reportList.find(r => r.report_name === reportName);
+            openModal(report);
+        });
+
+    } catch (error) {
+        console.error('Ошибка загрузки данных:', error);
+        loadingSpinner.innerHTML = `<div class="alert alert-danger">Ошибка при загрузке данных. Обратитесь к системному администратору!</div>`;
+    }
+
+    const modalElement = document.getElementById('universalReportModal');
+    const bsModal = new bootstrap.Modal(modalElement);
+    const formContainer = document.getElementById('form-fields-container');
+    const modalTitle = document.getElementById('modalTitle');
+    const dynamicForm = document.getElementById('dynamic-report-form');
+
+    let activeReportName = null;
+
+    function openModal(report) {
+        activeReportName = report.report_name;
+        modalTitle.innerText = report.localization_name;
+        formContainer.innerHTML = '';
+
+        if (report.configuration) {
+            Object.entries(report.configuration).forEach(([key, config]) => {
+                const fieldId = `field_${key}`;
+                let html = `<div class="mb-3">`;
+
+                if (config.type === 'checkbox') {
+                    html += `
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="${fieldId}" name="${key}">
+                            <label class="form-check-label" for="${fieldId}">${config.label}</label>
+                        </div>`;
+                } else if (config.type === 'date') {
+                    html += `
+                        <label class="form-label">${config.label}</label>
+                        <input type="date" class="form-control" name="${key}" required>`;
+                } else {
+                    html += `
+                        <label class="form-label">${config.label}</label>
+                        <input type="text" class="form-control" name="${key}"
+                               placeholder="${config.placeholder || ''}" required>`;
+                }
+                html += `</div>`;
+                formContainer.insertAdjacentHTML('beforeend', html);
+            });
+        } else {
+            formContainer.innerHTML = '<p class="text-muted">Этот отчет не требует дополнительных параметров. Нажмите "Сформировать" для отправки на почту.</p>';
         }
+
+        bsModal.show();
+    }
+
+    // 4. Отправка формы
+    dynamicForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(dynamicForm);
+        const payload = {
+            report_name: activeReportName
+        };
+
+        // Собираем данные полей
+        formData.forEach((value, key) => {
+            // Для чекбоксов в FormData значение 'on', преобразуем в boolean/1-0
+            const input = dynamicForm.querySelector(`[name="${key}"]`);
+            if (input.type === 'checkbox') {
+                payload[key] = input.checked;
+            } else {
+                payload[key] = value;
+            }
+        });
 
         try {
-            const response = await fetch('{{ url_for("api.reports_get_report") }}', {
+            const response = await fetch('/api/report_generator/generate-report', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
+                body: JSON.stringify(payload)
             });
-            const result = await response.json();
-            if (result.success) {
-                alert(result.message); // Показываем сообщение об успехе
-            } else {
-                alert(result.message); // Показываем сообщение об ошибке
-            }
-        } catch (error) {
-            alert('Ошибка при отправке запроса: ' + error.message);
-        }
 
-        // Закрываем модальное окно
-        const modal = form.closest('.modal');
-        const bsModal = bootstrap.Modal.getInstance(modal);
-        bsModal.hide();
+            const result = await response.json();
+            alert(result.message || 'Запрос успешно отправлен');
+            bsModal.hide();
+        } catch (err) {
+            alert('Ошибка при формировании отчета');
+        }
     });
 });
 </script>

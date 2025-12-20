@@ -21,13 +21,14 @@ report_response_model = reports_ns.model('ReportResponse', {
     'success': fields.Boolean(description='Статус успешной операции', example=True)
 })
 
-@reports_ns.route('/get_report/')
+@reports_ns.route('/get_report/', )
 class GetReport(Resource):
+    @reports_ns.doc(deprecated=True)
     @reports_ns.expect(report_input_model)
     @reports_ns.marshal_with(report_response_model)
     @need_access('reports')
     def post(self):
-        """Генерировать и отправить отчет"""
+        """Генерировать и отправить отчет (УСТАРЕЛО)"""
         user = g.user
         data = request.json
 
