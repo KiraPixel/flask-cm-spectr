@@ -53,16 +53,18 @@ class GetCarInfo(Resource):
                             wialon_cmd = item.cmd
                         engine_hours_day = 0
                         engine_hours = item.engine_hours or 0.0
-                        engine_hours = round(engine_hours, 2)
-                        if item.engine_hours != 0.0:
+                        if engine_hours != 0.0:
+                            engine_hours = round(engine_hours, 2)
+
                             first_cash_on_today = db.session.query(CashHistoryWialon).filter(
                                 CashHistoryWialon.uid == item.uid,
                                 CashHistoryWialon.last_time >= 1766437200,
                                 CashHistoryWialon.last_time < end_ts,
                             ).order_by(CashHistoryWialon.last_time).first()
-                            if engine_hours is not None or engine_hours != 0.0:
-                                engine_hours_day = engine_hours - first_cash_on_today.engine_hours if first_cash_on_today else engine_hours_day
-                                engine_hours_day = round(engine_hours_day, 2)
+
+                            if first_cash_on_today is not None and first_cash_on_today.engine_hours is not None:
+                                engine_hours_day = round(engine_hours - engine_hours_day, 2)
+
                         monitoring_json_block = {
                             "type": 'wialon',
                             "online": online_check(item.last_time),
@@ -111,17 +113,18 @@ class GetCarInfo(Resource):
 
                         engine_hours_day = 0
                         engine_hours = item.engine_hours or 0.0
-                        engine_hours = round(engine_hours, 2)
                         if item.engine_hours != 0.0:
+                            engine_hours = round(engine_hours, 2)
+
                             first_cash_on_today = db.session.query(CashHistoryAxenta).filter(
                                 CashHistoryAxenta.uid == item.uid,
                                 CashHistoryAxenta.last_time >= start_ts,
                                 CashHistoryAxenta.last_time < end_ts,
                             ).order_by(CashHistoryAxenta.last_time).first()
 
-                            if engine_hours is not None or engine_hours != 0.0:
-                                engine_hours_day = engine_hours-first_cash_on_today.engine_hours if first_cash_on_today else engine_hours_day
-                                engine_hours_day = round(engine_hours_day, 2)
+                            if first_cash_on_today is not None and first_cash_on_today.engine_hours is not None:
+                                engine_hours_day = round(engine_hours - engine_hours_day, 2)
+
                         monitoring_json_block = {
                             "type": 'axenta',
                             "online": connected_status,
