@@ -4,7 +4,6 @@ import pytz
 
 moscow_tz = pytz.timezone('Europe/Moscow')
 
-
 def now_unix_time():
     return time.time()
 
@@ -59,7 +58,6 @@ def get_time_minus_twelve_days():
     return int(three_days_ago)
 
 
-
 def to_unix_time(time_str):
     try:
         naive_time = datetime.datetime.strptime(time_str, '%Y-%m-%dT%H:%M')
@@ -77,6 +75,14 @@ def tz_to_moscow_time(z_time):
         return moscow_time.strftime("%d-%m-%Y %H:%M")
     except:
         return 0
+
+
+def get_today_bounds_msk():
+    now = datetime.datetime.now()
+    start_day = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    end_day = start_day + datetime.timedelta(days=1)
+
+    return int(start_day.timestamp()), int(end_day.timestamp())
 
 
 def unix_to_moscow_time(timestamp):

@@ -3,7 +3,7 @@ from flask_restx import Namespace, Resource
 from ..utils import need_access, get_address_from_coords, storage_id_to_name
 from ..models import User, CashWialon, Alert, TransferTasks, db, Transport, Storage, TransportModel, CashCesar, \
     AlertType, Comments, CashHistoryWialon, AlertTypePresets, CashHistoryCesar, CashAxenta, CashHistoryAxenta
-from modules.my_time import unix_to_moscow_time, online_check_cesar, online_check
+from modules.my_time import unix_to_moscow_time, online_check_cesar, online_check, get_today_bounds_msk
 from ..utils.functionality_acccess import has_role_access, get_user_roles
 
 from ..utils.transport_acccess import check_access_to_transport, get_all_access_transport
@@ -42,6 +42,7 @@ class GetCarInfo(Resource):
 
             # Мониторинг
             monitoring_json_response = {"monitoring": []}
+            start_ts, end_ts = get_today_bounds_msk()
             # Получение информации из Wialon
             if 'wialon' in user_role:
                 wialon = db.session.query(CashWialon).filter(CashWialon.nm.like(car.uNumber)).all()
@@ -50,6 +51,18 @@ class GetCarInfo(Resource):
                         wialon_cmd = None
                         if 'car_command' in user_role:
                             wialon_cmd = item.cmd
+                        engine_hours_day = 0
+                        engine_hours = item.engine_hours or 0.0
+                        engine_hours = round(engine_hours, 2)
+                        if item.engine_hours != 0.0:
+                            first_cash_on_today = db.session.query(CashHistoryWialon).filter(
+                                CashHistoryWialon.uid == item.uid,
+                                CashHistoryWialon.last_time >= 1766437200,
+                                CashHistoryWialon.last_time < end_ts,
+                            ).order_by(CashHistoryWialon.last_time).first()
+                            if engine_hours is not None or engine_hours != 0.0:
+                                engine_hours_day = engine_hours - first_cash_on_today.engine_hours if first_cash_on_today else engine_hours_day
+                                engine_hours_day = round(engine_hours_day, 2)
                         monitoring_json_block = {
                             "type": 'wialon',
                             "online": online_check(item.last_time),
@@ -58,6 +71,8 @@ class GetCarInfo(Resource):
                             "pos_x": item.pos_y,
                             "pos_y": item.pos_x,
                             "valid_nav": item.valid_nav,
+                            "engine_hours": engine_hours,
+                            "engine_hours_day": engine_hours_day,
                             "address": str(get_address_from_coords(item.pos_y, item.pos_x)),
                             "last_time": unix_to_moscow_time(item.last_time),
                             "wialon_cmd": wialon_cmd,
@@ -93,6 +108,20 @@ class GetCarInfo(Resource):
                             axenta_cmd = item.cmd
                         if item.connected_status:
                             connected_status = 'Online'
+
+                        engine_hours_day = 0
+                        engine_hours = item.engine_hours or 0.0
+                        engine_hours = round(engine_hours, 2)
+                        if item.engine_hours != 0.0:
+                            first_cash_on_today = db.session.query(CashHistoryAxenta).filter(
+                                CashHistoryAxenta.uid == item.uid,
+                                CashHistoryAxenta.last_time >= start_ts,
+                                CashHistoryAxenta.last_time < end_ts,
+                            ).order_by(CashHistoryAxenta.last_time).first()
+
+                            if engine_hours is not None or engine_hours != 0.0:
+                                engine_hours_day = engine_hours-first_cash_on_today.engine_hours if first_cash_on_today else engine_hours_day
+                                engine_hours_day = round(engine_hours_day, 2)
                         monitoring_json_block = {
                             "type": 'axenta',
                             "online": connected_status,
@@ -101,6 +130,8 @@ class GetCarInfo(Resource):
                             "pos_x": item.pos_x,
                             "pos_y": item.pos_y,
                             "valid_nav": item.valid_nav,
+                            "engine_hours": engine_hours,
+                            "engine_hours_day": engine_hours_day,
                             "address": str(get_address_from_coords(item.pos_x, item.pos_y)),
                             "last_time": unix_to_moscow_time(item.last_time),
                             "axenta_cmd": axenta_cmd,

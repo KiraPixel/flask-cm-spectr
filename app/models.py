@@ -128,9 +128,9 @@ class CashWialon(db.Model):
     valid_nav = Column(Integer, default=1)
     last_time = Column(Integer, default=0)
     last_pos_time = Column(Integer, default=0)
-    linked = Column(Boolean, nullable=True, default=False)  # TINYINT(1) NULL DEFAULT '0'
     cmd = Column(Text, nullable=True, default='')
     sens = Column(Text, nullable=True, default='')
+    engine_hours = Column(Float, default=0.0)
 
 
 class CashAxenta(db.Model):
@@ -147,7 +147,7 @@ class CashAxenta(db.Model):
     cmd = Column(Text, nullable=True, default='')
     sens = Column(Text, nullable=True, default='')
     valid_nav = Column(Integer, nullable=True, default=1)
-
+    engine_hours = Column(Float, default=0.0)
 
 class CashHistoryWialon(db.Model):
     __tablename__ = 'cash_history_wialon'
@@ -158,7 +158,7 @@ class CashHistoryWialon(db.Model):
     pos_y = Column(Float, default=0.0)
     last_time = Column(Integer, default=0)
     valid_nav = Column(Integer, default=1)
-
+    engine_hours = Column(Float, default=0.0)
 
 class CashHistoryCesar(db.Model):
     __tablename__ = 'cash_history_cesar'
@@ -178,8 +178,7 @@ class CashHistoryAxenta(db.Model):
     pos_y = Column(Float, default=0.0)
     last_time = Column(Integer, default=0)
     valid_nav = Column(Integer, nullable=True, default=0)
-
-
+    engine_hours = Column(Float, default=0.0)
 
 class Alert(db.Model):
     __tablename__ = 'alert'

@@ -53,6 +53,8 @@ window.addEventListener('carDataLoaded', function() {
                                 </span>
                             </p>
                             <p class="mb-1 small"><strong>Спутники:</strong> ${item.wialon_satellite_count || 0}</p>
+                            <p class="mb-1 small"><strong>Моточасы:</strong> ${item.engine_hours || 0}</p>
+                            <p class="mb-1 small"><strong>Моточасы за день:</strong> ${item.engine_hours_day || 0}</p>
                             <p class="mb-1 small"><strong>Валидность GPS данных:</strong> ${item.valid_nav === 1 ? 'точные' : item.valid_nav === 0 ? 'не точные' : 'неизвестно'}</p>
                             <p class="mb-0 small"><strong>Адрес:</strong> ${item.address || '-'}</p>
                         </div>
@@ -116,7 +118,9 @@ window.addEventListener('carDataLoaded', function() {
                                     ${item.pos_x || '-'}, ${item.pos_y || '-'}
                                 </span>
                             </p>
-                            <p class="mb-1 small"><strong>Спутники:</strong> ${item.wialon_satellite_count || 0}</p>
+                            <p class="mb-1 small"><strong>Спутники:</strong> ${item.axenta_satellite_count || 0}</p>
+                            <p class="mb-1 small"><strong>Моточасы:</strong> ${item.engine_hours || 0}</p>
+                            <p class="mb-1 small"><strong>Моточасы за день:</strong> ${item.engine_hours_day || 0}</p>
                             <p class="mb-1 small"><strong>Валидность GPS данных:</strong> ${item.valid_nav === 1 ? 'точные' : item.valid_nav === 0 ? 'не точные' : 'неизвестно'}</p>
                             <p class="mb-0 small"><strong>Адрес:</strong> ${item.address || '-'}</p>
                     </div>
