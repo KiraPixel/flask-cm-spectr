@@ -23,21 +23,20 @@ window.addEventListener('carDataLoaded', function() {
         return;
     }
 
-    const wialonUnits = window.carData.monitoring.filter(item => item.type === 'wialon');
     const cesarUnits = window.carData.monitoring.filter(item => item.type === 'cesar');
     const axentaUnits = window.carData.monitoring.filter(item => item.type === 'axenta');
 
     let monitoringHtml = '';
 
-    // Секция Wialon
-    if (wialonUnits.length > 0) {
-        monitoringHtml += '<h5 class="mb-3">Wialon</h5>';
-        const wialonColumnClass = wialonUnits.length === 1 ? 'col-12' : 'col-12 col-md-6';
+    // Секция Axenta
+    if (axentaUnits.length > 0) {
+        monitoringHtml += '<h5 class="mb-3">Axenta</h5>';
+        const axentaColumnClass = axentaUnits.length === 1 ? 'col-12' : 'col-12 col-md-6';
         monitoringHtml += '<div class="row g-3 mb-4">';
-        wialonUnits.forEach(item => {
+        axentaUnits.forEach(item => {
             const coords = item.pos_x && item.pos_y ? `${item.pos_x},${item.pos_y}` : '-';
             monitoringHtml += `
-                <div class="${wialonColumnClass}">
+                <div class="${axentaColumnClass}">
                     <div class="card border shadow-sm h-100 rounded-3">
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center mb-2">
@@ -46,17 +45,17 @@ window.addEventListener('carDataLoaded', function() {
                                     ${item.online || 'Неизвестно'}
                                 </span>
                             </div>
-                            <p class="mb-1 small"><strong>Последнее обновление:</strong> ${item.last_time || '-'}</p>
-                            <p class="mb-1 small"><strong>Координаты:</strong>
-                                <span class="coords-link" data-coords="${coords}" style="cursor: ${coords === '-' ? 'default' : 'pointer'}; color: ${coords === '-' ? 'inherit' : 'var(--bs-primary)'};">
-                                    ${item.pos_x || '-'}, ${item.pos_y || '-'}
-                                </span>
-                            </p>
-                            <p class="mb-1 small"><strong>Спутники:</strong> ${item.wialon_satellite_count || 0}</p>
-                            <p class="mb-1 small"><strong>Моточасы:</strong> ${item.engine_hours || 0}</p>
-                            <p class="mb-1 small"><strong>Моточасы за день:</strong> ${item.engine_hours_day || 0}</p>
-                            <p class="mb-1 small"><strong>Валидность GPS данных:</strong> ${item.valid_nav === 1 ? 'точные' : item.valid_nav === 0 ? 'не точные' : 'неизвестно'}</p>
-                            <p class="mb-0 small"><strong>Адрес:</strong> ${item.address || '-'}</p>
+                                <p class="mb-1 small"><strong>Последнее обновление:</strong> ${item.last_time || '-'}</p>
+                                <p class="mb-1 small"><strong>Координаты:</strong>
+                                    <span class="coords-link" data-coords="${coords}" style="cursor: ${coords === '-' ? 'default' : 'pointer'}; color: ${coords === '-' ? 'inherit' : 'var(--bs-primary)'};">
+                                        ${item.pos_x || '-'}, ${item.pos_y || '-'}
+                                    </span>
+                                </p>
+                                <p class="mb-1 small"><strong>Спутники:</strong> ${item.axenta_satellite_count || 0}</p>
+                                <p class="mb-1 small"><strong>Моточасы:</strong> ${item.engine_hours || 0}</p>
+                                <p class="mb-1 small"><strong>Моточасы за день:</strong> ${item.engine_hours_day || 0}</p>
+                                <p class="mb-1 small"><strong>Валидность GPS данных:</strong> ${item.valid_nav === 1 ? 'точные' : item.valid_nav === 0 ? 'не точные' : 'неизвестно'}</p>
+                                <p class="mb-0 small"><strong>Адрес:</strong> ${item.address || '-'}</p>
                         </div>
                     </div>
                 </div>`;
@@ -78,7 +77,7 @@ window.addEventListener('carDataLoaded', function() {
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <h6 class="card-title fw-bold mb-0">${item.pin || item.uid || '-'}</h6>
                                 <span class="badge ${item.online === 'Online' ? 'bg-success' : 'bg-danger'}">
-                                    ${item.online || 'Неизвестно'}
+                                    ${item.online || 'Disconnect'}
                                 </span>
                             </div>
                             <p class="mb-1 small"><strong>Последнее обновление:</strong> ${item.last_time || '-'}</p>
@@ -94,41 +93,6 @@ window.addEventListener('carDataLoaded', function() {
         });
         monitoringHtml += '</div>';
     }
-
-    // Секция Axentq
-    if (axentaUnits.length > 0) {
-    monitoringHtml += '<h5 class="mb-3">Axenta</h5>';
-    const axentaColumnClass = cesarUnits.length <= 2 ? 'col-12 col-md-6' : 'col-12 col-md-6 col-lg-4';
-    monitoringHtml += '<div class="row g-3">';
-     axentaUnits.forEach(item => {
-        const coords = item.pos_x && item.pos_y ? `${item.pos_x},${item.pos_y}` : '-';
-        monitoringHtml += `
-            <div class="${axentaColumnClass}">
-                <div class="card border shadow-sm h-100 rounded-3">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <h6 class="card-title fw-bold mb-0">${item.pin || item.uid || '-'}</h6>
-                            <span class="badge ${item.online === 'Online' ? 'bg-success' : 'bg-danger'}">
-                                ${item.online || 'Disconnect'}
-                            </span>
-                        </div>
-                            <p class="mb-1 small"><strong>Последнее обновление:</strong> ${item.last_time || '-'}</p>
-                            <p class="mb-1 small"><strong>Координаты:</strong>
-                                <span class="coords-link" data-coords="${coords}" style="cursor: ${coords === '-' ? 'default' : 'pointer'}; color: ${coords === '-' ? 'inherit' : 'var(--bs-primary)'};">
-                                    ${item.pos_x || '-'}, ${item.pos_y || '-'}
-                                </span>
-                            </p>
-                            <p class="mb-1 small"><strong>Спутники:</strong> ${item.axenta_satellite_count || 0}</p>
-                            <p class="mb-1 small"><strong>Моточасы:</strong> ${item.engine_hours || 0}</p>
-                            <p class="mb-1 small"><strong>Моточасы за день:</strong> ${item.engine_hours_day || 0}</p>
-                            <p class="mb-1 small"><strong>Валидность GPS данных:</strong> ${item.valid_nav === 1 ? 'точные' : item.valid_nav === 0 ? 'не точные' : 'неизвестно'}</p>
-                            <p class="mb-0 small"><strong>Адрес:</strong> ${item.address || '-'}</p>
-                    </div>
-                </div>
-            </div>`;
-    });
-    monitoringHtml += '</div>';
-}
 
     movementContainer.innerHTML = monitoringHtml;
 

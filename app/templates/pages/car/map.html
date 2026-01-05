@@ -130,9 +130,9 @@
                     }, { preset: 'islands#redDotIcon', iconCaptionMaxWidth: '150' });
                     this.addBaseObject(placemark);
                 } else if (data.monitoring) {
-                    const wialonItem = data.monitoring.find(item => item.type === 'wialon' && item.pos_y && item.pos_x);
-                    if (wialonItem) {
-                        centerCoords = [wialonItem.pos_x, wialonItem.pos_y];
+                    const axentaItem = data.monitoring.find(item => item.type === 'axenta' && item.pos_y && item.pos_x);
+                    if (axentaItem) {
+                        centerCoords = [axentaItem.pos_x, axentaItem.pos_y];
                         hasCoords = true;
                     } else {
                         const cesarItem = data.monitoring.find(item => item.type === 'cesar' && item.pos_y && item.pos_x);
@@ -167,12 +167,12 @@
                             }, { preset: 'islands#orangeDotIcon', iconCaptionMaxWidth: '150' });
                             this.addBaseObject(cesarMark);
                         }
-                        if (item.type === 'wialon' && item.pos_y && item.pos_x) {
-                            let wialonMark = new ymaps.Placemark([item.pos_x, item.pos_y], {
-                                hintContent: 'Метка Wialon',
+                        if (item.type === 'axenta' && item.pos_y && item.pos_x) {
+                            let axentaMark = new ymaps.Placemark([item.pos_x, item.pos_y], {
+                                hintContent: 'Метка Axenta',
                                 balloonContent: `UID блока: ${item.uid || '-'}`
                             }, { preset: 'islands#blueDotIcon', iconCaptionMaxWidth: '150' });
-                            this.addBaseObject(wialonMark);
+                            this.addBaseObject(axentaMark);
                         }
                     });
                 }

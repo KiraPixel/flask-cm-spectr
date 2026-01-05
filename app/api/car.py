@@ -1,8 +1,7 @@
 from flask import session, jsonify, request, g
 from flask_restx import Namespace, Resource
 from ..utils import need_access, get_address_from_coords, storage_id_to_name
-from ..models import User, CashWialon, Alert, TransferTasks, db, Transport, Storage, TransportModel, CashCesar, \
-    AlertType, Comments, CashHistoryWialon, AlertTypePresets, CashHistoryCesar, CashAxenta, CashHistoryAxenta
+from ..models import User, Alert, TransferTasks, db, Transport, Storage, TransportModel, CashCesar, AlertType, Comments, AlertTypePresets, CashHistoryCesar, CashAxenta, CashHistoryAxenta, CashHistoryWialon
 from modules.my_time import unix_to_moscow_time, online_check_cesar, online_check, get_today_bounds_msk
 from ..utils.functionality_acccess import has_role_access, get_user_roles
 
@@ -43,47 +42,6 @@ class GetCarInfo(Resource):
             # Мониторинг
             monitoring_json_response = {"monitoring": []}
             start_ts, end_ts = get_today_bounds_msk()
-            # Получение информации из Wialon
-            if 'wialon' in user_role:
-                wialon = db.session.query(CashWialon).filter(CashWialon.nm.like(car.uNumber)).all()
-                if wialon:
-                    for item in wialon:
-                        wialon_cmd = None
-                        if 'car_command' in user_role:
-                            wialon_cmd = item.cmd
-                        engine_hours_day = 0
-                        engine_hours = item.engine_hours or 0.0
-                        if engine_hours != 0.0:
-
-                            first_cash_on_today = db.session.query(CashHistoryWialon).filter(
-                                CashHistoryWialon.uid == item.uid,
-                                CashHistoryWialon.last_time >= start_ts,
-                                CashHistoryWialon.last_time < end_ts,
-                            ).order_by(CashHistoryWialon.last_time).first()
-
-                            if first_cash_on_today is not None and first_cash_on_today.engine_hours is not None:
-                                engine_hours_day = engine_hours - first_cash_on_today.engine_hours
-                                engine_hours_day = round(engine_hours_day, 2)
-
-                            engine_hours = round(engine_hours, 2)
-
-                        monitoring_json_block = {
-                            "type": 'wialon',
-                            "online": online_check(item.last_time),
-                            "uid": item.uid,
-                            "unit_id": item.id,
-                            "pos_x": item.pos_y,
-                            "pos_y": item.pos_x,
-                            "valid_nav": item.valid_nav,
-                            "engine_hours": engine_hours,
-                            "engine_hours_day": engine_hours_day,
-                            "address": str(get_address_from_coords(item.pos_y, item.pos_x)),
-                            "last_time": unix_to_moscow_time(item.last_time),
-                            "wialon_cmd": wialon_cmd,
-                            "wialon_sensors_list": item.sens,
-                            "wialon_satellite_count": item.gps,
-                        }
-                        monitoring_json_response["monitoring"].append(monitoring_json_block)
 
             # Получение информации из Cesar Position
             if 'csp' in user_role:
@@ -329,7 +287,7 @@ class CarsResource(Resource):
         if not data_db:
             return {'message': 'No data found.'}, 404
 
-        wialon_cars = db.session.query(CashWialon).all()
+        axenta_cars = db.session.query(CashAxenta).all()
         cesar_cars = db.session.query(CashCesar).all()
 
         result_dict = {}
@@ -337,15 +295,15 @@ class CarsResource(Resource):
             u_number = transport.Transport.uNumber or "Без ТС"
             result_dict[u_number] = {"uNumber": u_number, "devices": []}
 
-        for wialon in wialon_cars:
-            u_number = wialon.nm or "Без ТС"
+        for axenta in axenta_cars:
+            u_number = axenta.nm or "Без ТС"
             if u_number in result_dict:
                 result_dict[u_number]["devices"].append({
-                    "type": "Wialon",
-                    "uNumber": wialon.nm,
-                    "pos_x": wialon.pos_x,
-                    "pos_y": wialon.pos_y,
-                    "last_time": wialon.last_time
+                    "type": "Axenta",
+                    "uNumber": axenta.nm,
+                    "pos_x": axenta.pos_x,
+                    "pos_y": axenta.pos_y,
+                    "last_time": axenta.last_time
                 })
 
         if has_role_access(user.username, 'csp'):
@@ -369,7 +327,7 @@ class CarsResource(Resource):
 class GetCarHistory(Resource):
 
     @car_ns.param('nm', 'Номер транспортного средства', _required=True)
-    @car_ns.param('monitoring_system', 'Cesar, Wialon, Axenta', _required=False)
+    @car_ns.param('monitoring_system', 'Cesar, Axenta', _required=False)
     @car_ns.param('block_number', 'UID для Виалона, PIN для Цезаря', _required=False, type=int)
     @car_ns.param('time_from', 'Время начала фильтрации (UNIX timestamp)', _required=True, type=int)
     @car_ns.param('time_to', 'Время окончания фильтрации (UNIX timestamp)', _required=True, type=int)
@@ -385,7 +343,7 @@ class GetCarHistory(Resource):
         monitoring_system = request.args.get('monitoring_system')
         block_number = request.args.get('block_number')
 
-        valid_systems = {None, 'Wialon', 'Cesar', 'Axenta'}
+        valid_systems = {None, 'Cesar', 'Axenta'}
         if monitoring_system not in valid_systems:
             return {'error': f'Invalid monitoring_system value: {monitoring_system}. Valid values: {valid_systems}'}, 400
 

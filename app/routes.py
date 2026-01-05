@@ -7,7 +7,7 @@ import xml.etree.ElementTree as ET
 
 from sqlalchemy import case
 
-from .models import db, User, Transport, TransportModel, Storage, CashWialon, CashCesar, Alert, \
+from .models import db, User, Transport, TransportModel, Storage, CashAxenta, CashCesar, Alert, \
     IgnoredStorage, AlertType, ParserTasks
 from .utils import need_access
 from modules import my_time, hash_password
@@ -50,12 +50,12 @@ def home():
     }
 
     # Создаем базовый запрос с объединением трех таблиц
-    query = db.session.query(Transport, Storage, TransportModel, CashWialon).outerjoin(
+    query = db.session.query(Transport, Storage, TransportModel, CashAxenta).outerjoin(
         Storage, Transport.storage_id == Storage.ID
     ).outerjoin(
         TransportModel, Transport.model_id == TransportModel.id
     ).outerjoin(
-        CashWialon, Transport.uNumber == CashWialon.nm
+        CashAxenta, Transport.uNumber == CashAxenta.nm
     )
 
     # Применяем фильтры к запросу
@@ -96,7 +96,7 @@ def home():
             if last_time_start_unix == 0:
                 last_time_start_unix = my_time.five_minutes_ago_unix()
         if not filters['online'] == 'all':
-            query = query.filter(CashWialon.last_time.between(last_time_start_unix, last_time_end_unix))
+            query = query.filter(CashAxenta.last_time.between(last_time_start_unix, last_time_end_unix))
 
     # Фильтруем транспорт по доступам пользователя
     allowed_uNumbers = get_all_access_transport(g.user.username)
@@ -112,7 +112,7 @@ def home():
     seen_unumbers = set()  # Множество для отслеживания уникальных uNumber
 
     if data_db is not None:
-        for transport, storage, transport_model, wialon in data_db:
+        for transport, storage, transport_model, axenta in data_db:
             transport_number = transport.uNumber
             # Пропускаем запись, если uNumber уже встречался
             if transport_number in seen_unumbers:
@@ -180,12 +180,12 @@ def virtual_operator():
 def dashboard():
     cesar_access = has_role_access(g.user.username, 'csp')
 
-    # Wialon
-    online_count = db.session.query(CashWialon).filter(CashWialon.last_time >= my_time.five_minutes_ago_unix()).count()
-    offline_count = db.session.query(CashWialon).filter(CashWialon.last_time < my_time.five_minutes_ago_unix()).count()
-    offline_over_48_count = db.session.query(CashWialon).filter(
-        CashWialon.last_time < my_time.seventy_two_ago_unix()).count()
-    wialon = {
+    # Axenta
+    online_count = db.session.query(CashAxenta).filter(CashAxenta.last_time >= my_time.five_minutes_ago_unix()).count()
+    offline_count = db.session.query(CashAxenta).filter(CashAxenta.last_time < my_time.five_minutes_ago_unix()).count()
+    offline_over_48_count = db.session.query(CashAxenta).filter(
+        CashAxenta.last_time < my_time.seventy_two_ago_unix()).count()
+    axenta = {
         'online': online_count,
         'offline': offline_count,
         'offline_over_48': offline_over_48_count
@@ -203,9 +203,9 @@ def dashboard():
         'offline': offline_count
     }
 
-    # Последнее подключение к Wialon
-    last_wialon = db.session.query(CashWialon).order_by(CashWialon.last_time.desc()).first()
-    last_wialon = last_wialon.last_time if last_wialon else None
+    # Последнее подключение к Axenta
+    last_axenta = db.session.query(CashAxenta).order_by(CashAxenta.last_time.desc()).first()
+    last_axenta = last_axenta.last_time if last_axenta else None
 
     # Последнее подключение к Cesar
     last_cesar = db.session.query(CashCesar).order_by(CashCesar.last_time.desc()).first()
@@ -214,11 +214,11 @@ def dashboard():
     else:
         last_cesar = last_cesar.last_time if last_cesar else None
     connections = {
-        'last_wialon': last_wialon,
+        'last_axenta': last_axenta,
         'last_cesar': last_cesar
     }
 
-    return render_template('pages/dashboard/page.html', wialon=wialon, connections=connections, cesar=cesar, distance=distance, cesar_access=cesar_access)
+    return render_template('pages/dashboard/page.html', axenta=axenta, connections=connections, cesar=cesar, distance=distance, cesar_access=cesar_access)
 
 
 # Страница отчетов

@@ -23,7 +23,6 @@ class User(db.Model):
     def __repr__(self):
         return '<User %r>' % self.username
 
-
 class Reports(db.Model):
     __tablename__ = 'reports'
 
@@ -38,7 +37,6 @@ class Reports(db.Model):
     percentage_completed = Column(Float)
     success = Column(Boolean, nullable=False,    default=False)
     errors = Column(String, nullable=True)
-
 
 class Transport(db.Model):
     __tablename__ = 'transport'
@@ -67,7 +65,6 @@ class Transport(db.Model):
     def __repr__(self):
         return '<Transport %r>' % self.uNumber
 
-
 class Storage(db.Model):
     __tablename__ = 'storage'
 
@@ -82,7 +79,6 @@ class Storage(db.Model):
 
     def __repr__(self):
         return '<Storage %r>' % self.name
-
 
 class TransportModel(db.Model):
     __tablename__ = 'transport_model'
@@ -102,7 +98,6 @@ class TransportModel(db.Model):
     def __repr__(self):
         return '<TransportModel %r>' % self.name
 
-
 class CashCesar(db.Model):
     __tablename__ = 'cash_cesar'
     unit_id = Column(Integer, primary_key=True, index=True)
@@ -115,23 +110,6 @@ class CashCesar(db.Model):
     created_at = Column(Integer, default=0)
     device_type = Column(Text, nullable=False)
     linked = Column(Boolean, nullable=True, default=False)  # TINYINT(1) NULL DEFAULT '0'
-
-
-class CashWialon(db.Model):
-    __tablename__ = 'cash_wialon'
-    id = Column(Integer, primary_key=True, index=True)
-    uid = Column(Integer, nullable=False, default=0)
-    nm = Column(Text, nullable=False)
-    pos_x = Column(Float, default=0.0)
-    pos_y = Column(Float, default=0.0)
-    gps = Column(Integer, default=0)
-    valid_nav = Column(Integer, default=1)
-    last_time = Column(Integer, default=0)
-    last_pos_time = Column(Integer, default=0)
-    cmd = Column(Text, nullable=True, default='')
-    sens = Column(Text, nullable=True, default='')
-    engine_hours = Column(Float, default=0.0)
-
 
 class CashAxenta(db.Model):
     __tablename__ = 'cash_axenta'

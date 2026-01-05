@@ -30,7 +30,7 @@ from .health import health_ns
 from .car import car_ns
 from .api_key import api_key_ns
 from .users import user_ns
-from .wialon import wialon_ns
+# from .wialon import wialon_ns
 from .parser import parser_ns
 from .setting import settings_ns
 from .alerts_presets import alerts_presets_ns
@@ -43,7 +43,7 @@ api.add_namespace(health_ns)
 api.add_namespace(car_ns)
 api.add_namespace(api_key_ns)
 api.add_namespace(user_ns)
-api.add_namespace(wialon_ns)
+# api.add_namespace(wialon_ns)
 api.add_namespace(parser_ns)
 api.add_namespace(settings_ns)
 api.add_namespace(alerts_presets_ns)

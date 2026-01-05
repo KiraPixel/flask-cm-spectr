@@ -1,5 +1,5 @@
 from flask_restx import Namespace, Resource
-from ..models import User, CashWialon, Alert, TransferTasks, db, SystemSettings
+from ..models import User, CashAxenta, Alert, TransferTasks, db, SystemSettings
 from modules.my_time import one_hours_ago_unix, forty_eight_hours_ago_unix
 
 health_ns = Namespace('health', description='System health check')
@@ -21,19 +21,19 @@ class HealthCheck(Resource):
             db_error = str(e)
 
         try:
-            last_wialon_entry = CashWialon.query.order_by(CashWialon.last_time.desc()).first()
-            if last_wialon_entry and last_wialon_entry.last_time >= one_hours_ago_unix():
+            last_axenta_entry = CashAxenta.query.order_by(CashAxenta.last_time.desc()).first()
+            if last_axenta_entry and last_axenta_entry.last_time >= one_hours_ago_unix():
                 cashing_module = 1
-                last_wialon_time = last_wialon_entry.last_time
+                last_axenta_time = last_axenta_entry.last_time
             else:
                 cashing_module = 0
-                last_wialon_time = "No data"
+                last_axenta_time = "No data"
             if actual_settings is not None:
                 if not actual_settings.enable_db_cashing:
                     cashing_module = 0
         except Exception:
             cashing_module = 0
-            last_wialon_time = "No data"
+            last_axenta_time = "No data"
 
         try:
             last_alert_entry = Alert.query.order_by(Alert.date.desc()).first()
@@ -72,7 +72,7 @@ class HealthCheck(Resource):
             },
             'cashing_module': {
                 'status': cashing_module,
-                'last_time': last_wialon_time
+                'last_time': last_axenta_time
             },
             'voperator_module': {
                 'status': voperator,
