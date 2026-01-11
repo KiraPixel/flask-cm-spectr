@@ -214,6 +214,7 @@ class GetCarInfo(Resource):
             if 'car_info_rent' in user_role:
                 info_rent = {
                     "rent": {
+                        "in_parser_1c": car.parser_1c,
                         "x": car.x,
                         "y": car.y,
                         "address": str(get_address_from_coords(car.x, car.y)),

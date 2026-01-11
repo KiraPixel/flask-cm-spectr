@@ -43,6 +43,7 @@
                     <h5 class="mb-0"><i class="bi bi-person-workspace me-2"></i> Аренда</h5>
                 </div>
                 <div class="card-body">
+                    <p class="mb-1"><strong>Список аренды 1С: <span id="parser_1c" class="text-muted">-</span> </strong></p>
                     <p class="mb-1"><strong>Клиент:</strong> <span id="customer" class="text-muted">-</span></p>
                     <p class="mb-1"><strong>Контакт клиента:</strong> <span id="customer_contact" class="text-muted">-</span></p>
                     <p class="mb-1"><strong>Менеджер:</strong> <span id="manager" class="text-muted">-</span></p>
@@ -88,6 +89,10 @@ window.addEventListener('carDataLoaded', function() {
     setTextContent('manufacture_year', window.carData.transport?.manufacture_year);
 
     // Информация об аренде
+    setTextContent(
+      'parser_1c',
+      window.carData.rent?.in_parser_1c === 1 ? 'Присутствует' : 'Отсутствует '
+    );
     setTextContent('customer', window.carData.rent?.customer);
     setTextContent('customer_contact', window.carData.rent?.customer_contact);
     setTextContent('manager', window.carData.rent?.manager);
