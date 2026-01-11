@@ -378,9 +378,11 @@ class GetCarHistory(Resource):
                 CashHistoryAxenta.last_time <= time_to_unix
             )
 
-            if monitoring_system == 'Wialon' or monitoring_system is None:
+            if monitoring_system == 'Axenta' or monitoring_system is None:
                 if block_number is not None:
                     wialon_query = wialon_query.filter(CashHistoryWialon.uid == block_number)
+                    axenta_query = axenta_query.filter(CashHistoryAxenta.uid == block_number)
+                axenta_entries = axenta_query.all()
                 wialon_entries = wialon_query.all()
                 result = [
                     {
@@ -394,12 +396,7 @@ class GetCarHistory(Resource):
                     }
                     for entry in wialon_entries
                 ]
-
-            if monitoring_system == 'Axenta' or monitoring_system is None:
-                if block_number is not None:
-                    axenta_query = axenta_query.filter(CashHistoryAxenta.uid == block_number)
-                axenta_entries = axenta_query.all()
-                result = [
+                result += [
                     {
                         'uid': entry.uid,
                         'nm': entry.nm,
