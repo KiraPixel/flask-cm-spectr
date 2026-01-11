@@ -313,8 +313,8 @@ class CarsResource(Resource):
                     result_dict[u_number]["devices"].append({
                         "type": "Cesar",
                         "uNumber": cesar.object_name,
-                        "pos_x": cesar.pos_y,
-                        "pos_y": cesar.pos_x,
+                        "pos_x": cesar.pos_x,
+                        "pos_y": cesar.pos_y,
                         "last_time": cesar.last_time
                     })
 

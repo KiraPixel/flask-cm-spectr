@@ -169,7 +169,7 @@
                 deviceItem.innerHTML = `
                     <label>
                         <input type="checkbox" id="device-${car.uNumber}-${device.type}"
-                            onchange="toggleMarker(this, ${device.pos_x}, ${device.pos_y}, '${device.type}', '${car.uNumber}', '${device.last_time}')">
+                            onchange="toggleMarker(this, ${device.pos_y}, ${device.pos_x}, '${device.type}', '${car.uNumber}', '${device.last_time}')">
                         ${device.type} (${formattedTime})
                     </label>
                 `;
