@@ -15,24 +15,6 @@
 </div>
 
 <script type="text/javascript" charset="utf-8">
-// Функция для преобразования псевдо-JSON в валидный JSON
-function fixPseudoJson(str) {
-    if (!str || typeof str !== 'string') return '{}';
-
-    let fixedStr = str.trim()
-        .replace(/'/g, '"')
-        .replace(/\s*:\s*/g, ': ');
-
-    fixedStr = fixedStr.replace(/(\d+)\s*:/g, '"$1":');
-    fixedStr = fixedStr.replace(/\(([^()]+)\)/g, (match, content) => `[${content.trim()}]`);
-
-    if (!fixedStr.startsWith('{') || !fixedStr.endsWith('}')) {
-        return '{}';
-    }
-
-    return fixedStr;
-}
-
 document.addEventListener('DOMContentLoaded', function () {
     window.addEventListener('carDataLoaded', function() {
         initializeSensors();
@@ -41,127 +23,126 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('refreshSensorsBtn').addEventListener('click', refreshSensors);
 });
 
+window.axentaSensors = {};
+
 function initializeSensors() {
     const sensorsContainer = document.getElementById('sensorsContainer');
-    const wialonUnits = window.carData.monitoring.filter(unit => unit.type === 'wialon');
+    const axentaUnits = window.carData.monitoring.filter(unit => unit.type === 'axenta');
 
-    if (wialonUnits.length === 0) {
+    if (axentaUnits.length === 0) {
         sensorsContainer.innerHTML = `
             <div class="col-12">
-                <div class="alert alert-warning">Устройства Wialon не найдены</div>
+                <div class="alert alert-warning">Устройства Axenta не найдены</div>
             </div>`;
         return;
     }
 
     sensorsContainer.innerHTML = '';
 
-    const columnClass = wialonUnits.length === 1 ? 'col-12' : 'col-12 col-md-6';
+    const columnClass = axentaUnits.length === 1 ? 'col-12' : 'col-12 col-md-6';
 
-    wialonUnits.forEach((unit, index) => {
-        let sensorsList = {};
-        let commandsListData = {};
+    Promise.all(axentaUnits.map(unit =>
+        Promise.all([
+            fetch(`/api/axenta/axenta_get_sensors/${unit.unit_id}`).then(response => response.json()),
+            fetch(`/api/axenta/axenta_get_commands/${unit.unit_id}`).then(response => response.json())
+        ]).then(([sensorsList, commandsList]) => ({ unit, sensorsList, commandsList }))
+    ))
+    .then(results => {
+        results.forEach(({ unit, sensorsList, commandsList }) => {
+            window.axentaSensors[unit.unit_id] = sensorsList;
 
-        try {
-            const fixedSensors = fixPseudoJson(unit.wialon_sensors_list);
-            sensorsList = JSON.parse(fixedSensors);
-        } catch (e) {
-            sensorsList = {};
-        }
-
-        try {
-            const fixedCommands = fixPseudoJson(unit.wialon_cmd);
-            commandsListData = JSON.parse(fixedCommands);
-        } catch (e) {
-            commandsListData = {};
-        }
-
-        let unitCard = `
-            <div class="${columnClass} mb-4">
-                <div class="card h-100 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <h5 class="card-title mb-0">${unit.uid || 'Без имени'}</h5>
-                            <span class="badge ${unit.online === 'Online' ? 'bg-success' : 'bg-danger'}">
-                                ${unit.online}
-                            </span>
-                        </div>
-                        <p class="text-muted small mb-3">ID: ${unit.unit_id}</p>
-                        <p class="text-muted small mb-3">Количество спутников: ${unit.wialon_satellite_count}</p>
-                        <div class="sensors-list" data-unit-id="${unit.unit_id}">
-                            ${Object.keys(sensorsList).length === 0 ? '<p class="text-muted">Датчики отсутствуют</p>' : ''}
-                        </div>`;
-        {% if g.user.role >= 0 %}
-        if (commandsListData && Object.keys(commandsListData).length > 0) {
-            unitCard += `
-                <hr class="my-3">
-                <h6 class="mb-2">Команды</h6>
-                <div class="btn-group flex-wrap" role="group">`;
-            Object.entries(commandsListData).forEach(([id, command]) => {
+            let unitCard = `
+                <div class="${columnClass} mb-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h5 class="card-title mb-0">${unit.uid || 'Без имени'}</h5>
+                                <span class="badge ${unit.online === 'Online' ? 'bg-success' : 'bg-danger'}">
+                                    ${unit.online}
+                                </span>
+                            </div>
+                            <div class="text-muted small">Последняя связь: ${unit.last_time || '—'}</div>
+                            <br>
+                            <div class="sensors-list" data-unit-id="${unit.unit_id}">
+                                ${sensorsList.length === 0 ? '<p class="text-muted">Датчики отсутствуют</p>' : ''}
+                            </div>`;
+            {% if g.user.role >= 0 %}
+            if (commandsList && commandsList.length > 0) {
                 unitCard += `
-                    <button type="button"
-                            class="btn btn-outline-secondary m-1 command-btn"
-                            data-unit-id="${unit.unit_id}"
-                            data-command="${command}">
-                        ${command}
-                        <span class="spinner-border spinner-border-sm ms-2 loading-spinner"
-                              style="display: none;"
-                              role="status"
-                              aria-hidden="true"></span>
-                    </button>`;
-            });
-            unitCard += '</div>';
-        }
-        {% endif %}
+                    <hr class="my-3">
+                    <h6 class="mb-2">Команды</h6>
+                    <div class="btn-group flex-wrap" role="group">`;
+                commandsList.forEach(cmd => {
+                    unitCard += `
+                        <button type="button"
+                                class="btn btn-outline-secondary m-1 command-btn"
+                                data-unit-id="${unit.unit_id}"
+                                data-command="${cmd.params}">
+                            ${cmd.name}
+                            <span class="spinner-border spinner-border-sm ms-2 loading-spinner"
+                                  style="display: none;"
+                                  role="status"
+                                  aria-hidden="true"></span>
+                        </button>`;
+                });
+                unitCard += '</div>';
+            }
+            {% endif %}
 
-        unitCard += `
-                <hr class="my-3">
-                <h6 class="mb-2">График датчика</h6>
-                <div class="row mb-4">
-                    <div class="col-md-4 mb-3">
-                        <label for="sensorGraphSelect-${unit.unit_id}" class="form-label">Выберите датчик</label>
-                        <select class="form-select" id="sensorGraphSelect-${unit.unit_id}">
-                            <option value="">Выберите датчик</option>
-                            ${Object.entries(sensorsList).map(([id, sensor]) => {
-                                const name = Array.isArray(sensor) ? sensor[0] : sensor;
-                                return `<option value="${id}" data-unit-id="${unit.unit_id}">[${id}] ${name}</option>`;
-                            }).join('')}
-                        </select>
+            unitCard += `
+                            <hr class="my-3">
+                            <h6 class="mb-2">График датчика</h6>
+                            <div class="row mb-4">
+                                <div class="col-md-4 mb-3">
+                                    <label for="sensorGraphSelect-${unit.unit_id}" class="form-label">Выберите датчик</label>
+                                    <select class="form-select" id="sensorGraphSelect-${unit.unit_id}">
+                                        <option value="">Выберите датчик</option>
+                                        ${sensorsList.map(sensor => {
+                                            return `<option value="${sensor.id}" data-unit-id="${unit.unit_id}">${sensor.name}</option>`;
+                                        }).join('')}
+                                    </select>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label for="sensorGraphDateFrom-${unit.unit_id}" class="form-label">Дата и время от</label>
+                                    <input type="datetime-local" class="form-control" id="sensorGraphDateFrom-${unit.unit_id}" step="1">
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label for="sensorGraphDateTo-${unit.unit_id}" class="form-label">Дата и время до</label>
+                                    <input type="datetime-local" class="form-control" id="sensorGraphDateTo-${unit.unit_id}" step="1">
+                                </div>
+                                <div class="col-md-2 mb-3 align-self-end">
+                                    <button type="button" class="btn btn-primary w-100 sensorGraphFetchDataBtn" data-unit-id="${unit.unit_id}">
+                                        <i class="bi bi-arrow-repeat me-2"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="alert alert-info sensorGraphLoadingIndicator" id="sensorGraphLoadingIndicator-${unit.unit_id}" style="display: none;">
+                                Загрузка данных...
+                            </div>
+                            <div class="alert alert-danger sensorGraphErrorIndicator" id="sensorGraphErrorIndicator-${unit.unit_id}" style="display: none;"></div>
+                            <div class="card" style="height: 500px;">
+                                <div class="card-body">
+                                    <canvas id="sensorGraphChart-${unit.unit_id}" style="max-height: 500px;"></canvas>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="col-md-3 mb-3">
-                        <label for="sensorGraphDateFrom-${unit.unit_id}" class="form-label">Дата и время от</label>
-                        <input type="datetime-local" class="form-control" id="sensorGraphDateFrom-${unit.unit_id}" step="1">
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <label for="sensorGraphDateTo-${unit.unit_id}" class="form-label">Дата и время до</label>
-                        <input type="datetime-local" class="form-control" id="sensorGraphDateTo-${unit.unit_id}" step="1">
-                    </div>
-                    <div class="col-md-2 mb-3 align-self-end">
-                        <button type="button" class="btn btn-primary w-100 sensorGraphFetchDataBtn" data-unit-id="${unit.unit_id}">
-                            <i class="bi bi-arrow-repeat me-2"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="alert alert-info sensorGraphLoadingIndicator" id="sensorGraphLoadingIndicator-${unit.unit_id}" style="display: none;">
-                    Загрузка данных...
-                </div>
-                <div class="alert alert-danger sensorGraphErrorIndicator" id="sensorGraphErrorIndicator-${unit.unit_id}" style="display: none;"></div>
-                <div class="card" style="height: 500px;">
-                    <div class="card-body">
-                        <canvas id="sensorGraphChart-${unit.unit_id}" style="max-height: 500px;"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>`;
+                </div>`;
 
-        sensorsContainer.innerHTML += unitCard;
+            sensorsContainer.innerHTML += unitCard;
+        });
+
+        initializeDynamicDateInputs();
+        refreshSensors();
+        setupCommandButtons();
+        setupGraphButtons();
+    })
+    .catch(error => {
+        sensorsContainer.innerHTML = `
+            <div class="col-12">
+                <div class="alert alert-danger">Ошибка загрузки данных Axenta: ${error.message}</div>
+            </div>`;
     });
-
-    initializeDynamicDateInputs();
-
-    refreshSensors();
-    setupCommandButtons();
-    setupGraphButtons();
-    setupAllDataButtons();
 }
 
 function initializeDynamicDateInputs() {
@@ -188,42 +169,47 @@ function initializeDynamicDateInputs() {
 
 function refreshSensors() {
     const loadingIndicator = document.getElementById('loadingIndicator');
-    const wialonUnits = window.carData.monitoring.filter(unit => unit.type === 'wialon');
+    const axentaUnits = window.carData.monitoring.filter(unit => unit.type === 'axenta');
 
     loadingIndicator.style.display = 'block';
 
-    Promise.all(wialonUnits.map(unit =>
-        fetch(`/api/wialon/wialon_get_sensor/${unit.unit_id}/`)
+    const now = Math.floor(Date.now() / 1000);
+    //const start = now - 86400; // Последние 24 часа для надежности
+
+    Promise.all(axentaUnits.map(unit => {
+        const start = unit.last_unix_time
+        return fetch(`/api/axenta/axenta_get_sensor_messages/?object_id=${unit.unit_id}&start=${start}&end=${now}&sort=desc&mode=sensors`)
             .then(response => response.json())
-            .then(data => ({ unit, data }))
-            .catch(error => ({ unit, error }))
-    ))
+            .then(data => ({ unit, data: Array.isArray(data) && data.length > 0 ? data[0].sensors : null }))
+            .catch(error => ({ unit, error }));
+    }))
     .then(results => {
         results.forEach(({ unit, data, error }) => {
             const sensorsListElement = document.querySelector(`.sensors-list[data-unit-id="${unit.unit_id}"]`);
-            if (!sensorsListElement || !unit.wialon_sensors_list) return;
+            if (!sensorsListElement) return;
 
-            let sensorsData = {};
-            try {
-                const fixedSensors = fixPseudoJson(unit.wialon_sensors_list);
-                sensorsData = JSON.parse(fixedSensors);
-            } catch (e) {
-                sensorsData = {};
-            }
+            const sensorsList = window.axentaSensors[unit.unit_id] || [];
 
             let sensorsHtml = '';
-            if (error || data.error) {
-                sensorsHtml = '<div class="alert alert-danger">Wialon API не вернул данные по датчикам. Попробуйте еще раз</div>';
+            if (error || !data) {
+                sensorsHtml = '<div class="alert alert-danger">Axenta API не вернул последние данные по датчикам. Проверьте настройки датчиков или попробуйте позже</div>';
             } else {
-                Object.entries(sensorsData).forEach(([id, sensor]) => {
-                    const value = data[id] !== undefined ? data[id] : 'Н/Д';
-                    const [name, status] = Array.isArray(sensor) ? sensor : [sensor, ''];
-                    const displayValue = status && status.includes('/')
-                        ? `${value === 1 ? status.split('/')[0] : status.split('/')[1]} (${value})`
-                        : `${value}${status ? ' ' + status : ''}`;
+                sensorsList.forEach(sensor => {
+                    const key = `sensor__${sensor.id}`;
+                    const value = data[key] !== undefined ? data[key] : 'Н/Д';
+                    const status = sensor.unit || '';
+                    let displayValue = value;
+
+                    if (['ignition_sensor', 'custom_digital_sensor'].includes(sensor.type) && status.includes('/')) {
+                        const parts = status.split('/');
+                        displayValue = (value === 1 ? parts[0].trim() : (parts[1] ? parts[1].trim() : parts[0].trim())) + ` (${value})`;
+                    } else if (status) {
+                        displayValue = `${value} ${status}`;
+                    }
+
                     sensorsHtml += `
                         <div class="mb-2 p-2 rounded border">
-                            <strong>[${id}] ${name}</strong>
+                            <strong>${sensor.name}</strong>
                             <p class="mb-0">Значение:
                                 <span class="sensor-value">${displayValue}</span>
                             </p>
@@ -249,13 +235,13 @@ function setupCommandButtons() {
             spinner.style.display = 'inline-block';
             this.disabled = true;
 
-            fetch(`/api/wialon/wialon_exec_cmd/${unitId}/${encodeURIComponent(command)}`)
+            fetch(`/api/axenta/axenta_exec_cmd/${unitId}/${encodeURIComponent(command)}`)
                 .then(response => response.json())
                 .then(data => {
                     spinner.style.display = 'none';
                     this.disabled = false;
 
-                    if (data.status === 'OK' || (data[0] && data[0].status === 0)) {
+                    if (data.status === 'sent') {
                         alert(`Команда "${command}" выполнена успешно`);
                         refreshSensors();
                     } else {
@@ -314,16 +300,16 @@ function fetchSensorData(unitId) {
     loadingIndicator.style.display = 'block';
     errorIndicator.style.display = 'none';
 
-    fetch(`/api/wialon/wialon_get_unit_sensor_messages/?unit_id=${unitId}&time_from=${timeFrom}&time_to=${timeTo}`)
+    fetch(`/api/axenta/axenta_get_sensors_by_period/?object_id=${unitId}&start=${timeFrom}&end=${timeTo}&sensors=${sensorValue}`)
         .then(response => response.json())
         .then(data => {
             loadingIndicator.style.display = 'none';
-            if (data.error || !Array.isArray(data)) {
-                errorIndicator.textContent = 'Ошибка загрузки данных: ' + (data.error || 'Неверный формат данных');
+            if (data.error || !data.series || !data.series[sensorValue]) {
+                errorIndicator.textContent = 'Ошибка загрузки данных: ' + (data.error || 'Нет данных за этот период');
                 errorIndicator.style.display = 'block';
                 return;
             }
-            buildChart(data, sensorValue, sensorSelect.options[sensorSelect.selectedIndex].text, unitId);
+            buildChart(data.series[sensorValue], sensorValue, sensorSelect.options[sensorSelect.selectedIndex].text, unitId);
         })
         .catch(error => {
             loadingIndicator.style.display = 'none';
@@ -332,10 +318,10 @@ function fetchSensorData(unitId) {
         });
 }
 
-function buildChart(data, sensorId, sensorName, unitId) {
-    const validData = data.filter(item => item.sensors[sensorId] && typeof item.sensors[sensorId].value !== 'undefined');
+function buildChart(sensorData, sensorId, sensorName, unitId) {
+    const rawData = sensorData.data || [];
 
-    if (validData.length === 0) {
+    if (rawData.length === 0) {
         const errorIndicator = document.getElementById(`sensorGraphErrorIndicator-${unitId}`);
         errorIndicator.textContent = 'Нет данных для выбранного датчика';
         errorIndicator.style.display = 'block';
@@ -343,16 +329,16 @@ function buildChart(data, sensorId, sensorName, unitId) {
     }
 
     // Устанавливаем maxPoints как процент от общего количества данных
-    const totalDataPoints = validData.length;
+    const totalDataPoints = rawData.length;
     const maxPoints = Math.max(10, Math.floor(totalDataPoints * 0.1)); // Минимум 10 точек, максимум 10% от всех точек
 
     // Рассчитываем шаг для агрегации данных
     const step = Math.ceil(totalDataPoints / maxPoints);
-    const aggregatedData = validData.filter((_, index) => index % step === 0);
+    const aggregatedData = rawData.filter((_, index) => index % step === 0);
 
     // Форматируем метки времени
     const labels = aggregatedData.map(item => {
-        const date = new Date(item.message_time * 1000);
+        const date = new Date(item[0]);
         return date.toLocaleString('ru-RU', {
             day: '2-digit',
             month: '2-digit',
@@ -362,7 +348,11 @@ function buildChart(data, sensorId, sensorName, unitId) {
         });
     });
 
-    const values = aggregatedData.map(item => item.sensors[sensorId].value);
+    const values = aggregatedData.map(item => item[1]);
+
+    // Определяем тип сенсора
+    const sensor = window.axentaSensors[unitId].find(s => s.id == sensorId);
+    const isDigital = sensor && ['ignition_sensor', 'custom_digital_sensor'].includes(sensor.type);
 
     // Уничтожаем предыдущий график, если он существует
     const chartInstance = window[`sensorGraphChart-${unitId}`];
@@ -382,7 +372,8 @@ function buildChart(data, sensorId, sensorName, unitId) {
                 fill: true,
                 tension: 0.4,
                 pointRadius: 3,
-                pointHoverRadius: 6
+                pointHoverRadius: 6,
+                stepped: isDigital ? 'middle' : false
             }]
         },
         options: {
@@ -395,7 +386,14 @@ function buildChart(data, sensorId, sensorName, unitId) {
                 tooltip: {
                     callbacks: {
                         label: function(context) {
-                            return `${context.parsed.y}`;
+                            let val = context.parsed.y;
+                            if (isDigital && sensor.unit && sensor.unit.includes('/')) {
+                                const parts = sensor.unit.split('/');
+                                val = (val === 1 ? parts[0].trim() : (parts[1] ? parts[1].trim() : parts[0].trim())) + ` (${val})`;
+                            } else if (sensor.unit) {
+                                val = `${val} ${sensor.unit}`;
+                            }
+                            return val;
                         }
                     }
                 }
@@ -417,10 +415,6 @@ function buildChart(data, sensorId, sensorName, unitId) {
             }
         }
     });
-}
-
-function setupAllDataButtons() {
-    // Пустая функция, так как она вызывается, но не определена в исходном коде
 }
 </script>
 

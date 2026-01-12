@@ -140,11 +140,11 @@
             </div>
             <div class="row">
               <div class="col-md-6 mb-3">
-                <label for="filter-last-time-start" class="form-label">Онлайн (от)</label>
+                <label for="filter-last-time-start" class="form-label">Последний онлайн (от)</label>
                 <input type="datetime-local" id="filter-last-time-start" name="last_time_start" class="form-control" value="{{ request.args.get('last_time_start') or '' }}">
               </div>
               <div class="col-md-6 mb-3">
-                <label for="filter-last-time-end" class="form-label">Онлайн (до)</label>
+                <label for="filter-last-time-end" class="form-label">Последний онлайн (до)</label>
                 <input type="datetime-local" id="filter-last-time-end" name="last_time_end" class="form-control" value="{{ request.args.get('last_time_end') or '' }}">
               </div>
             </div>

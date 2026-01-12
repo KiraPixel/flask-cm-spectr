@@ -27,7 +27,7 @@ class AxentaApi:
         url = self.api_url + "auth/login/"
         payload = {"username": self.login, "password": self.password}
         try:
-            resp = requests.post(url, data=payload, verify=False, timeout=15)
+            resp = requests.post(url, data=payload, timeout=15)
             resp.raise_for_status()
             data = resp.json()
             if "token" in data:
@@ -55,7 +55,6 @@ class AxentaApi:
                     json=json,
                     params=params,
                     data=data,
-                    verify=False,
                     timeout=20
                 )
                 if resp.status_code in (200, 201, 204):
@@ -125,8 +124,8 @@ class AxentaApi:
             "messagesType": "with_data",
             "messagesParam": messages_param,
             "sort": sort,
-            "sortField": "t",
-            "filterServiceMessages": False
+            #"sortField": "t",
+            #"filterServiceMessages": False
         }
 
         raw = self._request("POST", "messages/get", json=payload)
@@ -139,3 +138,19 @@ class AxentaApi:
             if sensors:
                 result.append({"t": msg.get("t"), "sensors": sensors})
         return result if result else None
+
+    def get_sensors_by_period(
+            self,
+            object_id: int,
+            start_ts: int,
+            end_ts: int,
+            sensor_ids: List[int]
+    ) -> Optional[Dict]:
+        payload = {
+            "objectId": int(object_id),
+            "startDatetime": self._unix_to_iso(start_ts),
+            "endDatetime": self._unix_to_iso(end_ts),
+            "messageFields": sensor_ids,
+            "messagesType": "sensors"
+        }
+        return self._request("POST", "messages/chart", json=payload)

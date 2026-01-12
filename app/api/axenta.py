@@ -36,7 +36,7 @@ class AxentaExecCmd(Resource):
     @need_access('car_command')
     def get(self, object_id: str, command_params: str):
         username = g.user.username
-        cash = CashAxenta.query.filter_by(axenta_id=object_id).first()
+        cash = CashAxenta.query.filter_by(id=object_id).first()
         if not cash or not check_access_to_transport(username, cash.nm):
             return jsonify({'status': 'not accessed'}), 403
 
@@ -84,6 +84,41 @@ class AxentaBuildTrack(Resource):
         )
         return jsonify(track) if track is not None else (jsonify({'error': 'track build failed'}), 500)
 
+
+@axenta_ns.route('/axenta_get_sensors_by_period/')
+class AxentaGetSensorsByPeriod(Resource):
+    @axenta_ns.param('object_id', 'ID объекта в Axenta', type=int, required=True)
+    @axenta_ns.param('start', 'Unix timestamp (секунды)', required=True)
+    @axenta_ns.param('end', 'Unix timestamp (секунды)', required=True)
+    @axenta_ns.param('sensors', 'Список ID сенсоров, разделенных запятыми (например: 1733350,1733351)', required=True)
+    @need_access('car_sensors')
+    def get(self):
+        object_id = request.args.get('object_id', type=int)
+        start_ts = request.args.get('start', type=int)
+        end_ts = request.args.get('end', type=int)
+        sensors_str = request.args.get('sensors')
+
+        if not all([object_id, start_ts, end_ts, sensors_str]):
+            return {"error": "object_id, start, end, sensors — обязательны"}, 400
+
+        try:
+            sensor_ids = [int(sid.strip()) for sid in sensors_str.split(',') if sid.strip()]
+            if not sensor_ids:
+                raise ValueError
+        except ValueError:
+            return {"error": "sensors должен быть списком целых чисел, разделенных запятыми"}, 400
+
+        data = axenta_api.get_sensors_by_period(
+            object_id=object_id,
+            start_ts=start_ts,
+            end_ts=end_ts,
+            sensor_ids=sensor_ids
+        )
+        if data is None:
+            logger.error(f"Axenta: нет данных сенсоров за период | User: {g.user.username} | Obj: {object_id} | {start_ts}→{end_ts} | Sensors: {sensors_str}")
+            return {"error": "Нет данных или ошибка Axenta"}, 500
+
+        return data, 200
 
 
 @axenta_ns.route('/axenta_reverse_geocode/', methods=['POST'])

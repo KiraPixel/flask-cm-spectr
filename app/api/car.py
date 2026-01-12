@@ -70,6 +70,8 @@ class GetCarInfo(Resource):
                             axenta_cmd = item.cmd
                         if item.connected_status:
                             connected_status = 'Online'
+                        else:
+                            connected_status = 'Offline'
 
                         engine_hours_day = 0
                         engine_hours = item.engine_hours or 0.0
@@ -99,6 +101,7 @@ class GetCarInfo(Resource):
                             "engine_hours_day": engine_hours_day,
                             "address": str(get_address_from_coords(item.pos_x, item.pos_y)),
                             "last_time": unix_to_moscow_time(item.last_time),
+                            "last_unix_time": item.last_time,
                             "axenta_cmd": axenta_cmd,
                             "axenta_sensors_list": item.sens,
                             "axenta_satellite_count": item.gps,
