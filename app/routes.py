@@ -86,15 +86,16 @@ def home():
     else:
         query = query.filter(Transport.parser_1c == 1)
     if filters['last_time_start'] or filters['last_time_end'] or filters['online']:
-
         last_time_start_unix = my_time.to_unix_time(filters['last_time_start']) if filters['last_time_start'] else 0
         last_time_end_unix = my_time.to_unix_time(filters['last_time_end']) if filters['last_time_end'] else time.time()
         if filters['online'] == 'no':
             query = query.filter(CashAxenta.connected_status == 0)
+            query = query.filter(CashAxenta.last_time.between(last_time_start_unix, last_time_end_unix))
         elif filters['online'] == 'yes':
             query = query.filter(CashAxenta.connected_status == 1)
+            query = query.filter(CashAxenta.last_time.between(last_time_start_unix, last_time_end_unix))
 
-        query = query.filter(CashAxenta.last_time.between(last_time_start_unix, last_time_end_unix))
+
 
     # Фильтруем транспорт по доступам пользователя
     allowed_uNumbers = get_all_access_transport(g.user.username)
