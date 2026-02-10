@@ -184,7 +184,8 @@ class GetCarInfo(Resource):
                         "storage_id": car.storage_id,
                         "model_id": car.model_id,
                         "manufacture_year": car.manufacture_year,
-                        "vin": car.vin
+                        "vin": car.vin,
+                        "jamming_risk": car.jamming_risk
                     }
                 }
             info_storage = {"storage": []}

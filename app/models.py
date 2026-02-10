@@ -56,6 +56,7 @@ class Transport(db.Model):
     alert_preset = Column(Integer)
     alert_preset_updated_date = Column(Integer)
     parser_1c = Column(Integer, default=1)
+    jamming_risk = Column(Text(15), default='low')
 
     transport_model = db.relationship(
         'TransportModel',

@@ -50,6 +50,7 @@
                     <p class="mb-1"><strong>Координаты:</strong>
                         <span id="coordinates" class="coords-link" data-coords="-">-</span>
                     </p>
+                    <p class="mb-1"><strong>Риск глушения:</strong> <span id="jamming" class="text-muted">-</span></p>
                     <p class="mb-1"><strong>Адрес:</strong> <span id="address" class="text-muted">-</span></p>
                 </div>
             </div>
@@ -96,6 +97,7 @@ window.addEventListener('carDataLoaded', function() {
     setTextContent('customer', window.carData.rent?.customer);
     setTextContent('customer_contact', window.carData.rent?.customer_contact);
     setTextContent('manager', window.carData.rent?.manager);
+    setTextContent('jamming', window.carData.transport?.jamming_risk)
 
     // Установка координат и добавление data-coords
     const coordsElement = document.getElementById('coordinates');
