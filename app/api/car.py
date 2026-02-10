@@ -3,6 +3,7 @@ from flask_restx import Namespace, Resource
 from ..utils import need_access, get_address_from_coords, storage_id_to_name
 from ..models import User, Alert, TransferTasks, db, Transport, Storage, TransportModel, CashCesar, AlertType, Comments, AlertTypePresets, CashHistoryCesar, CashAxenta, CashHistoryAxenta, CashHistoryWialon
 from modules.my_time import unix_to_moscow_time, online_check_cesar, online_check, get_today_bounds_msk, now_unix_time
+from ..utils.db_log import add_log
 from ..utils.functionality_acccess import has_role_access, get_user_roles
 
 from ..utils.transport_acccess import check_access_to_transport, get_all_access_transport
@@ -465,6 +466,7 @@ class SetPreset(Resource):
             if alert_type_presets_id is None or alert_type_presets_id == '' or alert_type_presets_id.lower() == 'null':
                 transport.alert_preset = None
                 transport.alert_preset_updated_date = now_unix_time()
+                add_log(transport.uNumber, g.user, 'alert_preset', 'Удален пресет')
             else:
                 # Проверяем, существует ли пресет
                 try:
@@ -474,6 +476,7 @@ class SetPreset(Resource):
                         return {'status': 'error', 'message': f'Пресет с id {alert_type_presets_id} не найден'}, 404
                     transport.alert_preset = alert_type_presets_id
                     transport.alert_preset_updated_date = now_unix_time()
+                    add_log(transport.uNumber, g.user, 'alert_preset', f'Установлен пресет {alert_type_presets_id}')
                 except ValueError:
                     return {'status': 'error', 'message': 'alert_type_presets_id должен быть целым числом или null'}, 400
             db.session.commit()
