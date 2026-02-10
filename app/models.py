@@ -54,6 +54,7 @@ class Transport(db.Model):
     customer_contact = Column(Text)
     manager = Column(Text)
     alert_preset = Column(Integer)
+    alert_preset_updated_date = Column(Integer)
     parser_1c = Column(Integer, default=1)
 
     transport_model = db.relationship(
