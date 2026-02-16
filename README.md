@@ -1,8 +1,7 @@
 # flask-cm-spektr
 
 ### File:
-![CM](https://github.com/user-attachments/assets/b1ff7853-f583-4db8-8bcc-375959ae825c)
-
+![CM](https://github.com/user-attachments/assets/d885d61f-3b43-4c5f-ae4c-3f3a29f0632a)
 
 
 ## License  
