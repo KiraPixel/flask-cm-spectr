@@ -189,6 +189,7 @@ class AlertTypePresets(db.Model):
     preset_name = Column(Text, nullable=False)
     enable_alert_types = Column(Text)
     disable_alert_types = Column(Text)
+    jamming_zone = Column(Integer, nullable=False, default=0)
     wialon_danger_distance = Column(Integer, default=5)
     wialon_danger_hours_not_work = Column(Integer, default=72)
     active = Column(Integer, nullable=False, default=1)

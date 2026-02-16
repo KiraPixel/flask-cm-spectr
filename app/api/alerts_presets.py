@@ -15,6 +15,7 @@ preset_model = alerts_presets_ns.model('PresetModel', {
     'preset_name': fields.String(required=True, description='Название пресета'),
     'enable_alert_types': fields.List(fields.String, description='Список включенных типов оповещений'),
     'disable_alert_types': fields.List(fields.String, description='Список отключенных типов оповещений'),
+    'jamming_zone': fields.Integer(description='Признак работы с зоне с глушилками', default=0),
     'wialon_danger_distance': fields.Integer(description='Опасное расстояние для Wialon (км)', default=5),
     'wialon_danger_hours_not_work': fields.Integer(description='Часы простоя для Wialon', default=72),
     'active': fields.Integer(description='Статус активности пресета (0 или 1)', default=1),
@@ -53,6 +54,7 @@ class AlertsPresets(Resource):
                 'preset_name': preset.preset_name,
                 'enable_alert_types': json.loads(preset.enable_alert_types) if preset.enable_alert_types else [],
                 'disable_alert_types': json.loads(preset.disable_alert_types) if preset.disable_alert_types else [],
+                'jamming_zone': preset.jamming_zone,
                 'wialon_danger_distance': preset.wialon_danger_distance,
                 'wialon_danger_hours_not_work': preset.wialon_danger_hours_not_work,
                 'active': preset.active,
@@ -75,6 +77,7 @@ class AlertsPresets(Resource):
         preset_name = data.get('preset_name')
         enable_alert_types = data.get('enable_alert_types', [])
         disable_alert_types = data.get('disable_alert_types', [])
+        jamming_zone = data.get('jamming_zone')
         wialon_danger_distance = data.get('wialon_danger_distance', 5)
         wialon_danger_hours_not_work = data.get('wialon_danger_hours_not_work', 72)
         active = data.get('active', 1)
@@ -85,8 +88,8 @@ class AlertsPresets(Resource):
         if not preset_name:
             return {'status': 'error', 'message': 'Требуется указать preset_name'}, 400
 
-        if active not in [0, 1] or editable not in [0, 1] or personalized not in [0, 1]:
-            return {'status': 'error', 'message': 'Поля active, editable и personalized должны быть 0 или 1'}, 400
+        if active not in [0, 1] or editable not in [0, 1] or personalized not in [0, 1] or jamming_zone not in [0, 1]:
+            return {'status': 'error', 'message': 'Поля active, editable, personalized и jamming_zone должны быть 0 или 1'}, 400
 
         # Проверка валидности новых параметров
         if not isinstance(wialon_danger_distance, int) or wialon_danger_distance < 0:
@@ -105,6 +108,7 @@ class AlertsPresets(Resource):
                 preset_name=preset_name,
                 enable_alert_types=json.dumps(enable_alert_types),
                 disable_alert_types=json.dumps(disable_alert_types),
+                jamming_zone=jamming_zone,
                 wialon_danger_distance=wialon_danger_distance,
                 wialon_danger_hours_not_work=wialon_danger_hours_not_work,
                 active=active,
@@ -139,6 +143,7 @@ class AlertPreset(Resource):
                     'preset_name': preset.preset_name,
                     'enable_alert_types': json.loads(preset.enable_alert_types) if preset.enable_alert_types else [],
                     'disable_alert_types': json.loads(preset.disable_alert_types) if preset.disable_alert_types else [],
+                    'jamming_zone': preset.jamming_zone,
                     'wialon_danger_distance': preset.wialon_danger_distance,
                     'wialon_danger_hours_not_work': preset.wialon_danger_hours_not_work,
                     'active': preset.active,
@@ -208,6 +213,11 @@ class AlertPreset(Resource):
                                 'message': 'wialon_danger_hours_not_work должно быть неотрицательным целым числом'}, 400
                 preset.wialon_danger_hours_not_work = data['wialon_danger_hours_not_work']
 
+            if 'jamming_zone' in data:
+                if data['jamming_zone'] not in [0, 1]:
+                    return {'status': 'error', 'message': 'Поле jamming должно быть 0 или 1'}, 400
+                preset.jamming_zone = data['jamming_zone']
+
             if 'active' in data:
                 if data['active'] not in [0, 1]:
                     return {'status': 'error', 'message': 'Поле active должно быть 0 или 1'}, 400
@@ -269,6 +279,7 @@ class AlertsPresetsWithVehicleCount(Resource):
                     'preset_name': preset.preset_name,
                     'enable_alert_types': json.loads(preset.enable_alert_types) if preset.enable_alert_types else [],
                     'disable_alert_types': json.loads(preset.disable_alert_types) if preset.disable_alert_types else [],
+                    'jamming_zone': preset.jamming_zone,
                     'wialon_danger_distance': preset.wialon_danger_distance,
                     'wialon_danger_hours_not_work': preset.wialon_danger_hours_not_work,
                     'active': preset.active,
@@ -314,6 +325,7 @@ class VehiclePreset(Resource):
                         default_preset.enable_alert_types) if default_preset.enable_alert_types else [],
                     'disable_alert_types': json.loads(
                         default_preset.disable_alert_types) if default_preset.disable_alert_types else [],
+                    'jamming_zone': default_preset.jamming_zone,
                     'wialon_danger_distance': default_preset.wialon_danger_distance,
                     'wialon_danger_hours_not_work': default_preset.wialon_danger_hours_not_work,
                     'active': default_preset.active,
@@ -332,6 +344,7 @@ class VehiclePreset(Resource):
                             custom_preset.enable_alert_types) if custom_preset.enable_alert_types else [],
                         'disable_alert_types': json.loads(
                             custom_preset.disable_alert_types) if custom_preset.disable_alert_types else [],
+                        'jamming_zone': custom_preset.jamming_zone,
                         'wialon_danger_distance': custom_preset.wialon_danger_distance,
                         'wialon_danger_hours_not_work': custom_preset.wialon_danger_hours_not_work,
                         'active': custom_preset.active,

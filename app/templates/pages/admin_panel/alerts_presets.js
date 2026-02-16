@@ -85,7 +85,19 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center rounded-top-4 py-3">
                             <h5 class="mb-0 fw-semibold">${preset.preset_name}</h5>
                             <div>
-                                ${preset.editable ? `<button class="btn btn-sm btn-outline-light edit-preset rounded-circle ms-2" data-id="${preset.id}" data-preset_name="${preset.preset_name}" data-enable_alert_types='${JSON.stringify(preset.enable_alert_types)}' data-disable_alert_types='${JSON.stringify(preset.disable_alert_types)}' data-wialon_danger_distance="${preset.wialon_danger_distance}" data-wialon_danger_hours_not_work="${preset.wialon_danger_hours_not_work}" data-active="${preset.active}" data-editable="${preset.editable}" data-personalized="${preset.personalized}"><i class="bi bi-pencil"></i></button>` : ''}
+                                ${preset.editable ? `
+                                <button class="btn btn-sm btn-outline-light edit-preset rounded-circle ms-2" 
+                                    data-id="${preset.id}" 
+                                    data-preset_name="${preset.preset_name}" 
+                                    data-enable_alert_types='${JSON.stringify(preset.enable_alert_types)}' 
+                                    data-disable_alert_types='${JSON.stringify(preset.disable_alert_types)}' 
+                                    data-wialon_danger_distance="${preset.wialon_danger_distance}" 
+                                    data-wialon_danger_hours_not_work="${preset.wialon_danger_hours_not_work}" 
+                                    data-jamming_zone="${preset.jamming_zone}" 
+                                    data-active="${preset.active}" 
+                                    data-editable="${preset.editable}" 
+                                    data-personalized="${preset.personalized}">
+                                <i class="bi bi-pencil"></i></button>` : ''}
                                 <button class="btn btn-sm btn-outline-light delete-preset rounded-circle ms-2" data-id="${preset.id}"><i class="bi bi-trash"></i></button>
                             </div>
                         </div>
@@ -106,6 +118,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <i class="bi bi-bell-slash-fill me-2 text-primary"></i>
                                 <span class="badge bg-primary-subtle text-primary rounded-pill">${preset.disable_alert_types.length}</span>
                             </div>
+                            
                             <div class="d-flex align-items-center me-3 mb-2">
                                 <i class="bi bi-rulers me-2 text-primary"></i>
                                 <span class="badge bg-primary-subtle text-primary rounded-pill">${preset.wialon_danger_distance} км</span>
@@ -115,7 +128,11 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <span class="badge bg-primary-subtle text-primary rounded-pill">${preset.wialon_danger_hours_not_work} ч</span>
                             </div>
                             <div class="d-flex align-items-center mb-2">
-                                ${preset.editable ? '<i class="bi bi-pencil-fill me-2 text-primary"></i>' : ''}
+                                <i class="bi bi-cloud-fog me-2 text-primary"></i>
+                                <span class="badge bg-primary-subtle text-primary rounded-pill">${preset.jamming_zone ? 'Да' : 'Нет'}</span>
+                            </div>
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="bi bi-pencil-fill me-2 text-primary"></i>
                                 <span class="badge bg-primary-subtle text-primary rounded-pill">${preset.editable ? 'Да' : 'Нет'}</span>
                             </div>
                         </div>
@@ -131,6 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const disableAlertTypes = JSON.parse(button.getAttribute('data-disable_alert_types'));
                     const wialonDangerDistance = button.getAttribute('data-wialon_danger_distance');
                     const wialonDangerHoursNotWork = button.getAttribute('data-wialon_danger_hours_not_work');
+                    const jammingZone = button.getAttribute('data-jamming_zone')
                     const active = button.getAttribute('data-active');
                     const editable = button.getAttribute('data-editable');
                     const personalized = button.getAttribute('data-personalized');
@@ -140,6 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     document.getElementById('wialonDangerDistance').value = wialonDangerDistance;
                     document.getElementById('wialonDangerHoursNotWork').value = wialonDangerHoursNotWork;
                     document.getElementById('active').value = active;
+                    document.getElementById('jamming_zone').value = jammingZone;
                     window.populateAlertTypeControls({ enable_alert_types: enableAlertTypes, disable_alert_types: disableAlertTypes });
                     bootstrap.Modal.getOrCreateInstance(document.getElementById('presetModal')).show();
                     window.loadPresets(); // Обновление списка пресетов после редактирования
@@ -220,6 +239,7 @@ document.addEventListener('DOMContentLoaded', () => {
             disable_alert_types: disableAlertTypes,
             wialon_danger_distance: parseInt(document.getElementById('wialonDangerDistance').value),
             wialon_danger_hours_not_work: parseInt(document.getElementById('wialonDangerHoursNotWork').value),
+            jamming_zone: parseInt(document.getElementById('jamming_zone').value),
             active: parseInt(document.getElementById('active').value),
             editable: 1,
             personalized: 0
@@ -284,6 +304,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('wialonDangerDistance').value = '5';
         document.getElementById('wialonDangerHoursNotWork').value = '72';
         document.getElementById('active').value = '1';
+        document.getElementById('jamming_zone').value = '0';
         await loadAlertTypes();
         window.populateAlertTypeControls();
         bootstrap.Modal.getOrCreateInstance(document.getElementById('presetModal')).show();
