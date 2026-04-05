@@ -3,14 +3,13 @@ from datetime import timedelta
 from flask import Flask, session, g
 import os
 
-from .routes_sbi import sbi
 from .utils import storage_id_to_name, get_alert_type, get_user_roles
 from .models import db, User
 
 from modules import my_time, location_module
+from flask_caching import Cache
 
-
-
+cache = Cache()
 
 def create_app():
     app = Flask(__name__)
@@ -22,15 +21,16 @@ def create_app():
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "false"
     db.init_app(app)
+    cache.init_app(app, config={
+        'CACHE_TYPE': 'SimpleCache',
+        'CACHE_DEFAULT_TIMEOUT': 300
+    })
 
     from .routes import bp as main_bp
     from .api import api_bp
-    from .routes_user_settings import us_bp
 
     app.register_blueprint(main_bp)
     app.register_blueprint(api_bp, url_prefix='/api')
-    app.register_blueprint(us_bp, url_prefix='/user_profile')
-    app.register_blueprint(sbi, url_prefix='/sbi')
 
     app.jinja_env.filters['unix_to_datetime'] = my_time.unix_to_moscow_time
     app.jinja_env.filters['online_check'] = my_time.online_check

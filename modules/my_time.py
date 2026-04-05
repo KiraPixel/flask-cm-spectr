@@ -58,13 +58,32 @@ def get_time_minus_twelve_days():
     return int(three_days_ago)
 
 
-def to_unix_time(time_str):
-    try:
-        naive_time = datetime.datetime.strptime(time_str, '%Y-%m-%dT%H:%M')
-        localized_time = moscow_tz.localize(naive_time)
-        return int(localized_time.timestamp())
-    except ValueError:
-        return None
+def to_unix_time(time_val):
+    moscow_tz = pytz.timezone("Europe/Moscow")
+
+    if isinstance(time_val, datetime.datetime):
+        dt = time_val
+    else:
+        formats = [
+            '%Y-%m-%d %H:%M:%S',
+            '%Y-%m-%dT%H:%M'
+        ]
+
+        dt = None
+        for fmt in formats:
+            try:
+                dt = datetime.datetime.strptime(time_val, fmt)
+                break
+            except (ValueError, TypeError):
+                continue
+
+        if dt is None:
+            return None
+
+    if dt.tzinfo is None:
+        dt = moscow_tz.localize(dt)
+
+    return int(dt.timestamp())
 
 
 def tz_to_moscow_time(z_time):

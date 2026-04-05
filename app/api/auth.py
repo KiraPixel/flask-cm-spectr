@@ -9,8 +9,7 @@ from modules import hash_password
 from modules.my_time import now_unix_time
 from ..config import SECRET_KEY
 from ..utils import need_access, is_valid_api_key, get_api_key_by_username
-from ..models import User, db
-
+from ..models import User, db, FunctionalityAccess
 
 auth_ns = Namespace('jwt', description='JWT авторизация')
 
@@ -42,16 +41,36 @@ class JwtLogin(Resource):
         # Генерация JWT с expiration 24 часа
         expiration = now_unix_time() + 86400
 
+        roles = []
+        if user.functionality_roles and isinstance(user.functionality_roles, list):
+            role_ids = [int(x) for x in user.functionality_roles if str(x).isdigit()]
+
+            if role_ids:
+                func_roles = (
+                    FunctionalityAccess.query
+                    .filter(FunctionalityAccess.id.in_(role_ids))
+                    .with_entities(FunctionalityAccess.id, FunctionalityAccess.name)
+                    .all()
+                )
+
+                for r in func_roles:
+                    roles.append({
+                        "id": r.id,
+                        "name": r.name or None
+                    })
+
         token = jwt.encode({
-            'user_id': user.id,
-            'username': user.username,
+            'id': user.id,
+            'name': user.username,
             'exp': expiration,
             'iat': now_unix_time()
         }, SECRET_KEY, algorithm='HS256')
 
         message = {
             'token': token,
-            'username': user.username,
-            'user_id': user.id
+            'id': user.id,
+            'name': user.username,
+            'is_admin': user.role,
+            'role': roles
         }
         return {'message': message,'success': True}, 200

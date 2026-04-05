@@ -36,16 +36,17 @@ def need_access(required_role):
                 token = auth_header.split(' ')[1]
                 try:
                     payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
-                    user_id = payload.get('user_id')
-                    username = payload.get('username')
+                    user_id = payload.get('id')
+                    username = payload.get('name')
                     iat = payload.get('iat')
                     if not user_id:
                         return 'Invalid token', 401
                     user = User.query.get(user_id)
+                    g.user = user
                     if not user or user.username != username:
                         return 'Invalid user or token mismatch', 401
                     else:
-                        if iat <= user.password_activated_date:
+                        if iat <= my_time.to_unix_time(user.password_activated_date):
                             return 'Token expired', 401
                 except jwt.ExpiredSignatureError:
                     return 'Token expired', 401

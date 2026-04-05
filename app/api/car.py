@@ -307,6 +307,7 @@ class CarsResource(Resource):
                 result_dict[u_number]["devices"].append({
                     "type": "Axenta",
                     "uNumber": axenta.nm,
+                    "block_number": axenta.uid,
                     "pos_x": axenta.pos_x,
                     "pos_y": axenta.pos_y,
                     "last_time": axenta.last_time
@@ -319,6 +320,7 @@ class CarsResource(Resource):
                     result_dict[u_number]["devices"].append({
                         "type": "Cesar",
                         "uNumber": cesar.object_name,
+                        "block_number": cesar.pin,
                         "pos_x": cesar.pos_x,
                         "pos_y": cesar.pos_y,
                         "last_time": cesar.last_time

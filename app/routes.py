@@ -31,145 +31,7 @@ def before_request():
 @bp.route('/', endpoint='home')
 @need_access('login')
 def home():
-    # Получаем параметры фильтра из запроса
-    filters = {
-        'nm': request.args.get('nm'),
-        'model': request.args.get('model'),
-        'vin': request.args.get('vin'),
-        'model_type': request.args.get('model_type'),
-        'customer': request.args.get('customer'),
-        'manager': request.args.get('manager'),
-        'storage': request.args.get('storage'),
-        'region': request.args.get('region'),
-        'organization': request.args.get('organization'),
-        'last_time_start': request.args.get('last_time_start'),
-        'last_time_end': request.args.get('last_time_end'),
-        'voperator': request.args.get('voperator'),
-        '1cparser': request.args.get('1cparser'),
-        'online': request.args.get('online')
-    }
-
-    # Создаем базовый запрос с объединением трех таблиц
-    query = db.session.query(Transport, Storage, TransportModel, CashAxenta).outerjoin(
-        Storage, Transport.storage_id == Storage.ID
-    ).outerjoin(
-        TransportModel, Transport.model_id == TransportModel.id
-    ).outerjoin(
-        CashAxenta, Transport.uNumber == CashAxenta.nm
-    )
-
-    # Применяем фильтры к запросу
-    if filters['nm']:
-        filters['nm'] = filters['nm'].rstrip()
-        query = query.filter(Transport.uNumber.like(f'%{filters["nm"]}%'))
-    if filters['model']:
-        query = query.filter(TransportModel.name.like(f'%{filters["model"]}%'))
-    if filters['vin']:
-        query = query.filter(Transport.vin.like(f'%{filters["vin"]}%'))
-    if filters['model_type'] and filters['model_type'] != 'all':
-        query = query.filter(TransportModel.type == filters["model_type"])
-    if filters['storage']:
-        query = query.filter(Storage.name.like(f'%{filters["storage"]}%'))
-    if filters['region']:
-        query = query.filter(Storage.region.like(f'%{filters["region"]}%'))
-    if filters['organization']:
-        query = query.filter(Storage.organization.like(f'%{filters["organization"]}%'))
-    if filters['customer']:
-        query = query.filter(Transport.customer.like(f'%{filters["customer"]}%'))
-    if filters['manager']:
-        query = query.filter(Transport.manager.like(f'%{filters["manager"]}%'))
-    if filters['1cparser']:
-        if filters['1cparser'] == 'no':
-            query = query.filter(Transport.parser_1c == 0)
-        elif filters['1cparser'] == 'yes':
-            query = query.filter(Transport.parser_1c == 1)
-    else:
-        query = query.filter(Transport.parser_1c == 1)
-    if filters['last_time_start'] or filters['last_time_end'] or filters['online']:
-        last_time_start_unix = my_time.to_unix_time(filters['last_time_start']) if filters['last_time_start'] else 0
-        last_time_end_unix = my_time.to_unix_time(filters['last_time_end']) if filters['last_time_end'] else time.time()
-        if filters['online'] == 'no':
-            query = query.filter(CashAxenta.connected_status == 0)
-            query = query.filter(CashAxenta.last_time.between(last_time_start_unix, last_time_end_unix))
-        elif filters['online'] == 'yes':
-            query = query.filter(CashAxenta.connected_status == 1)
-            query = query.filter(CashAxenta.last_time.between(last_time_start_unix, last_time_end_unix))
-
-
-
-    # Фильтруем транспорт по доступам пользователя
-    allowed_uNumbers = get_all_access_transport(g.user.username)
-    if not allowed_uNumbers:
-        return render_template('pages/search/page.html', columns=['№ Лота', 'Модель', 'Склад', 'Регион'], table_rows=[],
-                               redi='/car/', request=request)
-
-    query = query.filter(Transport.uNumber.in_(allowed_uNumbers if allowed_uNumbers else ['']))
-
-    data_db = query.all()
-    columns = ['№ Лота', 'Модель', 'Склад', 'Регион']
-    columns_data = []
-    seen_unumbers = set()  # Множество для отслеживания уникальных uNumber
-
-    if data_db is not None:
-        for transport, storage, transport_model, axenta in data_db:
-            transport_number = transport.uNumber
-            # Пропускаем запись, если uNumber уже встречался
-            if transport_number in seen_unumbers:
-                continue
-
-            seen_unumbers.add(transport_number)
-            transport_model_name = transport_model.name if transport_model else 'None'
-            storage_name = storage.name if storage else 'None'
-            storage_region = storage.region if storage else 'None'
-
-            columns_data.append([transport_number, transport_model_name, storage_name, storage_region])
-
-    # Отображаем шаблон с результатами фильтрации
-    return render_template('pages/search/page.html', columns=columns, table_rows=columns_data, redi='/car/', request=request)
-
-
-# Страница состояния
-@bp.route('/virtual_operator')
-@need_access('voperator')
-def virtual_operator():
-    category_case = case(
-        (Alert.type.in_(["distance", "gps"]), "distance"),
-        (Alert.type == "no_docs_cords", "no_docs_cord"),
-        (Alert.type == "not_work", "not_work"),
-        (Alert.type == "no_equipment", "no_equipment"),
-        else_="other"
-    )
-
-    alerts = (
-        db.session.query(Alert, category_case.label("category"))
-        .join(AlertType, Alert.type == AlertType.alert_un)
-        .filter(Alert.status == 0)
-        .order_by(Alert.date.desc())
-        .all()
-    )
-
-    categories = {
-        "distance": [],
-        "no_docs_cord": [],
-        "not_work": [],
-        "no_equipment": [],
-        "other": []
-    }
-
-    for alert, cat in alerts:
-        categories[cat].append(alert)
-
-    last_100_alerts = db.session.query(Alert).join(AlertType, Alert.type==AlertType.alert_un).order_by(Alert.date.desc()).limit(100).all()
-
-    return render_template(
-        'pages/virtual_operator/page.html',
-        distance=categories["distance"],
-        no_docs_cord=categories["no_docs_cord"],
-        not_work=categories["not_work"],
-        no_equipment=categories["no_equipment"],
-        other=categories["other"],
-        last_100_alerts=last_100_alerts
-    )
+    return render_template('main.html')
 
 
 
@@ -220,13 +82,6 @@ def dashboard():
     return render_template('pages/dashboard/page.html', axenta=axenta, connections=connections, cesar=cesar, distance=distance, cesar_access=cesar_access)
 
 
-# Страница отчетов
-@bp.route('/rep')
-@need_access('reports')
-def reports():
-    return render_template('pages/reports/page.html')
-
-
 # Страница входа
 @bp.route('/login', methods=['GET', 'POST'], endpoint='login')
 def login():
@@ -273,12 +128,6 @@ def car(car_id):
         car_name=car_name,
         ignored_storages=ignored_storages
     )
-
-
-@bp.route('/maps/')
-@need_access('map')
-def maps():
-    return render_template('pages/maps/page.html')
 
 
 @bp.route('/admin/', methods=['GET'])

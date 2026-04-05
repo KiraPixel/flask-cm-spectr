@@ -1,10 +1,12 @@
 import logging
 
+import jwt
 from flask import Blueprint, session, request, g
 from flask_restx import Api
 
 from .axenta import axenta_ns
 from .report_generator import report_api
+from ..config import SECRET_KEY
 
 # Создаем основной Blueprint
 api_bp = Blueprint('api', __name__)
@@ -37,6 +39,8 @@ from .alerts_presets import alerts_presets_ns
 from .admin import admin_ns, admin_users_ns, admin_storages_ns
 from .reports import reports_ns
 from .auth import auth_ns
+from .search import search_ns
+from .alerts import alerts_ns
 
 # Добавление Namespace в API
 api.add_namespace(health_ns)
@@ -54,6 +58,8 @@ api.add_namespace(reports_ns)
 api.add_namespace(report_api)
 api.add_namespace(auth_ns)
 api.add_namespace(axenta_ns)
+api.add_namespace(search_ns)
+api.add_namespace(alerts_ns)
 
 @api_bp.before_request
 def before_request():
@@ -62,6 +68,11 @@ def before_request():
     except:
         username = g.user or 'Неизвестен'
 
+    auth_header = request.headers.get('Authorization')
+    if auth_header and auth_header.startswith('Bearer '):
+        token = auth_header.split(' ')[1]
+        payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
+        username = f"jwt_{payload.get('name')}"
     logger.debug(
         'Request: User=%s, Method=%s, URL=%s, ARGS=%s',
         username, request.method, request.url, request.data,
